@@ -60,6 +60,23 @@ export default function PreRegister() {
 
         if (profileError) throw profileError;
 
+        // Send webhook notification
+        try {
+          await fetch("https://n8n-n8n.xm9jj7.easypanel.host/webhook-test/cadastro", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              nome: formData.fullName,
+              telefone: formData.phone,
+            }),
+          });
+        } catch (webhookError) {
+          console.error("Erro ao enviar webhook:", webhookError);
+          // Não interrompe o fluxo se o webhook falhar
+        }
+
         toast({
           title: "Pré-cadastro realizado com sucesso!",
           description: `Senha gerada: ${randomPassword}`,
