@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,11 +12,13 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
+type QuotaStatus = Database["public"]["Enums"]["quota_status"];
+
 interface Quota {
   id?: string;
   quota_number: number;
   member_id: string;
-  status: string;
+  status: QuotaStatus;
 }
 
 export default function GroupEdit() {
@@ -170,7 +173,7 @@ export default function GroupEdit() {
                   </Select>
                   <Select value={quota.status} onValueChange={(value) => {
                     const newQuotas = [...quotas];
-                    newQuotas[index].status = value;
+                    newQuotas[index].status = value as QuotaStatus;
                     setQuotas(newQuotas);
                   }}>
                     <SelectTrigger className="w-40">
