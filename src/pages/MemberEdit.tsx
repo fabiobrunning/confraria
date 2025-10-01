@@ -40,6 +40,19 @@ interface Company {
   address_state: string;
 }
 
+interface MemberCompany {
+  companies: Company;
+}
+
+interface QuotaData {
+  id: string;
+  quota_number: number;
+  status: string;
+  consortium_groups: {
+    description: string;
+  };
+}
+
 interface Quota {
   id: string;
   quota_number: number;
@@ -109,7 +122,7 @@ export default function MemberEdit() {
       .eq("member_id", id);
 
     if (memberCompanies) {
-      setCompanies(memberCompanies.map((mc: any) => mc.companies));
+      setCompanies(memberCompanies.map((mc: MemberCompany) => mc.companies));
     }
 
     const { data: quotasData } = await supabase
@@ -123,7 +136,7 @@ export default function MemberEdit() {
       .eq("member_id", id);
 
     if (quotasData) {
-      setQuotas(quotasData.map((q: any) => ({
+      setQuotas(quotasData.map((q: QuotaData) => ({
         ...q,
         group: q.consortium_groups,
       })));
@@ -160,10 +173,10 @@ export default function MemberEdit() {
         title: "Endereço encontrado",
         description: "Os campos foram preenchidos automaticamente",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Erro ao buscar CEP",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
     }
@@ -191,10 +204,10 @@ export default function MemberEdit() {
         title: "Dados encontrados",
         description: "Os campos foram preenchidos automaticamente",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Erro ao buscar CNPJ",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
     }
@@ -244,10 +257,10 @@ export default function MemberEdit() {
       });
       
       navigate("/members");
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Erro ao salvar",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
     } finally {
@@ -280,10 +293,10 @@ export default function MemberEdit() {
 
       setShowPasswordDialog(false);
       setNewPassword("");
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Erro ao alterar senha",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
     }
@@ -301,10 +314,10 @@ export default function MemberEdit() {
       });
       
       navigate("/members");
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Erro ao excluir conta",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
     }

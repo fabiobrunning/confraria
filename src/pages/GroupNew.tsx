@@ -44,10 +44,10 @@ export default function GroupNew() {
       });
 
       navigate(`/groups/${data.id}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Erro ao criar grupo",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
     } finally {

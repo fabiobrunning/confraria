@@ -21,12 +21,32 @@ interface Quota {
   status: QuotaStatus;
 }
 
+interface ExistingQuota {
+  id?: string;
+  quota_number: number;
+  member_id: string;
+  status: QuotaStatus;
+}
+
+interface Group {
+  id: string;
+  description: string;
+  total_quotas: number;
+  asset_value?: number;
+  monthly_value?: number;
+}
+
+interface Member {
+  id: string;
+  full_name: string;
+}
+
 export default function GroupEdit() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [group, setGroup] = useState<any>(null);
+  const [group, setGroup] = useState<Group | null>(null);
   const [quotas, setQuotas] = useState<Quota[]>([]);
-  const [members, setMembers] = useState<any[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -52,7 +72,7 @@ export default function GroupEdit() {
       // Create array with all quotas
       const allQuotas: Quota[] = [];
       for (let i = 1; i <= totalQuotas; i++) {
-        const existing = existingQuotas.find((q: any) => q.quota_number === i);
+        const existing = existingQuotas.find((q: ExistingQuota) => q.quota_number === i);
         allQuotas.push(existing || {
           quota_number: i,
           member_id: "",
@@ -103,8 +123,8 @@ export default function GroupEdit() {
 
       toast({ title: "Grupo atualizado com sucesso!" });
       navigate("/groups");
-    } catch (error: any) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      toast({ title: "Erro", description: error instanceof Error ? error.message : "Erro desconhecido", variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -140,11 +160,11 @@ export default function GroupEdit() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Valor do Bem</Label>
-                <Input type="number" step="0.01" value={group?.asset_value} onChange={(e) => setGroup({ ...group, asset_value: e.target.value })} />
+                <Input type="number" step="0.01" value={group?.asset_value} onChange={(e) => setGroup({ ...group, asset_value: parseFloat(e.target.value) || 0 })} />
               </div>
               <div className="space-y-2">
                 <Label>Valor Mensal</Label>
-                <Input type="number" step="0.01" value={group?.monthly_value} onChange={(e) => setGroup({ ...group, monthly_value: e.target.value })} />
+                <Input type="number" step="0.01" value={group?.monthly_value} onChange={(e) => setGroup({ ...group, monthly_value: parseFloat(e.target.value) || 0 })} />
               </div>
             </div>
           </CardContent>
