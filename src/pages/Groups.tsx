@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, DollarSign, Users as UsersIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useAdmin } from "@/hooks/use-admin";
 
 interface Group {
   id: string;
@@ -21,27 +22,13 @@ interface Group {
 export default function Groups() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { isAdmin } = useAdmin();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    checkAdmin();
     loadGroups();
   }, []);
-
-  const checkAdmin = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-
-    const { data } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", session.user.id)
-      .single();
-
-    setIsAdmin(data?.role === "admin");
-  };
 
   const loadGroups = async () => {
     setLoading(true);

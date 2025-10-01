@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useAdmin } from "@/hooks/use-admin";
 import { Loader2, Plus, Trash2, Search } from "lucide-react";
 import { fetchAddressByCep, fetchCompanyByCnpj } from "@/utils/apis";
 import {
@@ -57,6 +58,7 @@ export default function MemberEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { loading: adminLoading } = useAdmin(true);
 
   const [profile, setProfile] = useState({
     full_name: "",
@@ -76,27 +78,10 @@ export default function MemberEdit() {
   const [quotas, setQuotas] = useState<Quota[]>([]);
 
   useEffect(() => {
-    checkAdmin();
-    loadMember();
-  }, [id]);
-
-  const checkAdmin = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-      return;
+    if (!adminLoading) {
+      loadMember();
     }
-
-    const { data } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", session.user.id)
-      .single();
-
-    if (data?.role !== "admin") {
-      navigate("/dashboard");
-    }
-  };
+  }, [id, adminLoading]);
 
   const loadMember = async () => {
     if (!id) return;

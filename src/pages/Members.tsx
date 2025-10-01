@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { Search, Phone, Instagram } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useAdmin } from "@/hooks/use-admin";
 
 interface Member {
   id: string;
@@ -22,26 +23,12 @@ export default function Members() {
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { isAdmin } = useAdmin();
   const navigate = useNavigate();
 
   useEffect(() => {
-    checkAdmin();
     loadMembers();
   }, []);
-
-  const checkAdmin = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-
-    const { data } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", session.user.id)
-      .single();
-
-    setIsAdmin(data?.role === "admin");
-  };
 
   useEffect(() => {
     if (searchTerm) {

@@ -1,16 +1,19 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, RefreshCw, ArrowRight, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { useAdmin } from "@/hooks/use-admin";
 
 interface PreRegisteredMember {
   id: string;
@@ -24,6 +27,7 @@ interface PreRegisteredMember {
 export default function PreRegister() {
   const [loading, setLoading] = useState(false);
   const [resendingId, setResendingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [preRegisteredMembers, setPreRegisteredMembers] = useState<PreRegisteredMember[]>([]);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -157,6 +161,36 @@ export default function PreRegister() {
     }
   };
 
+  const handleDeletePreRegister = async (memberId: string) => {
+    setDeletingId(memberId);
+
+    try {
+      // Excluir o perfil do usuário pré-cadastrado
+      const { error } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("id", memberId);
+
+      if (error) throw error;
+
+      // Atualizar a lista após excluir
+      setPreRegisteredMembers(preRegisteredMembers.filter(member => member.id !== memberId));
+
+      toast({
+        title: "Pré-cadastro excluído com sucesso!",
+        description: "O usuário foi removido do sistema",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao excluir pré-cadastro",
+        description: error.message || "Erro desconhecido",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <Layout>
       <div className="p-6">
@@ -263,24 +297,35 @@ export default function PreRegister() {
                           {new Date(member.created_at).toLocaleDateString("pt-BR")}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleResendCredentials(member.id, member.phone, member.full_name)}
-                            disabled={resendingId === member.id}
-                          >
-                            {resendingId === member.id ? (
-                              <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Enviando...
-                              </>
-                            ) : (
-                              <>
-                                <RefreshCw className="mr-2 h-4 w-4" />
-                                Reenviar Acesso
-                              </>
-                            )}
-                          </Button>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleResendCredentials(member.id, member.phone, member.full_name)}
+                              disabled={resendingId === member.id || deletingId === member.id}
+                              title="Reenviar mensagem"
+                            >
+                              {resendingId === member.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <ArrowRight className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleDeletePreRegister(member.id)}
+                              disabled={resendingId === member.id || deletingId === member.id}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                              title="Excluir pré-cadastro"
+                            >
+                              {deletingId === member.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
