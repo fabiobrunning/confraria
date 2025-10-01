@@ -83,17 +83,19 @@ export default function Index() {
       </div>
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 h-20 backdrop-blur-[10px] border-b border-white/10"
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 sm:h-20 backdrop-blur-[10px] border-b border-white/10"
               style={{ background: 'rgba(0, 0, 0, 0.2)' }}>
-        <div className="max-w-screen-2xl mx-auto h-full flex items-center justify-between px-6">
+        <div className="max-w-screen-2xl mx-auto h-full flex items-center justify-between px-4 sm:px-6">
           <div className="animate-slide-in-left opacity-0 delay-100 flex items-center">
-            <h1 className="text-white text-2xl font-bold font-[Archive] tracking-wider">
-              CONFRARIA PEDRA BRANCA
-            </h1>
+            <img 
+              src="/logo-confraria.png" 
+              alt="Confraria Pedra Branca" 
+              className="animate-float h-12 sm:h-16 w-auto object-contain"
+            />
           </div>
           <button
             onClick={() => navigate("/auth")}
-            className="animate-slide-in-right opacity-0 delay-200 bg-transparent border border-white/30 text-white font-medium px-6 py-2 rounded text-sm btn-login transition-all duration-300 relative overflow-hidden hover:bg-white hover:text-black hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(255,255,255,0.2)]"
+            className="animate-slide-in-right opacity-0 delay-200 bg-transparent border border-white/30 text-white font-medium px-4 sm:px-6 py-1.5 sm:py-2 rounded text-xs sm:text-sm btn-login transition-all duration-300 relative overflow-hidden hover:bg-white hover:text-black hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(255,255,255,0.2)]"
           >
             Login
           </button>
@@ -102,68 +104,69 @@ export default function Index() {
 
       {/* Main content */}
       <main className="relative z-10">
-        <section className="px-6 pt-32 pb-20">
+        <section className="px-4 sm:px-6 pt-24 sm:pt-32 pb-12 sm:pb-20">
           <div className="max-w-screen-2xl mx-auto text-center">
             <h1 
-              className="text-white font-normal mb-8 font-[Archive]"
-              style={{ fontSize: 'clamp(3.5rem, 8vw, 6rem)', lineHeight: '1.1', letterSpacing: '0.02em' }}
+              className="text-white font-normal mb-6 sm:mb-8 font-[Archive] px-2"
+              style={{ fontSize: 'clamp(2rem, 8vw, 6rem)', lineHeight: '1.1', letterSpacing: '0.02em' }}
             >
               CONFRARIA PEDRA BRANCA
             </h1>
             <h2 
-              className="font-medium mb-12 text-white/90 font-[Cormorant_Garamond]"
-              style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', lineHeight: '1.3' }}
+              className="font-medium mb-8 sm:mb-12 text-white/90 font-[Cormorant_Garamond] px-4"
+              style={{ fontSize: 'clamp(1.25rem, 4vw, 2rem)', lineHeight: '1.3' }}
             >
               Pessoas com Visão geram Negócios com Propósito.
             </h2>
-            <div className="max-w-3xl mx-auto space-y-2 text-lg text-white/80 leading-relaxed">
+            <div className="max-w-3xl mx-auto space-y-3 sm:space-y-2 text-base sm:text-lg text-white/80 leading-relaxed px-4">
               <p>Sabe aquele networking autêntico que todo empresário procura, mas raramente encontra?</p>
-              <p>Bem-vindo à Confraria Pedra Branca. Nosso propósito é fortalecer os líderes de negócios da nossa região, criando um ambiente de confiança mútua. Aqui, o conhecimento é compartilhado sem segundas intenções, os desafios são divididos por escolha, e as conquistas são celebradas com orgulho genuíno.</p>
+              <p className="hidden sm:block">Bem-vindo à Confraria Pedra Branca. Nosso propósito é fortalecer os líderes de negócios da nossa região, criando um ambiente de confiança mútua. Aqui, o conhecimento é compartilhado sem segundas intenções, os desafios são divididos por escolha, e as conquistas são celebradas com orgulho genuíno.</p>
+              <p className="sm:hidden">Bem-vindo à Confraria Pedra Branca. Fortalecemos líderes de negócios criando um ambiente de confiança mútua e conhecimento compartilhado.</p>
             </div>
           </div>
         </section>
 
-        <section className="px-6 py-6">
+        <section className="px-4 sm:px-6 py-6 sm:py-12">
           <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-16">
-              <p className="text-white/80 text-xl">E nossos números refletem exatamente isso:</p>
+            <div className="text-center mb-8 sm:mb-16">
+              <p className="text-white/80 text-base sm:text-xl px-4">E nossos números refletem exatamente isso:</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-16 text-center">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-16 text-center">
               {/* Primeiro número - MEMBROS ATIVOS */}
-              <div>
+              <div className="py-4">
                 <div 
-                  className="count-up text-white font-bold mb-4 font-[Cormorant_Garamond]"
-                  style={{ fontSize: 'clamp(3.5rem, 8vw, 6rem)', lineHeight: '1' }}
+                  className="count-up text-white font-bold mb-3 sm:mb-4 font-[Cormorant_Garamond]"
+                  style={{ fontSize: 'clamp(3rem, 12vw, 6rem)', lineHeight: '1', fontFamily: "'Cormorant Garamond', serif" }}
                 >
                   0
                 </div>
-                <div className="text-sm font-medium text-white/60 tracking-wide uppercase">
+                <div className="text-xs sm:text-sm font-medium text-white/60 tracking-wide uppercase px-2">
                   Membros Ativos
                 </div>
               </div>
 
               {/* Segundo número - EMPRESAS CONECTADAS */}
-              <div>
+              <div className="py-4 border-y sm:border-y-0 sm:border-x border-white/10">
                 <div 
-                  className="count-up text-white font-bold mb-4 font-[Cormorant_Garamond]"
-                  style={{ fontSize: 'clamp(3.5rem, 8vw, 6rem)', lineHeight: '1' }}
+                  className="count-up text-white font-bold mb-3 sm:mb-4 font-[Cormorant_Garamond]"
+                  style={{ fontSize: 'clamp(3rem, 12vw, 6rem)', lineHeight: '1', fontFamily: "'Cormorant Garamond', serif" }}
                 >
                   0
                 </div>
-                <div className="text-sm font-medium text-white/60 tracking-wide uppercase">
+                <div className="text-xs sm:text-sm font-medium text-white/60 tracking-wide uppercase px-2">
                   Empresas Conectadas
                 </div>
               </div>
 
               {/* Terceiro número - VALOR MOVIMENTADO */}
-              <div>
+              <div className="py-4">
                 <div 
-                  className="count-up text-white font-bold mb-4 font-[Cormorant_Garamond]"
-                  style={{ fontSize: 'clamp(3.5rem, 8vw, 6rem)', lineHeight: '1' }}
+                  className="count-up text-white font-bold mb-3 sm:mb-4 font-[Cormorant_Garamond]"
+                  style={{ fontSize: 'clamp(3rem, 12vw, 6rem)', lineHeight: '1', fontFamily: "'Cormorant Garamond', serif" }}
                 >
                   0
                 </div>
-                <div className="text-sm font-medium text-white/60 tracking-wide uppercase">
+                <div className="text-xs sm:text-sm font-medium text-white/60 tracking-wide uppercase px-2">
                   Valor Movimentado
                 </div>
               </div>
@@ -173,9 +176,9 @@ export default function Index() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 py-12 px-6 border-t border-white/10">
+      <footer className="relative z-10 py-8 sm:py-12 px-4 sm:px-6 border-t border-white/10">
         <div className="max-w-4xl mx-auto text-center">
-          <p className="text-sm text-white/50 animate-fade-simple">
+          <p className="text-xs sm:text-sm text-white/50 animate-fade-simple">
             © 2025 | Desenvolvido por Seivi | CNPJ: 52.607.164/0001-85
           </p>
         </div>
