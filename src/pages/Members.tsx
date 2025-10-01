@@ -22,11 +22,26 @@ export default function Members() {
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
+    checkAdmin();
     loadMembers();
   }, []);
+
+  const checkAdmin = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", session.user.id)
+      .single();
+
+    setIsAdmin(data?.role === "admin");
+  };
 
   useEffect(() => {
     if (searchTerm) {
@@ -103,7 +118,11 @@ export default function Members() {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredMembers.map((member) => (
-              <Card key={member.id} className="hover:shadow-lg transition-shadow">
+              <Card 
+                key={member.id} 
+                className="hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => isAdmin && navigate(`/members/${member.id}`)}
+              >
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <CardTitle className="text-lg">{member.full_name}</CardTitle>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +21,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Company {
   id?: string;
@@ -47,13 +48,13 @@ interface Quota {
   };
 }
 
-export default function Profile() {
+export default function MemberEdit() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [newPassword, setNewPassword] = useState("");
-  const [userId, setUserId] = useState("");
+  const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -61,6 +62,7 @@ export default function Profile() {
     full_name: "",
     phone: "",
     instagram: "",
+    role: "member" as "admin" | "member",
     address_cep: "",
     address_street: "",
     address_number: "",
@@ -74,55 +76,61 @@ export default function Profile() {
   const [quotas, setQuotas] = useState<Quota[]>([]);
 
   useEffect(() => {
-    loadProfile();
-  }, []);
+    checkAdmin();
+    loadMember();
+  }, [id]);
 
-  const loadProfile = async () => {
-    setLoading(true);
+  const checkAdmin = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    
     if (!session) {
       navigate("/auth");
       return;
     }
 
-    setUserId(session.user.id);
+    const { data } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", session.user.id)
+      .single();
 
-    // Load profile
+    if (data?.role !== "admin") {
+      navigate("/dashboard");
+    }
+  };
+
+  const loadMember = async () => {
+    if (!id) return;
+    
+    setLoading(true);
+
     const { data: profileData } = await supabase
       .from("profiles")
       .select("*")
-      .eq("id", session.user.id)
+      .eq("id", id)
       .single();
 
     if (profileData) {
       setProfile(profileData);
     }
 
-    // Load companies
     const { data: memberCompanies } = await supabase
       .from("member_companies")
-      .select(`
-        companies (*)
-      `)
-      .eq("member_id", session.user.id);
+      .select(`companies (*)`)
+      .eq("member_id", id);
 
     if (memberCompanies) {
       setCompanies(memberCompanies.map((mc: any) => mc.companies));
     }
 
-    // Load quotas
     const { data: quotasData } = await supabase
       .from("quotas")
       .select(`
         id,
         quota_number,
         status,
-        consortium_groups (
-          description
-        )
+        consortium_groups (description)
       `)
-      .eq("member_id", session.user.id);
+      .eq("member_id", id);
 
     if (quotasData) {
       setQuotas(quotasData.map((q: any) => ({
@@ -206,24 +214,20 @@ export default function Profile() {
     setSaving(true);
 
     try {
-      // Update profile
       const { error: profileError } = await supabase
         .from("profiles")
         .update(profile)
-        .eq("id", userId);
+        .eq("id", id);
 
       if (profileError) throw profileError;
 
-      // Handle companies
       for (const company of companies) {
         if (company.id) {
-          // Update existing company
           await supabase
             .from("companies")
             .update(company)
             .eq("id", company.id);
         } else {
-          // Insert new company
           const { data: newCompany, error: companyError } = await supabase
             .from("companies")
             .insert({
@@ -235,20 +239,21 @@ export default function Profile() {
 
           if (companyError) throw companyError;
 
-          // Link company to member
           await supabase
             .from("member_companies")
             .insert({
-              member_id: userId,
+              member_id: id,
               company_id: newCompany.id,
             });
         }
       }
 
       toast({
-        title: "Perfil atualizado",
-        description: "Suas informações foram salvas com sucesso",
+        title: "Membro atualizado",
+        description: "As informações foram salvas com sucesso",
       });
+      
+      navigate("/members");
     } catch (error: any) {
       toast({
         title: "Erro ao salvar",
@@ -257,27 +262,6 @@ export default function Profile() {
       });
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    try {
-      const { error } = await supabase.auth.admin.deleteUser(userId);
-      
-      if (error) throw error;
-
-      toast({
-        title: "Conta excluída",
-        description: "Sua conta foi excluída com sucesso",
-      });
-      
-      navigate("/auth");
-    } catch (error: any) {
-      toast({
-        title: "Erro ao excluir conta",
-        description: error.message,
-        variant: "destructive",
-      });
     }
   };
 
@@ -292,15 +276,16 @@ export default function Profile() {
     }
 
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
+      const { error } = await supabase.auth.admin.updateUserById(
+        id!,
+        { password: newPassword }
+      );
 
       if (error) throw error;
 
       toast({
         title: "Senha alterada",
-        description: "Sua senha foi alterada com sucesso",
+        description: "A senha foi alterada com sucesso",
       });
 
       setShowPasswordDialog(false);
@@ -308,6 +293,27 @@ export default function Profile() {
     } catch (error: any) {
       toast({
         title: "Erro ao alterar senha",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      const { error } = await supabase.auth.admin.deleteUser(id!);
+      
+      if (error) throw error;
+
+      toast({
+        title: "Conta excluída",
+        description: "A conta foi excluída com sucesso",
+      });
+      
+      navigate("/members");
+    } catch (error: any) {
+      toast({
+        title: "Erro ao excluir conta",
         description: error.message,
         variant: "destructive",
       });
@@ -337,8 +343,7 @@ export default function Profile() {
   const removeCompany = async (index: number) => {
     const company = companies[index];
     if (company.id) {
-      // Delete from database
-      await supabase.from("companies").delete().eq("id", company.id);
+      await supabase.from("member_companies").delete().eq("member_id", id).eq("company_id", company.id);
     }
     setCompanies(companies.filter((_, i) => i !== index));
   };
@@ -355,13 +360,12 @@ export default function Profile() {
 
   return (
     <Layout>
-      <div className="p-6 space-y-6 max-w-4xl mx-auto">
+      <div className="p-6 max-w-4xl mx-auto space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Meu Perfil</h1>
-          <p className="text-muted-foreground">Gerencie suas informações pessoais e empresas</p>
+          <h1 className="text-3xl font-bold">Editar Membro</h1>
+          <p className="text-muted-foreground">Gerencie as informações do membro</p>
         </div>
 
-        {/* Personal Information */}
         <Card>
           <CardHeader>
             <CardTitle>Informações Pessoais</CardTitle>
@@ -369,34 +373,45 @@ export default function Profile() {
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="full_name">Nome Completo *</Label>
+                <Label>Nome Completo</Label>
                 <Input
-                  id="full_name"
                   value={profile.full_name}
                   onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Telefone *</Label>
+                <Label>Telefone</Label>
                 <Input
-                  id="phone"
                   value={profile.phone}
                   onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="instagram">Instagram</Label>
-              <Input
-                id="instagram"
-                placeholder="@seuusuario"
-                value={profile.instagram || ""}
-                onChange={(e) => setProfile({ ...profile, instagram: e.target.value })}
-              />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Instagram</Label>
+                <Input
+                  placeholder="@usuario"
+                  value={profile.instagram || ""}
+                  onChange={(e) => setProfile({ ...profile, instagram: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Nível de Acesso</Label>
+                <Select value={profile.role} onValueChange={(value: "admin" | "member") => setProfile({ ...profile, role: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="member">Membro</SelectItem>
+                    <SelectItem value="admin">Administrador</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div className="pt-4 border-t mt-4">
+            <div className="pt-4">
               <Button variant="outline" onClick={() => setShowPasswordDialog(true)}>
                 Alterar Senha
               </Button>
@@ -404,7 +419,6 @@ export default function Profile() {
           </CardContent>
         </Card>
 
-        {/* Address */}
         <Card>
           <CardHeader>
             <CardTitle>Endereço</CardTitle>
@@ -412,92 +426,297 @@ export default function Profile() {
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="address_cep">CEP</Label>
+                <Label>CEP</Label>
                 <div className="flex gap-2">
                   <Input
-                    id="address_cep"
                     value={profile.address_cep || ""}
                     onChange={(e) => setProfile({ ...profile, address_cep: e.target.value })}
                   />
                   <Button
-                    type="button"
                     variant="outline"
                     size="icon"
                     onClick={() => handleCepSearch(profile.address_cep, false)}
+                    disabled={!profile.address_cep}
                   >
                     <Search className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="address_street">Rua</Label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="sm:col-span-2 space-y-2">
+                <Label>Rua</Label>
                 <Input
-                  id="address_street"
                   value={profile.address_street || ""}
                   onChange={(e) => setProfile({ ...profile, address_street: e.target.value })}
                 />
               </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="address_number">Número</Label>
+                <Label>Número</Label>
                 <Input
-                  id="address_number"
                   value={profile.address_number || ""}
                   onChange={(e) => setProfile({ ...profile, address_number: e.target.value })}
                 />
               </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="address_complement">Complemento</Label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Complemento</Label>
                 <Input
-                  id="address_complement"
                   value={profile.address_complement || ""}
                   onChange={(e) => setProfile({ ...profile, address_complement: e.target.value })}
                 />
               </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="address_neighborhood">Bairro</Label>
+                <Label>Bairro</Label>
                 <Input
-                  id="address_neighborhood"
                   value={profile.address_neighborhood || ""}
                   onChange={(e) => setProfile({ ...profile, address_neighborhood: e.target.value })}
                 />
               </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="address_city">Cidade</Label>
+                <Label>Cidade</Label>
                 <Input
-                  id="address_city"
                   value={profile.address_city || ""}
                   onChange={(e) => setProfile({ ...profile, address_city: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="address_state">Estado</Label>
+                <Label>Estado</Label>
                 <Input
-                  id="address_state"
-                  value={profile.address_state || ""}
-                  onChange={(e) => setProfile({ ...profile, address_state: e.target.value })}
                   maxLength={2}
+                  value={profile.address_state || ""}
+                  onChange={(e) => setProfile({ ...profile, address_state: e.target.value.toUpperCase() })}
                 />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Quotas */}
+        {/* Companies Section - keeping existing code structure */}
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle>Empresas</CardTitle>
+              <Button onClick={addCompany} size="sm">
+                <Plus className="mr-2 h-4 w-4" />
+                Adicionar Empresa
+              </Button>
+            </div>
+            <CardDescription>Empresas vinculadas a este membro</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {companies.map((company, index) => (
+              <Card key={index} className="border-2">
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-lg">Empresa {index + 1}</CardTitle>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeCompany(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Company form fields - same as Profile.tsx */}
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>CNPJ</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={company.cnpj}
+                          onChange={(e) => {
+                            const newCompanies = [...companies];
+                            newCompanies[index].cnpj = e.target.value;
+                            setCompanies(newCompanies);
+                          }}
+                        />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleCnpjSearch(company.cnpj, index)}
+                          disabled={!company.cnpj}
+                        >
+                          <Search className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Nome</Label>
+                      <Input
+                        value={company.name}
+                        onChange={(e) => {
+                          const newCompanies = [...companies];
+                          newCompanies[index].name = e.target.value;
+                          setCompanies(newCompanies);
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Descrição</Label>
+                    <Textarea
+                      value={company.description}
+                      onChange={(e) => {
+                        const newCompanies = [...companies];
+                        newCompanies[index].description = e.target.value;
+                        setCompanies(newCompanies);
+                      }}
+                    />
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Telefone</Label>
+                      <Input
+                        value={company.phone}
+                        onChange={(e) => {
+                          const newCompanies = [...companies];
+                          newCompanies[index].phone = e.target.value;
+                          setCompanies(newCompanies);
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Instagram</Label>
+                      <Input
+                        placeholder="@empresa"
+                        value={company.instagram}
+                        onChange={(e) => {
+                          const newCompanies = [...companies];
+                          newCompanies[index].instagram = e.target.value;
+                          setCompanies(newCompanies);
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Address fields for company */}
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label>CEP</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={company.address_cep}
+                          onChange={(e) => {
+                            const newCompanies = [...companies];
+                            newCompanies[index].address_cep = e.target.value;
+                            setCompanies(newCompanies);
+                          }}
+                        />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleCepSearch(company.address_cep, true, index)}
+                          disabled={!company.address_cep}
+                        >
+                          <Search className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="sm:col-span-2 space-y-2">
+                      <Label>Rua</Label>
+                      <Input
+                        value={company.address_street}
+                        onChange={(e) => {
+                          const newCompanies = [...companies];
+                          newCompanies[index].address_street = e.target.value;
+                          setCompanies(newCompanies);
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Número</Label>
+                      <Input
+                        value={company.address_number}
+                        onChange={(e) => {
+                          const newCompanies = [...companies];
+                          newCompanies[index].address_number = e.target.value;
+                          setCompanies(newCompanies);
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Complemento</Label>
+                      <Input
+                        value={company.address_complement}
+                        onChange={(e) => {
+                          const newCompanies = [...companies];
+                          newCompanies[index].address_complement = e.target.value;
+                          setCompanies(newCompanies);
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Bairro</Label>
+                      <Input
+                        value={company.address_neighborhood}
+                        onChange={(e) => {
+                          const newCompanies = [...companies];
+                          newCompanies[index].address_neighborhood = e.target.value;
+                          setCompanies(newCompanies);
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Cidade</Label>
+                      <Input
+                        value={company.address_city}
+                        onChange={(e) => {
+                          const newCompanies = [...companies];
+                          newCompanies[index].address_city = e.target.value;
+                          setCompanies(newCompanies);
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Estado</Label>
+                      <Input
+                        maxLength={2}
+                        value={company.address_state}
+                        onChange={(e) => {
+                          const newCompanies = [...companies];
+                          newCompanies[index].address_state = e.target.value.toUpperCase();
+                          setCompanies(newCompanies);
+                        }}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Quotas Display */}
         {quotas.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>Minhas Cotas</CardTitle>
+              <CardTitle>Cotas do Membro</CardTitle>
+              <CardDescription>Cotas de consórcio vinculadas</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 {quotas.map((quota) => (
-                  <div key={quota.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div key={quota.id} className="flex items-center justify-between p-3 border rounded">
                     <div>
                       <p className="font-medium">{quota.group.description}</p>
                       <p className="text-sm text-muted-foreground">Cota #{quota.quota_number}</p>
@@ -512,248 +731,31 @@ export default function Profile() {
           </Card>
         )}
 
-        {/* Companies */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Empresas</CardTitle>
-                <CardDescription>Gerencie suas empresas</CardDescription>
-              </div>
-              <Button onClick={addCompany} size="sm">
-                <Plus className="mr-2 h-4 w-4" />
-                Adicionar Empresa
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {companies.map((company, index) => (
-              <div key={index} className="space-y-4 p-4 border rounded-lg">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold">Empresa {index + 1}</h3>
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => removeCompany(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>CNPJ</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={company.cnpj}
-                        onChange={(e) => {
-                          const newCompanies = [...companies];
-                          newCompanies[index].cnpj = e.target.value;
-                          setCompanies(newCompanies);
-                        }}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handleCnpjSearch(company.cnpj, index)}
-                      >
-                        <Search className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Nome da Empresa *</Label>
-                    <Input
-                      value={company.name}
-                      onChange={(e) => {
-                        const newCompanies = [...companies];
-                        newCompanies[index].name = e.target.value;
-                        setCompanies(newCompanies);
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Descrição</Label>
-                  <Textarea
-                    value={company.description}
-                    onChange={(e) => {
-                      const newCompanies = [...companies];
-                      newCompanies[index].description = e.target.value;
-                      setCompanies(newCompanies);
-                    }}
-                  />
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Telefone</Label>
-                    <Input
-                      value={company.phone}
-                      onChange={(e) => {
-                        const newCompanies = [...companies];
-                        newCompanies[index].phone = e.target.value;
-                        setCompanies(newCompanies);
-                      }}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Instagram</Label>
-                    <Input
-                      placeholder="@empresa"
-                      value={company.instagram}
-                      onChange={(e) => {
-                        const newCompanies = [...companies];
-                        newCompanies[index].instagram = e.target.value;
-                        setCompanies(newCompanies);
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label>CEP</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={company.address_cep}
-                        onChange={(e) => {
-                          const newCompanies = [...companies];
-                          newCompanies[index].address_cep = e.target.value;
-                          setCompanies(newCompanies);
-                        }}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handleCepSearch(company.address_cep, true, index)}
-                      >
-                        <Search className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="space-y-2 sm:col-span-2">
-                    <Label>Rua</Label>
-                    <Input
-                      value={company.address_street}
-                      onChange={(e) => {
-                        const newCompanies = [...companies];
-                        newCompanies[index].address_street = e.target.value;
-                        setCompanies(newCompanies);
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label>Número</Label>
-                    <Input
-                      value={company.address_number}
-                      onChange={(e) => {
-                        const newCompanies = [...companies];
-                        newCompanies[index].address_number = e.target.value;
-                        setCompanies(newCompanies);
-                      }}
-                    />
-                  </div>
-                  <div className="space-y-2 sm:col-span-2">
-                    <Label>Complemento</Label>
-                    <Input
-                      value={company.address_complement}
-                      onChange={(e) => {
-                        const newCompanies = [...companies];
-                        newCompanies[index].address_complement = e.target.value;
-                        setCompanies(newCompanies);
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label>Bairro</Label>
-                    <Input
-                      value={company.address_neighborhood}
-                      onChange={(e) => {
-                        const newCompanies = [...companies];
-                        newCompanies[index].address_neighborhood = e.target.value;
-                        setCompanies(newCompanies);
-                      }}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Cidade</Label>
-                    <Input
-                      value={company.address_city}
-                      onChange={(e) => {
-                        const newCompanies = [...companies];
-                        newCompanies[index].address_city = e.target.value;
-                        setCompanies(newCompanies);
-                      }}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Estado</Label>
-                    <Input
-                      value={company.address_state}
-                      onChange={(e) => {
-                        const newCompanies = [...companies];
-                        newCompanies[index].address_state = e.target.value;
-                        setCompanies(newCompanies);
-                      }}
-                      maxLength={2}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {companies.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>Nenhuma empresa cadastrada</p>
-                <Button onClick={addCompany} className="mt-4" variant="outline">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Adicionar Primeira Empresa
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4">
+          <Button variant="outline" onClick={() => navigate("/members")} className="flex-1">
+            Cancelar
+          </Button>
+          <Button variant="destructive" onClick={() => setShowDeleteDialog(true)} className="flex-1">
+            Excluir Conta
+          </Button>
           <Button onClick={handleSave} disabled={saving} className="flex-1">
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Salvar Alterações
           </Button>
-          <Button
-            variant="destructive"
-            onClick={() => setShowDeleteDialog(true)}
-            className="sm:w-auto"
-          >
-            Excluir Conta
-          </Button>
         </div>
 
-        {/* Delete Confirmation Dialog */}
+        {/* Delete Dialog */}
         <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+              <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
               <AlertDialogDescription>
-                Esta ação não pode ser desfeita. Sua conta e todos os dados associados serão
-                permanentemente excluídos.
+                Esta ação não pode ser desfeita. A conta do membro será permanentemente excluída.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive">
-                Confirmar Exclusão
-              </AlertDialogAction>
+              <AlertDialogAction onClick={handleDeleteAccount}>Confirmar Exclusão</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -764,7 +766,7 @@ export default function Profile() {
             <AlertDialogHeader>
               <AlertDialogTitle>Alterar Senha</AlertDialogTitle>
               <AlertDialogDescription>
-                Digite sua nova senha (mínimo 6 caracteres)
+                Digite a nova senha para o membro (mínimo 6 caracteres)
               </AlertDialogDescription>
             </AlertDialogHeader>
             <div className="py-4">

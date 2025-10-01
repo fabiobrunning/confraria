@@ -12,6 +12,7 @@ import Groups from "./pages/Groups";
 import GroupNew from "./pages/GroupNew";
 import GroupEdit from "./pages/GroupEdit";
 import Profile from "./pages/Profile";
+import MemberEdit from "./pages/MemberEdit";
 import Setup from "./pages/Setup";
 import NotFound from "./pages/NotFound";
 
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/pre-register" element={<PreRegister />} />
           <Route path="/members" element={<Members />} />
+          <Route path="/members/:id" element={<MemberEdit />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/companies" element={<Companies />} />
           <Route path="/groups" element={<Groups />} />
