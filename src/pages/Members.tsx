@@ -134,27 +134,29 @@ export default function Members() {
                 <CardContent className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-muted-foreground" />
-                    <a
-                      href={formatPhone(member.phone)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm hover:text-accent transition-colors"
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(formatPhone(member.phone), '_blank');
+                      }}
+                      className="text-sm hover:text-accent transition-colors text-left"
                     >
                       {member.phone}
-                    </a>
+                    </button>
                   </div>
 
                   {member.instagram && (
                     <div className="flex items-center gap-2">
                       <Instagram className="h-4 w-4 text-muted-foreground" />
-                      <a
-                        href={`https://www.instagram.com/${member.instagram.replace("@", "")}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm hover:text-accent transition-colors"
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(`https://www.instagram.com/${member.instagram!.replace("@", "")}`, '_blank');
+                        }}
+                        className="text-sm hover:text-accent transition-colors text-left"
                       >
                         {member.instagram}
-                      </a>
+                      </button>
                     </div>
                   )}
 

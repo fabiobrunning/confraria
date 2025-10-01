@@ -102,28 +102,30 @@ export default function Companies() {
                     {company.phone && (
                       <div className="flex items-center gap-2">
                         <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        <a
-                          href={formatPhone(company.phone)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm hover:text-accent transition-colors"
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(formatPhone(company.phone!), '_blank');
+                          }}
+                          className="text-sm hover:text-accent transition-colors text-left"
                         >
                           {company.phone}
-                        </a>
+                        </button>
                       </div>
                     )}
 
                     {company.instagram && (
                       <div className="flex items-center gap-2">
                         <Instagram className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        <a
-                          href={`https://www.instagram.com/${company.instagram.replace("@", "")}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm hover:text-accent transition-colors"
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(`https://www.instagram.com/${company.instagram!.replace("@", "")}`, '_blank');
+                          }}
+                          className="text-sm hover:text-accent transition-colors text-left"
                         >
                           {company.instagram}
-                        </a>
+                        </button>
                       </div>
                     )}
 
