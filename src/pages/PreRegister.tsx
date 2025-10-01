@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,78 +18,75 @@ export default function PreRegister() {
     role: "member" as "admin" | "member",
   });
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const generateRandomPassword = () => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let password = "";
-    for (let i = 0; i < 8; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return password;
-  };
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/auth");
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (profile?.role !== "admin") {
+        toast({
+          title: "Acesso negado",
+          description: "Apenas administradores podem acessar esta página",
+          variant: "destructive",
+        });
+        navigate("/dashboard");
+      }
+    };
+
+    checkAdmin();
+  }, [navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const randomPassword = generateRandomPassword();
-      const email = `${formData.phone.replace(/\D/g, "")}@confraria.local`;
-
-      // Create auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password: randomPassword,
-        options: {
-          data: {
-            full_name: formData.fullName,
-            phone: formData.phone,
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pre-register-member`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session?.access_token}`,
           },
-        },
+          body: JSON.stringify({
+            fullName: formData.fullName,
+            phone: formData.phone,
+            role: formData.role,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      toast({
+        title: "Pré-cadastro realizado com sucesso!",
+        description: `Senha gerada: ${result.password}`,
       });
 
-      if (authError) throw authError;
-
-      if (authData.user) {
-        // Create profile
-        const { error: profileError } = await supabase.from("profiles").insert({
-          id: authData.user.id,
-          full_name: formData.fullName,
-          phone: formData.phone,
-          role: formData.role,
-        });
-
-        if (profileError) throw profileError;
-
-        // Send webhook notification
-        try {
-          await fetch("https://n8n-n8n.xm9jj7.easypanel.host/webhook-test/cadastro", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              nome: formData.fullName,
-              telefone: formData.phone,
-            }),
-          });
-        } catch (webhookError) {
-          console.error("Erro ao enviar webhook:", webhookError);
-          // Não interrompe o fluxo se o webhook falhar
-        }
-
-        toast({
-          title: "Pré-cadastro realizado com sucesso!",
-          description: `Senha gerada: ${randomPassword}`,
-        });
-
-        // Reset form
-        setFormData({
-          fullName: "",
-          phone: "",
-          role: "member",
-        });
-      }
+      // Reset form
+      setFormData({
+        fullName: "",
+        phone: "",
+        role: "member",
+      });
     } catch (error: any) {
       toast({
         title: "Erro ao realizar pré-cadastro",
