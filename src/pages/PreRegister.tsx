@@ -52,33 +52,25 @@ export default function PreRegister() {
     setLoading(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pre-register-member`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${session?.access_token}`,
-          },
-          body: JSON.stringify({
-            fullName: formData.fullName,
-            phone: formData.phone,
-            role: formData.role,
-          }),
-        }
-      );
+      const { data, error } = await supabase.functions.invoke('pre-register-member', {
+        body: {
+          fullName: formData.fullName,
+          phone: formData.phone,
+          role: formData.role,
+        },
+      });
 
-      const result = await response.json();
+      if (error) {
+        throw error;
+      }
 
-      if (!result.success) {
-        throw new Error(result.error);
+      if (!data.success) {
+        throw new Error(data.error);
       }
 
       toast({
         title: "Pré-cadastro realizado com sucesso!",
-        description: `Senha gerada: ${result.password}`,
+        description: `Senha gerada: ${data.password}`,
       });
 
       // Reset form
@@ -90,7 +82,7 @@ export default function PreRegister() {
     } catch (error: any) {
       toast({
         title: "Erro ao realizar pré-cadastro",
-        description: error.message,
+        description: error.message || "Erro desconhecido",
         variant: "destructive",
       });
     } finally {
