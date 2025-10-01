@@ -12,6 +12,7 @@ import Groups from "./pages/Groups";
 import GroupNew from "./pages/GroupNew";
 import GroupEdit from "./pages/GroupEdit";
 import Profile from "./pages/Profile";
+import Setup from "./pages/Setup";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/groups" element={<Groups />} />
           <Route path="/groups/new" element={<GroupNew />} />
           <Route path="/groups/:id" element={<GroupEdit />} />
+          <Route path="/setup" element={<Setup />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
