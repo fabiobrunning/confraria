@@ -129,7 +129,7 @@ export default function Members() {
                     <div className="flex items-center gap-2">
                       <Instagram className="h-4 w-4 text-muted-foreground" />
                       <a
-                        href={`https://instagram.com/${member.instagram.replace("@", "")}`}
+                        href={`https://www.instagram.com/${member.instagram.replace("@", "")}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-sm hover:text-accent transition-colors"

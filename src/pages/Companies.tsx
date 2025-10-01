@@ -117,7 +117,7 @@ export default function Companies() {
                       <div className="flex items-center gap-2">
                         <Instagram className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         <a
-                          href={`https://instagram.com/${company.instagram.replace("@", "")}`}
+                          href={`https://www.instagram.com/${company.instagram.replace("@", "")}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-sm hover:text-accent transition-colors"
