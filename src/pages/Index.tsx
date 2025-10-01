@@ -87,11 +87,9 @@ export default function Index() {
               style={{ background: 'rgba(0, 0, 0, 0.2)' }}>
         <div className="max-w-screen-2xl mx-auto h-full flex items-center justify-between px-6">
           <div className="animate-slide-in-left opacity-0 delay-100 flex items-center">
-            <img 
-              src="/Confraria branca-D3ESDbvP.png" 
-              alt="Confraria Pedra Branca" 
-              className="animate-float w-[300px] h-auto object-contain"
-            />
+            <h1 className="text-white text-2xl font-bold font-[Archive] tracking-wider">
+              CONFRARIA PEDRA BRANCA
+            </h1>
           </div>
           <button
             onClick={() => navigate("/auth")}
