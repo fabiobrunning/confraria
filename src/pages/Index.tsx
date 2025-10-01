@@ -90,7 +90,7 @@ export default function Index() {
             <img 
               src="/logo-confraria.png" 
               alt="Confraria Pedra Branca" 
-              className="animate-float h-12 sm:h-16 w-auto object-contain"
+              className="animate-float h-18 sm:h-24 w-auto object-contain"
             />
           </div>
           <button
