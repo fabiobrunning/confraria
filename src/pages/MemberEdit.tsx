@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useAdmin } from "@/hooks/use-admin";
-import { Loader as Loader2, Plus, Trash2, Search } from "lucide-react";
+import { Loader2, Plus, Trash2, Search } from "lucide-react";
 import { fetchAddressByCep, fetchCompanyByCnpj } from "@/utils/apis";
 import {
   AlertDialog,
@@ -279,31 +279,12 @@ export default function MemberEdit() {
     }
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error("Sessão não encontrada");
-      }
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-user-password`,
-        {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${session.access_token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId: id,
-            password: newPassword,
-          }),
-        }
+      const { error } = await supabase.auth.admin.updateUserById(
+        id!,
+        { password: newPassword }
       );
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Erro ao alterar senha");
-      }
+      if (error) throw error;
 
       toast({
         title: "Senha alterada",
@@ -323,36 +304,15 @@ export default function MemberEdit() {
 
   const handleDeleteAccount = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error("Sessão não encontrada");
-      }
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`,
-        {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${session.access_token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId: id,
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Erro ao excluir conta");
-      }
+      const { error } = await supabase.auth.admin.deleteUser(id!);
+      
+      if (error) throw error;
 
       toast({
         title: "Conta excluída",
         description: "A conta foi excluída com sucesso",
       });
-
+      
       navigate("/members");
     } catch (error: unknown) {
       toast({
