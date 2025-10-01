@@ -86,15 +86,17 @@ export default function GroupEdit() {
           if (quota.id) {
             await supabase.from("quotas").update({
               member_id: quota.member_id,
-              status: quota.status,
+              status: quota.status as QuotaStatus,
             }).eq("id", quota.id);
           } else {
-            await supabase.from("quotas").insert({
-              group_id: id,
-              quota_number: quota.quota_number,
-              member_id: quota.member_id,
-              status: quota.status,
-            });
+            await supabase.from("quotas").insert([
+              {
+                group_id: id as string,
+                quota_number: quota.quota_number,
+                member_id: quota.member_id,
+                status: quota.status as QuotaStatus,
+              },
+            ]);
           }
         }
       }
