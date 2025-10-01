@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Building2, Layers, TrendingUp } from "lucide-react";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     members: 0,
     companies: 0,
@@ -38,24 +40,28 @@ export default function Dashboard() {
       value: stats.members,
       icon: Users,
       color: "text-primary",
+      link: "/members",
     },
     {
       title: "Empresas Cadastradas",
       value: stats.companies,
       icon: Building2,
       color: "text-accent",
+      link: "/companies",
     },
     {
       title: "Grupos de Consórcio",
       value: stats.groups,
       icon: Layers,
       color: "text-success",
+      link: "/groups",
     },
     {
       title: "Cotas Ativas",
       value: stats.activeQuotas,
       icon: TrendingUp,
       color: "text-primary",
+      link: null,
     },
   ];
 
@@ -69,7 +75,11 @@ export default function Dashboard() {
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {statCards.map((stat) => (
-            <Card key={stat.title} className="hover:shadow-lg transition-shadow">
+            <Card 
+              key={stat.title} 
+              className={`hover:shadow-lg transition-all ${stat.link ? 'cursor-pointer hover:scale-105' : ''}`}
+              onClick={() => stat.link && navigate(stat.link)}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
                 <stat.icon className={`h-5 w-5 ${stat.color}`} />
