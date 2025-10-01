@@ -8,10 +8,23 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+
+interface PreRegisteredMember {
+  id: string;
+  full_name: string;
+  phone: string;
+  role: string;
+  created_at: string;
+  address_street: string | null;
+}
 
 export default function PreRegister() {
   const [loading, setLoading] = useState(false);
+  const [resendingId, setResendingId] = useState<string | null>(null);
+  const [preRegisteredMembers, setPreRegisteredMembers] = useState<PreRegisteredMember[]>([]);
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -19,6 +32,21 @@ export default function PreRegister() {
   });
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const fetchPreRegisteredMembers = async () => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, full_name, phone, role, created_at, address_street")
+      .is("address_street", null)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Erro ao buscar membros pré-cadastrados:", error);
+      return;
+    }
+
+    setPreRegisteredMembers(data || []);
+  };
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -41,7 +69,10 @@ export default function PreRegister() {
           variant: "destructive",
         });
         navigate("/dashboard");
+        return;
       }
+
+      fetchPreRegisteredMembers();
     };
 
     checkAdmin();
@@ -79,6 +110,9 @@ export default function PreRegister() {
         phone: "",
         role: "member",
       });
+
+      // Refresh list
+      fetchPreRegisteredMembers();
     } catch (error: any) {
       toast({
         title: "Erro ao realizar pré-cadastro",
@@ -87,6 +121,39 @@ export default function PreRegister() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendCredentials = async (memberId: string, phone: string, fullName: string) => {
+    setResendingId(memberId);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('pre-register-member', {
+        body: {
+          fullName,
+          phone,
+          role: "member",
+        },
+      });
+
+      if (error) throw error;
+
+      if (!data.success) {
+        throw new Error(data.error);
+      }
+
+      toast({
+        title: "Credenciais reenviadas!",
+        description: `Nova senha gerada: ${data.password}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao reenviar credenciais",
+        description: error.message || "Erro desconhecido",
+        variant: "destructive",
+      });
+    } finally {
+      setResendingId(null);
     }
   };
 
@@ -156,6 +223,70 @@ export default function PreRegister() {
                   Realizar Pré-Cadastro
                 </Button>
               </form>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Membros Pré-Cadastrados</CardTitle>
+              <CardDescription>
+                Membros que ainda não finalizaram o cadastro completo
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {preRegisteredMembers.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Nenhum membro pré-cadastrado encontrado
+                </p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Telefone</TableHead>
+                      <TableHead>Nível</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {preRegisteredMembers.map((member) => (
+                      <TableRow key={member.id}>
+                        <TableCell className="font-medium">{member.full_name}</TableCell>
+                        <TableCell>{member.phone}</TableCell>
+                        <TableCell>
+                          <Badge variant={member.role === "admin" ? "default" : "secondary"}>
+                            {member.role === "admin" ? "Administrador" : "Membro"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(member.created_at).toLocaleDateString("pt-BR")}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleResendCredentials(member.id, member.phone, member.full_name)}
+                            disabled={resendingId === member.id}
+                          >
+                            {resendingId === member.id ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Enviando...
+                              </>
+                            ) : (
+                              <>
+                                <RefreshCw className="mr-2 h-4 w-4" />
+                                Reenviar Acesso
+                              </>
+                            )}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </div>
