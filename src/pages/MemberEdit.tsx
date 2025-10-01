@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useAdmin } from "@/hooks/use-admin";
-import { Loader2, Plus, Trash2, Search } from "lucide-react";
+import { Loader as Loader2, Plus, Trash2, Search } from "lucide-react";
 import { fetchAddressByCep, fetchCompanyByCnpj } from "@/utils/apis";
 import {
   AlertDialog,
