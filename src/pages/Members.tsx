@@ -136,10 +136,11 @@ export default function Members() {
                     <Phone className="h-4 w-4 text-muted-foreground" />
                     <button
                       onClick={(e) => {
+                        e.preventDefault();
                         e.stopPropagation();
-                        window.open(formatPhone(member.phone), '_blank');
+                        window.open(formatPhone(member.phone), '_blank', 'noopener,noreferrer');
                       }}
-                      className="text-sm hover:text-accent transition-colors text-left"
+                      className="text-sm hover:text-accent hover:underline transition-colors text-left cursor-pointer"
                     >
                       {member.phone}
                     </button>
@@ -150,10 +151,12 @@ export default function Members() {
                       <Instagram className="h-4 w-4 text-muted-foreground" />
                       <button
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
-                          window.open(`https://www.instagram.com/${member.instagram!.replace("@", "")}`, '_blank');
+                          const username = member.instagram!.replace(/[@\s]/g, "");
+                          window.open(`https://www.instagram.com/${username}`, '_blank', 'noopener,noreferrer');
                         }}
-                        className="text-sm hover:text-accent transition-colors text-left"
+                        className="text-sm hover:text-accent hover:underline transition-colors text-left cursor-pointer"
                       >
                         {member.instagram}
                       </button>
