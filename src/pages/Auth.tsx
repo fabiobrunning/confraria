@@ -7,11 +7,17 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { useAsyncAction } from "@/hooks/use-async";
+import { authSchema, type AuthFormData } from "@/schemas";
+import { logError } from "@/utils/logger";
 
 export default function Auth() {
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<AuthFormData>({
+    phone: "",
+    password: "",
+  });
+  const [validationErrors, setValidationErrors] = useState<Partial<AuthFormData>>({});
+  const { loading, error, execute } = useAsyncAction();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -32,45 +38,60 @@ export default function Auth() {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  const validateForm = (): boolean => {
+    try {
+      authSchema.parse(formData);
+      setValidationErrors({});
+      return true;
+    } catch (error: unknown) {
+      const errors: Partial<AuthFormData> = {};
+      if (error && typeof error === 'object' && 'errors' in error) {
+        const zodError = error as { errors: Array<{ path: string[]; message: string }> };
+        zodError.errors?.forEach((err) => {
+          if (err.path[0]) {
+            errors[err.path[0] as keyof AuthFormData] = err.message;
+          }
+        });
+      }
+      setValidationErrors(errors);
+      return false;
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    
+    if (!validateForm()) {
+      return;
+    }
 
-    try {
+    const success = await execute(async () => {
       // Remove non-digits from phone and create email
-      const cleanPhone = phone.replace(/\D/g, "");
+      const cleanPhone = formData.phone.replace(/\D/g, "");
       const email = `${cleanPhone}@confraria.local`;
 
       // Try to sign in with the email/password
       const { error } = await supabase.auth.signInWithPassword({
         email,
-        password,
+        password: formData.password,
       });
 
       if (error) {
         // Check if it's an invalid credentials error
         if (error.message.includes("Invalid login credentials")) {
-          toast({
-            title: "Erro ao fazer login",
-            description: "Telefone ou senha incorretos.",
-            variant: "destructive",
-          });
+          throw new Error("Telefone ou senha incorretos.");
         } else {
-          toast({
-            title: "Erro ao fazer login",
-            description: error.message,
-            variant: "destructive",
-          });
+          throw new Error(error.message);
         }
       }
-    } catch (error: any) {
+    });
+
+    if (!success && error) {
       toast({
-        title: "Erro",
-        description: error?.message || "Ocorreu um erro ao fazer login.",
+        title: "Erro ao fazer login",
+        description: error,
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -94,11 +115,14 @@ export default function Auth() {
                 id="phone"
                 type="tel"
                 placeholder="(00) 00000-0000"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                required
+                value={formData.phone}
+                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                 disabled={loading}
+                className={validationErrors.phone ? "border-destructive" : ""}
               />
+              {validationErrors.phone && (
+                <p className="text-sm text-destructive">{validationErrors.phone}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
@@ -106,11 +130,14 @@ export default function Auth() {
                 id="password"
                 type="password"
                 placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+                value={formData.password}
+                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                 disabled={loading}
+                className={validationErrors.password ? "border-destructive" : ""}
               />
+              {validationErrors.password && (
+                <p className="text-sm text-destructive">{validationErrors.password}</p>
+              )}
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { logError } from "@/utils/logger";
 
 export default function Setup() {
   const [loading, setLoading] = useState(false);
@@ -30,7 +31,7 @@ export default function Setup() {
         setMasterExists(true);
       }
     } catch (error) {
-      console.error('Error checking master admin:', error);
+      logError(error, 'Setup - checkMasterAdmin');
     } finally {
       setChecking(false);
     }
@@ -74,10 +75,11 @@ export default function Setup() {
         // Sign out the user so they can log in properly
         await supabase.auth.signOut();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Erro ao criar usuário master";
       toast({
         title: "Erro",
-        description: error.message || "Erro ao criar usuário master",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useState, useMemo, useCallback, memo } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -26,7 +26,7 @@ interface Profile {
   role: string;
 }
 
-export default function Layout({ children }: LayoutProps) {
+function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -76,31 +76,34 @@ export default function Layout({ children }: LayoutProps) {
     setLoading(false);
   };
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     await supabase.auth.signOut();
     navigate("/auth");
     toast({
       title: "Logout realizado",
       description: "Você saiu do sistema com sucesso.",
     });
-  };
+  }, [navigate, toast]);
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = useCallback((path: string) => location.pathname === path, [location.pathname]);
 
-  const navigationItems = [
+  const navigationItems = useMemo(() => [
     { path: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { path: "/members", icon: Users, label: "Membros" },
     { path: "/companies", icon: Building2, label: "Empresas" },
     { path: "/groups", icon: Layers, label: "Grupos de Consórcio" },
-  ];
+  ], []);
 
-  const adminItems = profile?.role === "admin" 
-    ? [{ path: "/pre-register", icon: UserPlus, label: "Pré-Cadastro" }]
-    : [];
+  const adminItems = useMemo(() => 
+    profile?.role === "admin" 
+      ? [{ path: "/pre-register", icon: UserPlus, label: "Pré-Cadastro" }]
+      : [],
+    [profile?.role]
+  );
 
-  const allItems = [...navigationItems, ...adminItems];
+  const allItems = useMemo(() => [...navigationItems, ...adminItems], [navigationItems, adminItems]);
 
-  const NavContent = () => (
+  const NavContent = useCallback(() => (
     <>
       <div className="space-y-1">
         {allItems.map((item) => (
@@ -130,7 +133,7 @@ export default function Layout({ children }: LayoutProps) {
         </Button>
       </div>
     </>
-  );
+  ), [allItems, isActive, handleLogout]);
 
   if (loading) {
     return (
@@ -194,3 +197,5 @@ export default function Layout({ children }: LayoutProps) {
     </div>
   );
 }
+
+export default memo(Layout);

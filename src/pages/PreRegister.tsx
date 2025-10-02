@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAdmin } from "@/hooks/use-admin";
+import { logError } from "@/utils/logger";
 
 interface PreRegisteredMember {
   id: string;
@@ -45,7 +46,7 @@ export default function PreRegister() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Erro ao buscar membros pré-cadastrados:", error);
+      logError(error, "PreRegister - fetchPreRegisteredMembers");
       return;
     }
 
@@ -117,10 +118,11 @@ export default function PreRegister() {
 
       // Refresh list
       fetchPreRegisteredMembers();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
       toast({
         title: "Erro ao realizar pré-cadastro",
-        description: error.message || "Erro desconhecido",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -150,10 +152,11 @@ export default function PreRegister() {
         title: "Credenciais reenviadas!",
         description: `Nova senha gerada: ${data.password}`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
       toast({
         title: "Erro ao reenviar credenciais",
-        description: error.message || "Erro desconhecido",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -180,10 +183,11 @@ export default function PreRegister() {
         title: "Pré-cadastro excluído com sucesso!",
         description: "O usuário foi removido do sistema",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
       toast({
         title: "Erro ao excluir pré-cadastro",
-        description: error.message || "Erro desconhecido",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

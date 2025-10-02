@@ -1,11 +1,15 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Home, ArrowLeft } from "lucide-react";
 import { useEffect } from "react";
+import { logError } from "@/utils/logger";
 
 const NotFound = () => {
   const location = useLocation();
 
   useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
+    logError(new Error(`404 Error: User attempted to access non-existent route: ${location.pathname}`), "NotFound - routeAccess");
   }, [location.pathname]);
 
   return (

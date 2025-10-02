@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAdmin } from "@/hooks/use-admin";
 import { Loader as Loader2, Plus, Trash2, Search } from "lucide-react";
 import { fetchAddressByCep, fetchCompanyByCnpj } from "@/utils/apis";
+import { logError } from "@/utils/logger";
+import { memberProfileSchema, companySchema } from "@/schemas";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -320,7 +322,7 @@ export default function MemberEdit() {
       setShowPasswordDialog(false);
       setNewPassword("");
     } catch (error: unknown) {
-      console.error("Erro ao alterar senha:", error);
+      logError(error, "MemberEdit - handlePasswordChange");
       toast({
         title: "Erro ao alterar senha",
         description: error instanceof Error ? error.message : "Erro desconhecido. Verifique se as Edge Functions estão implantadas.",
@@ -372,7 +374,7 @@ export default function MemberEdit() {
         throw new Error('Erro ao gerar nova senha');
       }
     } catch (error: unknown) {
-      console.error("Erro ao resetar senha:", error);
+      logError(error, "MemberEdit - handlePasswordReset");
       toast({
         title: "Erro ao resetar senha",
         description: error instanceof Error ? error.message : "Erro desconhecido. Verifique se as Edge Functions estão implantadas.",

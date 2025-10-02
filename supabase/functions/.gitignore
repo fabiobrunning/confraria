@@ -1,0 +1,4 @@
+# Edge Functions são executadas no ambiente Deno
+# Excluir da análise TypeScript do projeto principal
+*.ts
+!deno.json

@@ -1,0 +1,6 @@
+# Edge Functions executam no ambiente Deno
+# Excluir da análise ESLint/TypeScript do projeto principal
+*.ts
+*.js
+**/*.ts
+**/*.js

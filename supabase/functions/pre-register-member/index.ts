@@ -1,4 +1,8 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+// @ts-nocheck
+// Edge Function para pré-cadastro de membros
+// Este arquivo é executado no ambiente Deno do Supabase Edge Functions
+
+import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

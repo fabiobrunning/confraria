@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,9 +18,88 @@ interface Member {
   companies: { name: string }[];
 }
 
-export default function Members() {
+interface MemberCardProps {
+  member: Member;
+  isAdmin: boolean;
+  onNavigate: (id: string) => void;
+  formatPhone: (phone: string) => string;
+}
+
+const MemberCard = memo(({ member, isAdmin, onNavigate, formatPhone }: MemberCardProps) => {
+  const handleCardClick = useCallback(() => {
+    if (isAdmin) {
+      onNavigate(member.id);
+    }
+  }, [isAdmin, onNavigate, member.id]);
+
+  const handlePhoneClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.open(formatPhone(member.phone), '_blank', 'noopener,noreferrer');
+  }, [formatPhone, member.phone]);
+
+  const handleInstagramClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const username = member.instagram!.replace(/[@\s]/g, "");
+    window.open(`https://www.instagram.com/${username}`, '_blank', 'noopener,noreferrer');
+  }, [member.instagram]);
+
+  return (
+    <Card 
+      className="hover:shadow-lg transition-shadow cursor-pointer"
+      onClick={handleCardClick}
+    >
+      <CardHeader>
+        <div className="flex items-start justify-between">
+          <CardTitle className="text-lg">{member.full_name}</CardTitle>
+          <Badge variant={member.role === "admin" ? "default" : "secondary"}>
+            {member.role === "admin" ? "Admin" : "Membro"}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Phone className="h-4 w-4 text-muted-foreground" />
+          <button
+            onClick={handlePhoneClick}
+            className="text-sm hover:text-accent hover:underline transition-colors text-left cursor-pointer"
+          >
+            {member.phone}
+          </button>
+        </div>
+
+        {member.instagram && (
+          <div className="flex items-center gap-2">
+            <Instagram className="h-4 w-4 text-muted-foreground" />
+            <button
+              onClick={handleInstagramClick}
+              className="text-sm hover:text-accent hover:underline transition-colors text-left cursor-pointer"
+            >
+              {member.instagram}
+            </button>
+          </div>
+        )}
+
+        {member.companies.length > 0 && (
+          <div className="pt-2 border-t">
+            <p className="text-xs text-muted-foreground mb-1">Empresas:</p>
+            <div className="flex flex-wrap gap-1">
+              {member.companies.map((company, idx) => (
+                <Badge key={idx} variant="outline" className="text-xs">
+                  {company.name}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+});
+
+function Members() {
   const [members, setMembers] = useState<Member[]>([]);
-  const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const { isAdmin } = useAdmin();
@@ -30,19 +109,17 @@ export default function Members() {
     loadMembers();
   }, []);
 
-  useEffect(() => {
+  const filteredMembers = useMemo(() => {
     if (searchTerm) {
-      const filtered = members.filter((member) =>
+      return members.filter((member) =>
         member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         member.phone.includes(searchTerm)
       );
-      setFilteredMembers(filtered);
-    } else {
-      setFilteredMembers(members);
     }
+    return members;
   }, [searchTerm, members]);
 
-  const loadMembers = async () => {
+  const loadMembers = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("profiles")
@@ -60,20 +137,30 @@ export default function Members() {
       `);
 
     if (!error && data) {
-      const processedMembers = data.map((member: any) => ({
+      const processedMembers = data.map((member: {
+        id: string;
+        full_name: string;
+        phone: string;
+        instagram: string | null;
+        role: string;
+        member_companies?: Array<{ companies: { name: string } }>;
+      }) => ({
         ...member,
-        companies: member.member_companies?.map((mc: any) => mc.companies) || [],
+        companies: member.member_companies?.map((mc) => mc.companies) || [],
       }));
       setMembers(processedMembers);
-      setFilteredMembers(processedMembers);
     }
     setLoading(false);
-  };
+  }, []);
 
-  const formatPhone = (phone: string) => {
-    const cleaned = phone.replace(/\D/g, "");
-    return `https://wa.me/55${cleaned}`;
-  };
+  const formatPhone = useCallback((phone: string) => {
+    const cleanPhone = phone.replace(/\D/g, "");
+    return `https://wa.me/55${cleanPhone}`;
+  }, []);
+
+  const handleNavigate = useCallback((id: string) => {
+    navigate(`/members/${id}`);
+  }, [navigate]);
 
   return (
     <Layout>
@@ -105,65 +192,13 @@ export default function Members() {
         ) : (
           <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {filteredMembers.map((member) => (
-              <Card 
-                key={member.id} 
-                className="hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => isAdmin && navigate(`/members/${member.id}`)}
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg">{member.full_name}</CardTitle>
-                    <Badge variant={member.role === "admin" ? "default" : "secondary"}>
-                      {member.role === "admin" ? "Admin" : "Membro"}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        window.open(formatPhone(member.phone), '_blank', 'noopener,noreferrer');
-                      }}
-                      className="text-sm hover:text-accent hover:underline transition-colors text-left cursor-pointer"
-                    >
-                      {member.phone}
-                    </button>
-                  </div>
-
-                  {member.instagram && (
-                    <div className="flex items-center gap-2">
-                      <Instagram className="h-4 w-4 text-muted-foreground" />
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          const username = member.instagram!.replace(/[@\s]/g, "");
-                          window.open(`https://www.instagram.com/${username}`, '_blank', 'noopener,noreferrer');
-                        }}
-                        className="text-sm hover:text-accent hover:underline transition-colors text-left cursor-pointer"
-                      >
-                        {member.instagram}
-                      </button>
-                    </div>
-                  )}
-
-                  {member.companies.length > 0 && (
-                    <div className="pt-2 border-t">
-                      <p className="text-xs text-muted-foreground mb-1">Empresas:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {member.companies.map((company, idx) => (
-                          <Badge key={idx} variant="outline" className="text-xs">
-                            {company.name}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <MemberCard
+                key={member.id}
+                member={member}
+                isAdmin={isAdmin}
+                onNavigate={handleNavigate}
+                formatPhone={formatPhone}
+              />
             ))}
           </div>
         )}
@@ -177,5 +212,7 @@ export default function Members() {
         )}
       </div>
     </Layout>
-  );
-}
+    );
+  }
+
+export default memo(Members);

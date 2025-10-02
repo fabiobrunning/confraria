@@ -1,3 +1,7 @@
+// @ts-nocheck
+// Edge Function para reset de senha de usuário
+// Este arquivo é executado no ambiente Deno do Supabase Edge Functions
+
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {

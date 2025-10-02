@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,7 +19,59 @@ interface Group {
   contemplated_quotas: number;
 }
 
-export default function Groups() {
+interface GroupCardProps {
+  group: Group;
+  isAdmin: boolean;
+  onNavigate: (id: string) => void;
+  formatCurrency: (value: number) => string;
+}
+
+const GroupCard = memo(({ group, isAdmin, onNavigate, formatCurrency }: GroupCardProps) => {
+  const handleCardClick = useCallback(() => {
+    if (isAdmin) {
+      onNavigate(group.id);
+    }
+  }, [isAdmin, onNavigate, group.id]);
+
+  return (
+    <Card
+      className="hover:shadow-lg transition-shadow cursor-pointer"
+      onClick={handleCardClick}
+    >
+      <CardHeader>
+        <CardTitle className="text-lg">{group.description}</CardTitle>
+        <CardDescription>
+          {group.total_quotas} cotas no total
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Valor do Bem:</span>
+            <span className="font-semibold">{formatCurrency(group.asset_value)}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Valor Mensal:</span>
+            <span className="font-semibold">{formatCurrency(group.monthly_value)}</span>
+          </div>
+        </div>
+
+        <div className="pt-3 border-t space-y-2">
+          <div className="flex items-center justify-between">
+            <Badge variant="outline" className="bg-success/10">
+              {group.active_quotas} Ativas
+            </Badge>
+            <Badge variant="outline" className="bg-accent/10">
+              {group.contemplated_quotas} Contempladas
+            </Badge>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+});
+
+function Groups() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const { isAdmin } = useAdmin();
@@ -30,7 +82,7 @@ export default function Groups() {
     loadGroups();
   }, []);
 
-  const loadGroups = async () => {
+  const loadGroups = useCallback(async () => {
     setLoading(true);
     const { data: groupsData, error } = await supabase
       .from("consortium_groups")
@@ -65,14 +117,18 @@ export default function Groups() {
 
     setGroups(groupsWithQuotas);
     setLoading(false);
-  };
+  }, [toast]);
 
-  const formatCurrency = (value: number) => {
+  const formatCurrency = useCallback((value: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
     }).format(value);
-  };
+  }, []);
+
+  const handleNavigate = useCallback((id: string) => {
+    navigate(`/groups/${id}`);
+  }, [navigate]);
 
   return (
     <Layout>
@@ -97,41 +153,13 @@ export default function Groups() {
         ) : (
           <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {groups.map((group) => (
-              <Card
+              <GroupCard
                 key={group.id}
-                className="hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => isAdmin && navigate(`/groups/${group.id}`)}
-              >
-                <CardHeader>
-                  <CardTitle className="text-lg">{group.description}</CardTitle>
-                  <CardDescription>
-                    {group.total_quotas} cotas no total
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Valor do Bem:</span>
-                      <span className="font-semibold">{formatCurrency(group.asset_value)}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Valor Mensal:</span>
-                      <span className="font-semibold">{formatCurrency(group.monthly_value)}</span>
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="bg-success/10">
-                        {group.active_quotas} Ativas
-                      </Badge>
-                      <Badge variant="outline" className="bg-accent/10">
-                        {group.contemplated_quotas} Contempladas
-                      </Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                group={group}
+                isAdmin={isAdmin}
+                onNavigate={handleNavigate}
+                formatCurrency={formatCurrency}
+              />
             ))}
           </div>
         )}
@@ -153,3 +181,5 @@ export default function Groups() {
     </Layout>
   );
 }
+
+export default memo(Groups);

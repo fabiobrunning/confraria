@@ -1,3 +1,7 @@
+// @ts-nocheck
+// Edge Function para alteração de senha administrativa
+// Este arquivo é executado no ambiente Deno do Supabase Edge Functions
+
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -28,13 +32,17 @@ Deno.serve(async (req) => {
     const { data: { user } } = await supabaseClient.auth.getUser()
     if (!user) throw new Error('Não autenticado')
 
-    const { data: profile } = await supabaseClient
+    const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
 
-    if (profile?.role !== 'admin') {
+    if (profileError || !profile) {
+      throw new Error('Erro ao verificar permissões do usuário')
+    }
+
+    if (profile.role !== 'admin') {
       throw new Error('Apenas administradores podem alterar senhas de outros usuários')
     }
 

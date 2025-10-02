@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Loader as Loader2, Plus, Trash2, Search } from "lucide-react";
 import { fetchAddressByCep, fetchCompanyByCnpj } from "@/utils/apis";
+import { logError } from "@/utils/logger";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -97,7 +98,7 @@ export default function Profile() {
         .maybeSingle();
 
       if (profileError) {
-        console.error("Erro ao carregar perfil:", profileError);
+        logError(profileError, "Profile - loadProfile");
         toast({
           title: "Erro ao carregar perfil",
           description: profileError.message,
@@ -122,9 +123,9 @@ export default function Profile() {
         .eq("member_id", session.user.id);
 
       if (companiesError) {
-        console.error("Erro ao carregar empresas:", companiesError);
+        logError(companiesError, "Profile - loadCompanies");
       } else if (memberCompanies) {
-        setCompanies(memberCompanies.map((mc: any) => mc.companies));
+        setCompanies(memberCompanies.map((mc: { companies: Company }) => mc.companies));
       }
 
       // Load quotas
@@ -141,15 +142,20 @@ export default function Profile() {
         .eq("member_id", session.user.id);
 
       if (quotasError) {
-        console.error("Erro ao carregar cotas:", quotasError);
+        logError(quotasError, "Profile - loadQuotas");
       } else if (quotasData) {
-        setQuotas(quotasData.map((q: any) => ({
+        setQuotas(quotasData.map((q: {
+          id: string;
+          quota_number: number;
+          status: string;
+          consortium_groups: { description: string };
+        }) => ({
           ...q,
           group: q.consortium_groups,
         })));
       }
-    } catch (error: any) {
-      console.error("Erro geral ao carregar perfil:", error);
+    } catch (error: unknown) {
+      logError(error, "Profile - loadProfile general");
       toast({
         title: "Erro",
         description: "Não foi possível carregar as informações do perfil",
@@ -188,10 +194,11 @@ export default function Profile() {
         title: "Endereço encontrado",
         description: "Os campos foram preenchidos automaticamente",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Erro ao buscar CEP";
       toast({
         title: "Erro ao buscar CEP",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -219,10 +226,11 @@ export default function Profile() {
         title: "Dados encontrados",
         description: "Os campos foram preenchidos automaticamente",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido ao buscar CNPJ";
       toast({
         title: "Erro ao buscar CNPJ",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -275,10 +283,11 @@ export default function Profile() {
         title: "Perfil atualizado",
         description: "Suas informações foram salvas com sucesso",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido ao salvar";
       toast({
         title: "Erro ao salvar",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -298,10 +307,11 @@ export default function Profile() {
       });
       
       navigate("/auth");
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido ao excluir conta";
       toast({
         title: "Erro ao excluir conta",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -332,21 +342,25 @@ export default function Profile() {
         return;
       }
 
-      const { data, error } = await supabase.auth.updateUser({
-        password: newPassword
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/update-own-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': supabaseAnonKey,
+        },
+        body: JSON.stringify({
+          newPassword: newPassword
+        })
       });
 
-      if (error) {
-        console.error("Erro detalhado ao alterar senha:", {
-          message: error.message,
-          status: error.status,
-          name: error.name
-        });
-        throw new Error(error.message);
-      }
+      const data = await response.json();
 
-      if (!data.user) {
-        throw new Error("Falha ao atualizar usuário");
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Erro ao alterar senha');
       }
 
       toast({
@@ -356,17 +370,19 @@ export default function Profile() {
 
       setShowPasswordDialog(false);
       setNewPassword("");
-    } catch (error: any) {
-      console.error("Erro ao alterar senha:", error);
+    } catch (error: unknown) {
+      logError(error, "Profile - handlePasswordChange");
 
       let errorMessage = "Ocorreu um erro ao alterar a senha";
 
-      if (error.message?.includes("JWT")) {
-        errorMessage = "Sessão inválida. Por favor, faça login novamente";
-      } else if (error.message?.includes("network")) {
-        errorMessage = "Erro de conexão. Verifique sua internet";
-      } else if (error.message) {
-        errorMessage = error.message;
+      if (error instanceof Error) {
+        if (error.message?.includes("JWT")) {
+          errorMessage = "Sessão inválida. Por favor, faça login novamente";
+        } else if (error.message?.includes("network")) {
+          errorMessage = "Erro de conexão. Verifique sua internet";
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
       }
 
       toast({
