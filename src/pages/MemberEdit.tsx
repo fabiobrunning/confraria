@@ -279,12 +279,18 @@ export default function MemberEdit() {
     }
 
     try {
-      const { error } = await supabase.auth.admin.updateUserById(
-        id!,
-        { password: newPassword }
-      );
+      const { data, error } = await supabase.functions.invoke('update-user-password', {
+        body: {
+          userId: id,
+          newPassword: newPassword
+        },
+      });
 
       if (error) throw error;
+
+      if (!data.success) {
+        throw new Error(data.error);
+      }
 
       toast({
         title: "Senha alterada",
