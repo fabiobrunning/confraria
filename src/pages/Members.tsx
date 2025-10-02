@@ -128,12 +128,7 @@ function Members() {
         full_name,
         phone,
         instagram,
-        role,
-        member_companies!inner (
-          companies (
-            name
-          )
-        )
+        role
       `);
 
     if (!error && data) {
@@ -143,10 +138,9 @@ function Members() {
         phone: string;
         instagram: string | null;
         role: string;
-        member_companies?: Array<{ companies: { name: string } }>;
       }) => ({
         ...member,
-        companies: member.member_companies?.map((mc) => mc.companies) || [],
+        companies: [],
       }));
       setMembers(processedMembers);
     }

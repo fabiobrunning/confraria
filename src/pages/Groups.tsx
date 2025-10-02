@@ -4,29 +4,25 @@ import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Plus, DollarSign, Users as UsersIcon } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAdmin } from "@/hooks/use-admin";
 
 interface Group {
   id: string;
-  description: string;
-  asset_value: number;
-  total_quotas: number;
-  monthly_value: number;
-  active_quotas: number;
-  contemplated_quotas: number;
+  name: string;
+  description: string | null;
+  is_active: boolean;
 }
 
 interface GroupCardProps {
   group: Group;
   isAdmin: boolean;
   onNavigate: (id: string) => void;
-  formatCurrency: (value: number) => string;
 }
 
-const GroupCard = memo(({ group, isAdmin, onNavigate, formatCurrency }: GroupCardProps) => {
+const GroupCard = memo(({ group, isAdmin, onNavigate }: Omit<GroupCardProps, 'formatCurrency'>) => {
   const handleCardClick = useCallback(() => {
     if (isAdmin) {
       onNavigate(group.id);
@@ -39,33 +35,17 @@ const GroupCard = memo(({ group, isAdmin, onNavigate, formatCurrency }: GroupCar
       onClick={handleCardClick}
     >
       <CardHeader>
-        <CardTitle className="text-lg">{group.description}</CardTitle>
-        <CardDescription>
-          {group.total_quotas} cotas no total
-        </CardDescription>
+        <CardTitle className="text-lg">{group.name}</CardTitle>
+        {group.description && (
+          <CardDescription>
+            {group.description}
+          </CardDescription>
+        )}
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Valor do Bem:</span>
-            <span className="font-semibold">{formatCurrency(group.asset_value)}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Valor Mensal:</span>
-            <span className="font-semibold">{formatCurrency(group.monthly_value)}</span>
-          </div>
-        </div>
-
-        <div className="pt-3 border-t space-y-2">
-          <div className="flex items-center justify-between">
-            <Badge variant="outline" className="bg-success/10">
-              {group.active_quotas} Ativas
-            </Badge>
-            <Badge variant="outline" className="bg-accent/10">
-              {group.contemplated_quotas} Contempladas
-            </Badge>
-          </div>
-        </div>
+      <CardContent>
+        <Badge variant={group.is_active ? "default" : "secondary"}>
+          {group.is_active ? "Ativo" : "Inativo"}
+        </Badge>
       </CardContent>
     </Card>
   );
@@ -85,7 +65,7 @@ function Groups() {
   const loadGroups = useCallback(async () => {
     setLoading(true);
     const { data: groupsData, error } = await supabase
-      .from("consortium_groups")
+      .from("groups")
       .select("*")
       .order("created_at", { ascending: false });
 
@@ -99,32 +79,10 @@ function Groups() {
       return;
     }
 
-    // Load quotas count for each group
-    const groupsWithQuotas = await Promise.all(
-      (groupsData || []).map(async (group) => {
-        const { data: quotasData } = await supabase
-          .from("quotas")
-          .select("status")
-          .eq("group_id", group.id);
-
-        return {
-          ...group,
-          active_quotas: quotasData?.filter((q) => q.status === "active").length || 0,
-          contemplated_quotas: quotasData?.filter((q) => q.status === "contemplated").length || 0,
-        };
-      })
-    );
-
-    setGroups(groupsWithQuotas);
+    setGroups(groupsData || []);
     setLoading(false);
   }, [toast]);
 
-  const formatCurrency = useCallback((value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
-  }, []);
 
   const handleNavigate = useCallback((id: string) => {
     navigate(`/groups/${id}`);
@@ -158,7 +116,6 @@ function Groups() {
                 group={group}
                 isAdmin={isAdmin}
                 onNavigate={handleNavigate}
-                formatCurrency={formatCurrency}
               />
             ))}
           </div>

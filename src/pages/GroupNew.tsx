@@ -12,10 +12,8 @@ import { Loader2 } from "lucide-react";
 export default function GroupNew() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
+    name: "",
     description: "",
-    asset_value: "",
-    total_quotas: "",
-    monthly_value: "",
   });
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -26,12 +24,11 @@ export default function GroupNew() {
 
     try {
       const { data, error } = await supabase
-        .from("consortium_groups")
+        .from("groups")
         .insert({
-          description: formData.description,
-          asset_value: parseFloat(formData.asset_value),
-          total_quotas: parseInt(formData.total_quotas),
-          monthly_value: parseFloat(formData.monthly_value),
+          name: formData.name,
+          description: formData.description || null,
+          is_active: true,
         })
         .select()
         .single();
@@ -70,48 +67,23 @@ export default function GroupNew() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="description">Descrição do Bem *</Label>
+                <Label htmlFor="name">Nome do Grupo *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                  placeholder="Ex: Grupo A, Grupo Florianópolis, etc."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Descrição (opcional)</Label>
                 <Input
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="asset_value">Valor do Bem *</Label>
-                  <Input
-                    id="asset_value"
-                    type="number"
-                    step="0.01"
-                    value={formData.asset_value}
-                    onChange={(e) => setFormData({ ...formData, asset_value: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="monthly_value">Valor Mensal *</Label>
-                  <Input
-                    id="monthly_value"
-                    type="number"
-                    step="0.01"
-                    value={formData.monthly_value}
-                    onChange={(e) => setFormData({ ...formData, monthly_value: e.target.value })}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="total_quotas">Quantidade de Cotas *</Label>
-                <Input
-                  id="total_quotas"
-                  type="number"
-                  value={formData.total_quotas}
-                  onChange={(e) => setFormData({ ...formData, total_quotas: e.target.value })}
-                  required
+                  placeholder="Informações adicionais sobre o grupo"
                 />
               </div>
 

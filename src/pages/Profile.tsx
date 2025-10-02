@@ -39,14 +39,6 @@ interface Company {
   address_state: string;
 }
 
-interface Quota {
-  id: string;
-  quota_number: number;
-  status: string;
-  group: {
-    description: string;
-  };
-}
 
 export default function Profile() {
   const [loading, setLoading] = useState(true);
@@ -72,7 +64,6 @@ export default function Profile() {
   });
 
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [quotas, setQuotas] = useState<Quota[]>([]);
 
   useEffect(() => {
     loadProfile();
@@ -114,46 +105,8 @@ export default function Profile() {
         });
       }
 
-      // Load companies
-      const { data: memberCompanies, error: companiesError } = await supabase
-        .from("member_companies")
-        .select(`
-          companies (*)
-        `)
-        .eq("member_id", session.user.id);
-
-      if (companiesError) {
-        logError(companiesError, "Profile - loadCompanies");
-      } else if (memberCompanies) {
-        setCompanies(memberCompanies.map((mc: { companies: Company }) => mc.companies));
-      }
-
-      // Load quotas
-      const { data: quotasData, error: quotasError } = await supabase
-        .from("quotas")
-        .select(`
-          id,
-          quota_number,
-          status,
-          consortium_groups (
-            description
-          )
-        `)
-        .eq("member_id", session.user.id);
-
-      if (quotasError) {
-        logError(quotasError, "Profile - loadQuotas");
-      } else if (quotasData) {
-        setQuotas(quotasData.map((q: {
-          id: string;
-          quota_number: number;
-          status: string;
-          consortium_groups: { description: string };
-        }) => ({
-          ...q,
-          group: q.consortium_groups,
-        })));
-      }
+      // Note: Companies and quotas features are not implemented yet
+      // These will be added in a future update
     } catch (error: unknown) {
       logError(error, "Profile - loadProfile general");
       toast({
@@ -248,36 +201,7 @@ export default function Profile() {
 
       if (profileError) throw profileError;
 
-      // Handle companies
-      for (const company of companies) {
-        if (company.id) {
-          // Update existing company
-          await supabase
-            .from("companies")
-            .update(company)
-            .eq("id", company.id);
-        } else {
-          // Insert new company
-          const { data: newCompany, error: companyError } = await supabase
-            .from("companies")
-            .insert({
-              ...company,
-              id: undefined,
-            })
-            .select()
-            .single();
-
-          if (companyError) throw companyError;
-
-          // Link company to member
-          await supabase
-            .from("member_companies")
-            .insert({
-              member_id: userId,
-              company_id: newCompany.id,
-            });
-        }
-      }
+      // Note: Company management will be added in a future update
 
       toast({
         title: "Perfil atualizado",
@@ -569,29 +493,6 @@ export default function Profile() {
           </CardContent>
         </Card>
 
-        {/* Quotas */}
-        {quotas.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Minhas Cotas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {quotas.map((quota) => (
-                  <div key={quota.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">{quota.group.description}</p>
-                      <p className="text-sm text-muted-foreground">Cota #{quota.quota_number}</p>
-                    </div>
-                    <Badge variant={quota.status === "active" ? "default" : "secondary"}>
-                      {quota.status === "active" ? "Ativa" : "Contemplada"}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Companies */}
         <Card>

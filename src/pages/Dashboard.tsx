@@ -51,18 +51,17 @@ function Dashboard() {
   }, []);
 
   const loadStats = useCallback(async () => {
-    const [membersRes, companiesRes, groupsRes, quotasRes] = await Promise.all([
+    const [membersRes, companiesRes, groupsRes] = await Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
       supabase.from("companies").select("id", { count: "exact", head: true }),
-      supabase.from("consortium_groups").select("id", { count: "exact", head: true }),
-      supabase.from("quotas").select("id", { count: "exact", head: true }).eq("status", "active"),
+      supabase.from("groups").select("id", { count: "exact", head: true }),
     ]);
 
     setStats({
       members: membersRes.count || 0,
       companies: companiesRes.count || 0,
       groups: groupsRes.count || 0,
-      activeQuotas: quotasRes.count || 0,
+      activeQuotas: 0,
     });
   }, []);
 
