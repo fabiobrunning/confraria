@@ -76,14 +76,14 @@ export default function Groups() {
 
   return (
     <Layout>
-      <div className="p-6 space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+        <div className="flex flex-col gap-3">
           <div>
-            <h1 className="text-3xl font-bold">Grupos de Consórcio</h1>
-            <p className="text-muted-foreground">Gerencie os grupos de consórcio</p>
+            <h1 className="text-2xl sm:text-3xl font-bold">Grupos de Consórcio</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Gerencie os grupos de consórcio</p>
           </div>
           {isAdmin && (
-            <Button onClick={() => navigate("/groups/new")}>
+            <Button onClick={() => navigate("/groups/new")} className="w-full sm:w-auto sm:self-start">
               <Plus className="mr-2 h-4 w-4" />
               Novo Grupo
             </Button>
@@ -95,7 +95,7 @@ export default function Groups() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {groups.map((group) => (
               <Card
                 key={group.id}

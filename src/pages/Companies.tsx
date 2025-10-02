@@ -61,10 +61,10 @@ export default function Companies() {
 
   return (
     <Layout>
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Empresas</h1>
-          <p className="text-muted-foreground">Lista de todas as empresas cadastradas</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Empresas</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Lista de todas as empresas cadastradas</p>
         </div>
 
         <div className="relative">
@@ -82,7 +82,7 @@ export default function Companies() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {filteredCompanies.map((company) => (
               <Card key={company.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>

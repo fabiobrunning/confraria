@@ -77,13 +77,13 @@ export default function Members() {
 
   return (
     <Layout>
-      <div className="p-6 space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+        <div className="flex flex-col gap-3">
           <div>
-            <h1 className="text-3xl font-bold">Membros</h1>
-            <p className="text-muted-foreground">Lista de todos os membros cadastrados</p>
+            <h1 className="text-2xl sm:text-3xl font-bold">Membros</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Lista de todos os membros cadastrados</p>
           </div>
-          <Button onClick={() => navigate("/profile")}>
+          <Button onClick={() => navigate("/profile")} className="w-full sm:w-auto sm:self-start">
             Ver Meu Perfil
           </Button>
         </div>
@@ -103,7 +103,7 @@ export default function Members() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {filteredMembers.map((member) => (
               <Card 
                 key={member.id} 
