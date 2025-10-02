@@ -106,14 +106,14 @@ export default function Index() {
       <main className="relative z-10">
         <section className="px-4 sm:px-6 pt-24 sm:pt-32 pb-12 sm:pb-20">
           <div className="max-w-screen-2xl mx-auto text-center">
-            <h1 
-              className="text-white font-normal mb-6 sm:mb-8 font-[Archive] px-2"
+            <h1
+              className="text-white font-bold mb-6 sm:mb-8 px-2"
               style={{ fontSize: 'clamp(2rem, 8vw, 6rem)', lineHeight: '1.1', letterSpacing: '0.02em' }}
             >
               CONFRARIA PEDRA BRANCA
             </h1>
-            <h2 
-              className="font-medium mb-8 sm:mb-12 text-white/90 font-[Cormorant_Garamond] px-4"
+            <h2
+              className="font-medium mb-8 sm:mb-12 text-white/90 px-4"
               style={{ fontSize: 'clamp(1.25rem, 4vw, 2rem)', lineHeight: '1.3' }}
             >
               Pessoas com Visão geram Negócios com Propósito.
@@ -134,9 +134,9 @@ export default function Index() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-16 text-center">
               {/* Primeiro número - MEMBROS ATIVOS */}
               <div className="py-4">
-                <div 
-                  className="count-up text-white font-bold mb-3 sm:mb-4 font-[Cormorant_Garamond]"
-                  style={{ fontSize: 'clamp(3rem, 12vw, 6rem)', lineHeight: '1', fontFamily: "'Cormorant Garamond', serif" }}
+                <div
+                  className="count-up text-white font-bold mb-3 sm:mb-4"
+                  style={{ fontSize: 'clamp(3rem, 12vw, 6rem)', lineHeight: '1' }}
                 >
                   0
                 </div>
@@ -147,9 +147,9 @@ export default function Index() {
 
               {/* Segundo número - EMPRESAS CONECTADAS */}
               <div className="py-4 border-y sm:border-y-0 sm:border-x border-white/10">
-                <div 
-                  className="count-up text-white font-bold mb-3 sm:mb-4 font-[Cormorant_Garamond]"
-                  style={{ fontSize: 'clamp(3rem, 12vw, 6rem)', lineHeight: '1', fontFamily: "'Cormorant Garamond', serif" }}
+                <div
+                  className="count-up text-white font-bold mb-3 sm:mb-4"
+                  style={{ fontSize: 'clamp(3rem, 12vw, 6rem)', lineHeight: '1' }}
                 >
                   0
                 </div>
@@ -160,9 +160,9 @@ export default function Index() {
 
               {/* Terceiro número - VALOR MOVIMENTADO */}
               <div className="py-4">
-                <div 
-                  className="count-up text-white font-bold mb-3 sm:mb-4 font-[Cormorant_Garamond]"
-                  style={{ fontSize: 'clamp(3rem, 12vw, 6rem)', lineHeight: '1', fontFamily: "'Cormorant Garamond', serif" }}
+                <div
+                  className="count-up text-white font-bold mb-3 sm:mb-4"
+                  style={{ fontSize: 'clamp(3rem, 12vw, 6rem)', lineHeight: '1' }}
                 >
                   0
                 </div>
