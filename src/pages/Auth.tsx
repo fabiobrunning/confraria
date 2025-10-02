@@ -37,42 +37,36 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      // First, get the user's email from their phone number
-      const { data: profiles, error: profileError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("phone", phone)
-        .single();
+      // Remove non-digits from phone and create email
+      const cleanPhone = phone.replace(/\D/g, "");
+      const email = `${cleanPhone}@confraria.local`;
 
-      if (profileError || !profiles) {
-        toast({
-          title: "Erro",
-          description: "Telefone não encontrado. Entre em contato com o administrador.",
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
-      }
-
-      // Use the phone as email (phone@confraria.local)
-      const email = `${phone.replace(/\D/g, "")}@confraria.local`;
-
+      // Try to sign in with the email/password
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        toast({
-          title: "Erro ao fazer login",
-          description: error.message,
-          variant: "destructive",
-        });
+        // Check if it's an invalid credentials error
+        if (error.message.includes("Invalid login credentials")) {
+          toast({
+            title: "Erro ao fazer login",
+            description: "Telefone ou senha incorretos.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Erro ao fazer login",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao fazer login.",
+        description: error?.message || "Ocorreu um erro ao fazer login.",
         variant: "destructive",
       });
     } finally {

@@ -39,23 +39,45 @@ export default function Setup() {
   const createMasterAdmin = async () => {
     setLoading(true);
     try {
-      toast({
-        title: "Informação",
-        description: "O usuário master é criado automaticamente pelas migrations do banco de dados.",
+      const email = '48991836483@confraria.local';
+      const password = 'confraria';
+
+      // Try to sign up the master admin user
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            phone: '48991836483'
+          }
+        }
       });
 
-      await checkMasterAdmin();
-
-      if (masterExists) {
+      if (error) {
+        // Check if user already exists
+        if (error.message.includes('already registered')) {
+          toast({
+            title: "Usuário já existe",
+            description: "O usuário master já foi criado. Você pode fazer login agora.",
+          });
+          setMasterExists(true);
+        } else {
+          throw error;
+        }
+      } else if (data.user) {
         toast({
-          title: "Usuário já existe",
-          description: "O usuário master já foi criado. Você pode fazer login agora.",
+          title: "Sucesso!",
+          description: "Usuário master criado com sucesso!",
         });
+        setMasterExists(true);
+
+        // Sign out the user so they can log in properly
+        await supabase.auth.signOut();
       }
     } catch (error: any) {
       toast({
         title: "Erro",
-        description: error.message,
+        description: error.message || "Erro ao criar usuário master",
         variant: "destructive",
       });
     } finally {
@@ -101,28 +123,25 @@ export default function Setup() {
           ) : (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground text-center">
-                O usuário master é criado automaticamente pelas migrations do banco de dados.
+                Clique no botão abaixo para criar o usuário administrador master.
               </p>
               <div className="bg-muted p-4 rounded-lg space-y-1 text-sm">
                 <p><strong>Telefone:</strong> 48991836483</p>
                 <p><strong>Senha:</strong> confraria</p>
                 <p><strong>Nível:</strong> Administrador</p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Execute as migrations do banco de dados para criar o usuário
-                </p>
               </div>
               <Button
-                onClick={checkMasterAdmin}
+                onClick={createMasterAdmin}
                 disabled={loading}
                 className="w-full"
-                variant="outline"
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Verificar Novamente
+                Criar Usuário Master
               </Button>
               <Button
                 onClick={() => navigate('/auth')}
                 className="w-full"
+                variant="outline"
               >
                 Ir para Login
               </Button>

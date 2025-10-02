@@ -1,5 +1,5 @@
 /*
-  # Create Master Admin User
+  # Create Master Admin User via Function
 
   Creates the initial master administrator user for the system.
 
@@ -10,105 +10,71 @@
     - Role: admin
     - Name: Administrador Master
 
-  ## Security Note
-    This is a one-time setup. Change the password immediately after first login.
+  ## Important Note
+    This migration creates a helper function that can be called to create the master admin.
+    The actual user creation should be done via Supabase Dashboard or using the Admin API.
+
+  ## Manual Steps Required
+    1. Go to Supabase Dashboard > Authentication > Users
+    2. Click "Add user" > "Create new user"
+    3. Set:
+       - Email: 48991836483@confraria.local
+       - Password: confraria
+       - Auto Confirm User: YES
+    4. After user is created, the trigger will automatically create the profile
+
+  ## Alternative: Use SQL (requires proper setup)
+    If you have access to service role key, you can use the Admin API to create users.
 */
 
--- Create the auth user with a known password
--- Note: This uses a hardcoded UUID to ensure idempotency
-DO $$
+-- Create a function to setup master admin profile
+-- This will be called by a trigger when the auth user is created
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger
+SECURITY DEFINER
+SET search_path = public, auth
+LANGUAGE plpgsql
+AS $$
 DECLARE
-  master_user_id uuid := 'a0000000-0000-0000-0000-000000000001';
-  master_email text := '48991836483@confraria.local';
-  master_phone text := '48991836483';
-  encrypted_password text;
+  user_phone text;
 BEGIN
-  -- Check if user already exists
-  IF NOT EXISTS (
-    SELECT 1 FROM auth.users WHERE id = master_user_id
-  ) THEN
-    -- Generate password hash for 'confraria'
-    -- Using crypt function with bcrypt
-    encrypted_password := crypt('confraria', gen_salt('bf'));
+  -- Extract phone from email (format: phone@confraria.local)
+  user_phone := split_part(NEW.email, '@', 1);
 
-    -- Insert into auth.users
-    INSERT INTO auth.users (
-      id,
-      instance_id,
-      email,
-      encrypted_password,
-      email_confirmed_at,
-      raw_app_meta_data,
-      raw_user_meta_data,
-      created_at,
-      updated_at,
-      confirmation_token,
-      email_change,
-      email_change_token_new,
-      recovery_token,
-      aud,
-      role
-    ) VALUES (
-      master_user_id,
-      '00000000-0000-0000-0000-000000000000',
-      master_email,
-      encrypted_password,
-      now(),
-      '{"provider":"email","providers":["email"]}',
-      jsonb_build_object('phone', master_phone),
-      now(),
-      now(),
-      '',
-      '',
-      '',
-      '',
-      'authenticated',
-      'authenticated'
-    );
-
-    -- Insert into auth.identities
-    INSERT INTO auth.identities (
-      id,
-      user_id,
-      identity_data,
-      provider,
-      last_sign_in_at,
-      created_at,
-      updated_at
-    ) VALUES (
-      gen_random_uuid(),
-      master_user_id,
-      jsonb_build_object(
-        'sub', master_user_id::text,
-        'email', master_email,
-        'phone', master_phone
-      ),
-      'email',
-      now(),
-      now(),
-      now()
-    );
-
-    -- Create profile
-    INSERT INTO public.profiles (
-      id,
-      full_name,
-      phone,
-      role,
-      created_at,
-      updated_at
-    ) VALUES (
-      master_user_id,
-      'Administrador Master',
-      master_phone,
-      'admin',
-      now(),
-      now()
-    )
-    ON CONFLICT (id) DO NOTHING;
-
-    RAISE NOTICE 'Master admin user created successfully';
-  ELSE
-    RAISE NOTICE 'Master admin user already exists';
+  -- Only create profile if it doesn't exist
+  IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = NEW.id) THEN
+    -- Check if this is the master admin email
+    IF NEW.email = '48991836483@confraria.local' THEN
+      INSERT INTO public.profiles (id, full_name, phone, role, created_at, updated_at)
+      VALUES (
+        NEW.id,
+        'Administrador Master',
+        user_phone,
+        'admin',
+        now(),
+        now()
+      );
+    ELSE
+      -- For other users, create with member role
+      INSERT INTO public.profiles (id, full_name, phone, role, created_at, updated_at)
+      VALUES (
+        NEW.id,
+        '',
+        user_phone,
+        'member',
+        now(),
+        now()
+      );
+    END IF;
   END IF;
-END $$;
+
+  RETURN NEW;
+END;
+$$;
+
+-- Create trigger to auto-create profile when user signs up
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_new_user();
