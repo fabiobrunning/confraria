@@ -16,6 +16,7 @@ interface Member {
   instagram: string | null;
   role: string;
   companies: { name: string }[];
+  groups: { name: string; quota_number: number }[];
 }
 
 interface MemberCardProps {
@@ -93,6 +94,19 @@ const MemberCard = memo(({ member, isAdmin, onNavigate, formatPhone }: MemberCar
             </div>
           </div>
         )}
+
+        {member.groups.length > 0 && (
+          <div className="pt-2 border-t">
+            <p className="text-xs text-muted-foreground mb-1">Grupos de Consórcio:</p>
+            <div className="flex flex-wrap gap-1">
+              {member.groups.map((group, idx) => (
+                <Badge key={idx} variant="default" className="text-xs">
+                  {group.name} - Cota #{group.quota_number}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -132,16 +146,37 @@ function Members() {
       `);
 
     if (!error && data) {
-      const processedMembers = data.map((member: {
-        id: string;
-        full_name: string;
-        phone: string;
-        instagram: string | null;
-        role: string;
-      }) => ({
-        ...member,
-        companies: [],
-      }));
+      const processedMembers = await Promise.all(
+        data.map(async (member: {
+          id: string;
+          full_name: string;
+          phone: string;
+          instagram: string | null;
+          role: string;
+        }) => {
+          const { data: quotasData } = await supabase
+            .from("quotas")
+            .select(`
+              quota_number,
+              group:groups (
+                name
+              )
+            `)
+            .eq("member_id", member.id)
+            .order("quota_number");
+
+          const groups = quotasData?.map((q: { quota_number: number; group: { name: string } }) => ({
+            name: q.group.name,
+            quota_number: q.quota_number,
+          })) || [];
+
+          return {
+            ...member,
+            companies: [],
+            groups,
+          };
+        })
+      );
       setMembers(processedMembers);
     }
     setLoading(false);
