@@ -115,7 +115,7 @@ export default function GroupEdit() {
       const existing = quotasData?.find((q) => q.quota_number === i);
       allQuotas.push(existing || {
         quota_number: i,
-        member_id: "",
+        member_id: "__none__",
         status: "active",
       });
     }
@@ -147,7 +147,7 @@ export default function GroupEdit() {
 
       // Update quotas
       for (const quota of quotas) {
-        if (quota.member_id) {
+        if (quota.member_id && quota.member_id !== "__none__") {
           if (quota.id) {
             // Update existing quota
             await supabase
@@ -349,7 +349,7 @@ export default function GroupEdit() {
                       <SelectValue placeholder="Selecione um membro" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Nenhum membro</SelectItem>
+                      <SelectItem value="__none__">Nenhum membro</SelectItem>
                       {members.map((member) => (
                         <SelectItem key={member.id} value={member.id}>
                           {member.full_name}
@@ -364,7 +364,7 @@ export default function GroupEdit() {
                       newQuotas[index].status = value;
                       setQuotas(newQuotas);
                     }}
-                    disabled={!quota.member_id}
+                    disabled={!quota.member_id || quota.member_id === "__none__"}
                   >
                     <SelectTrigger className="w-full sm:w-40">
                       <SelectValue />
