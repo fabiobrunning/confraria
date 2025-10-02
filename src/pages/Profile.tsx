@@ -291,6 +291,8 @@ export default function Profile() {
       return;
     }
 
+    setSaving(true);
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
 
@@ -304,25 +306,50 @@ export default function Profile() {
         return;
       }
 
-      const { error } = await supabase.auth.updateUser({
+      const { data, error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro detalhado ao alterar senha:", {
+          message: error.message,
+          status: error.status,
+          name: error.name
+        });
+        throw new Error(error.message);
+      }
+
+      if (!data.user) {
+        throw new Error("Falha ao atualizar usuário");
+      }
 
       toast({
-        title: "Senha alterada",
-        description: "Sua senha foi alterada com sucesso",
+        title: "Senha alterada com sucesso",
+        description: "Sua nova senha já está ativa",
       });
 
       setShowPasswordDialog(false);
       setNewPassword("");
     } catch (error: any) {
+      console.error("Erro ao alterar senha:", error);
+
+      let errorMessage = "Ocorreu um erro ao alterar a senha";
+
+      if (error.message?.includes("JWT")) {
+        errorMessage = "Sessão inválida. Por favor, faça login novamente";
+      } else if (error.message?.includes("network")) {
+        errorMessage = "Erro de conexão. Verifique sua internet";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
       toast({
         title: "Erro ao alterar senha",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -789,7 +816,9 @@ export default function Profile() {
             </div>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setNewPassword("")}>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleChangePassword}>Alterar Senha</AlertDialogAction>
+              <AlertDialogAction onClick={handleChangePassword} disabled={saving}>
+                {saving ? "Alterando..." : "Alterar Senha"}
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
