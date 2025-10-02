@@ -1,9 +1,8 @@
-import { createClient } from 'npm:@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
 Deno.serve(async (req) => {
@@ -81,7 +80,7 @@ Deno.serve(async (req) => {
 
     // Send webhook notification
     try {
-      await fetch("https://n8n-n8n.xm9jj7.easypanel.host/webhook/cadastro", {
+      await fetch("https://n8n-n8n.xm9jj7.easypanel.host/webhook-test/cadastro", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -89,7 +88,6 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           nome: fullName,
           telefone: phone,
-          senha: password,
         }),
       })
     } catch (webhookError) {

@@ -1,19 +1,6 @@
-import { createClient } from 'npm:@supabase/supabase-js@2'
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
-};
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, {
-      status: 200,
-      headers: corsHeaders,
-    });
-  }
-
   try {
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -53,16 +40,13 @@ Deno.serve(async (req) => {
     if (profileError) throw profileError
 
     return new Response(
-      JSON.stringify({
-        success: true,
+      JSON.stringify({ 
+        success: true, 
         message: 'Usuário master criado com sucesso',
         userId: authData.user.id
       }),
-      {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        },
+      { 
+        headers: { 'Content-Type': 'application/json' },
         status: 200
       }
     )
@@ -70,15 +54,12 @@ Deno.serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
     return new Response(
-      JSON.stringify({
-        success: false,
+      JSON.stringify({ 
+        success: false, 
         error: errorMessage
       }),
-      {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        },
+      { 
+        headers: { 'Content-Type': 'application/json' },
         status: 400
       }
     )
