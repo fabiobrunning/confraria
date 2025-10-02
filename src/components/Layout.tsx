@@ -148,7 +148,7 @@ export default function Layout({ children }: LayoutProps) {
           <img
             src="/logo-confraria.png"
             alt="Confraria Pedra Branca"
-            className="h-16 w-auto object-contain"
+            className="h-32 w-auto object-contain"
           />
         </div>
         <nav className="flex-1 p-4 flex flex-col">
