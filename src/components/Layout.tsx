@@ -144,18 +144,12 @@ export default function Layout({ children }: LayoutProps) {
     <div className="min-h-screen flex w-full">
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex w-64 flex-col bg-sidebar border-r border-sidebar-border">
-        <div className="p-6 border-b border-sidebar-border">
-          <div className="flex items-center gap-3">
-            <img
-              src="/logo-confraria.png"
-              alt="Confraria Pedra Branca"
-              className="h-12 w-12 rounded-full object-cover"
-            />
-            <div>
-              <h2 className="font-bold text-sidebar-foreground">Confraria</h2>
-              <p className="text-xs text-sidebar-foreground/70">Pedra Branca</p>
-            </div>
-          </div>
+        <div className="p-6 border-b border-sidebar-border flex justify-center">
+          <img
+            src="/logo-confraria.png"
+            alt="Confraria Pedra Branca"
+            className="h-16 w-auto object-contain"
+          />
         </div>
         <nav className="flex-1 p-4 flex flex-col">
           <NavContent />
@@ -171,18 +165,12 @@ export default function Layout({ children }: LayoutProps) {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-64 p-0 bg-sidebar">
-            <div className="p-6 border-b border-sidebar-border">
-              <div className="flex items-center gap-3">
-                <img
-                  src="/logo-confraria.png"
-                  alt="Confraria Pedra Branca"
-                  className="h-12 w-12 rounded-full object-cover"
-                />
-                <div>
-                  <h2 className="font-bold text-sidebar-foreground">Confraria</h2>
-                  <p className="text-xs text-sidebar-foreground/70">Pedra Branca</p>
-                </div>
-              </div>
+            <div className="p-6 border-b border-sidebar-border flex justify-center">
+              <img
+                src="/logo-confraria.png"
+                alt="Confraria Pedra Branca"
+                className="h-16 w-auto object-contain"
+              />
             </div>
             <nav className="flex-1 p-4 flex flex-col h-[calc(100vh-5rem)]">
               <NavContent />
