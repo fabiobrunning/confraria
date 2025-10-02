@@ -14,6 +14,9 @@ export default function GroupNew() {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
+    asset_value: "",
+    total_quotas: "",
+    monthly_value: "",
   });
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -28,6 +31,9 @@ export default function GroupNew() {
         .insert({
           name: formData.name,
           description: formData.description || null,
+          asset_value: parseFloat(formData.asset_value),
+          total_quotas: parseInt(formData.total_quotas),
+          monthly_value: parseFloat(formData.monthly_value),
           is_active: true,
         })
         .select()
@@ -84,6 +90,48 @@ export default function GroupNew() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Informações adicionais sobre o grupo"
+                />
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="asset_value">Valor do Bem *</Label>
+                  <Input
+                    id="asset_value"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.asset_value}
+                    onChange={(e) => setFormData({ ...formData, asset_value: e.target.value })}
+                    required
+                    placeholder="Ex: 50000.00"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="monthly_value">Valor Mensal *</Label>
+                  <Input
+                    id="monthly_value"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.monthly_value}
+                    onChange={(e) => setFormData({ ...formData, monthly_value: e.target.value })}
+                    required
+                    placeholder="Ex: 500.00"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="total_quotas">Quantidade de Cotas *</Label>
+                <Input
+                  id="total_quotas"
+                  type="number"
+                  min="1"
+                  value={formData.total_quotas}
+                  onChange={(e) => setFormData({ ...formData, total_quotas: e.target.value })}
+                  required
+                  placeholder="Ex: 100"
                 />
               </div>
 

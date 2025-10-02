@@ -13,16 +13,22 @@ interface Group {
   id: string;
   name: string;
   description: string | null;
+  asset_value: number;
+  total_quotas: number;
+  monthly_value: number;
   is_active: boolean;
+  active_quotas?: number;
+  contemplated_quotas?: number;
 }
 
 interface GroupCardProps {
   group: Group;
   isAdmin: boolean;
   onNavigate: (id: string) => void;
+  formatCurrency: (value: number) => string;
 }
 
-const GroupCard = memo(({ group, isAdmin, onNavigate }: Omit<GroupCardProps, 'formatCurrency'>) => {
+const GroupCard = memo(({ group, isAdmin, onNavigate, formatCurrency }: GroupCardProps) => {
   const handleCardClick = useCallback(() => {
     if (isAdmin) {
       onNavigate(group.id);
@@ -36,16 +42,35 @@ const GroupCard = memo(({ group, isAdmin, onNavigate }: Omit<GroupCardProps, 'fo
     >
       <CardHeader>
         <CardTitle className="text-lg">{group.name}</CardTitle>
-        {group.description && (
-          <CardDescription>
-            {group.description}
-          </CardDescription>
-        )}
+        <CardDescription>
+          {group.total_quotas} cotas no total
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <Badge variant={group.is_active ? "default" : "secondary"}>
-          {group.is_active ? "Ativo" : "Inativo"}
-        </Badge>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Valor do Bem:</span>
+            <span className="font-semibold">{formatCurrency(group.asset_value)}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Valor Mensal:</span>
+            <span className="font-semibold">{formatCurrency(group.monthly_value)}</span>
+          </div>
+        </div>
+
+        <div className="pt-3 border-t space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <Badge variant="outline" className="bg-success/10 flex-1 justify-center">
+              {group.active_quotas || 0} Ativas
+            </Badge>
+            <Badge variant="outline" className="bg-accent/10 flex-1 justify-center">
+              {group.contemplated_quotas || 0} Contempladas
+            </Badge>
+          </div>
+          <Badge variant={group.is_active ? "default" : "secondary"} className="w-full justify-center">
+            {group.is_active ? "Grupo Ativo" : "Grupo Inativo"}
+          </Badge>
+        </div>
       </CardContent>
     </Card>
   );
@@ -79,10 +104,32 @@ function Groups() {
       return;
     }
 
-    setGroups(groupsData || []);
+    // Load quotas count for each group
+    const groupsWithQuotas = await Promise.all(
+      (groupsData || []).map(async (group) => {
+        const { data: quotasData } = await supabase
+          .from("quotas")
+          .select("status")
+          .eq("group_id", group.id);
+
+        return {
+          ...group,
+          active_quotas: quotasData?.filter((q) => q.status === "active").length || 0,
+          contemplated_quotas: quotasData?.filter((q) => q.status === "contemplated").length || 0,
+        };
+      })
+    );
+
+    setGroups(groupsWithQuotas);
     setLoading(false);
   }, [toast]);
 
+  const formatCurrency = useCallback((value: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value);
+  }, []);
 
   const handleNavigate = useCallback((id: string) => {
     navigate(`/groups/${id}`);
@@ -116,6 +163,7 @@ function Groups() {
                 group={group}
                 isAdmin={isAdmin}
                 onNavigate={handleNavigate}
+                formatCurrency={formatCurrency}
               />
             ))}
           </div>
