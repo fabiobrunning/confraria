@@ -272,36 +272,89 @@ export default function MemberEdit() {
     if (!newPassword || newPassword.length < 6) {
       toast({
         title: "Senha inválida",
-        description: "A senha deve ter no mínimo 6 caracteres",
+        description: "A senha deve ter pelo menos 6 caracteres",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('update-user-password', {
-        body: {
-          userId: id,
-          newPassword: newPassword
-        },
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Sessão expirada",
+          description: "Por favor, faça login novamente",
+          variant: "destructive",
+        });
+        navigate("/auth");
+        return;
+      }
+
+      // Por enquanto, vamos usar apenas reset automático
+      // até conseguirmos fazer deploy da Edge Function para senha personalizada
+      const { data, error } = await supabase.functions.invoke('reset-user-password', {
+        body: { 
+          userId: id
+        }
       });
 
       if (error) throw error;
 
-      if (!data.success) {
-        throw new Error(data.error);
+      if (data.newPassword) {
+        toast({
+          title: "Senha alterada",
+          description: `Nova senha gerada: ${data.newPassword}`,
+        });
+      } else {
+        toast({
+          title: "Senha alterada",
+          description: "A senha foi alterada com sucesso",
+        });
       }
-
-      toast({
-        title: "Senha alterada",
-        description: "A senha foi alterada com sucesso",
-      });
-
+      
       setShowPasswordDialog(false);
       setNewPassword("");
     } catch (error: unknown) {
       toast({
         title: "Erro ao alterar senha",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleResetPassword = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Sessão expirada",
+          description: "Por favor, faça login novamente",
+          variant: "destructive",
+        });
+        navigate("/auth");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('reset-user-password', {
+        body: { userId: id }
+      });
+
+      if (error) throw error;
+
+      if (data.newPassword) {
+        toast({
+          title: "Senha resetada",
+          description: `Nova senha gerada: ${data.newPassword}`,
+        });
+        setShowPasswordDialog(false);
+        setNewPassword("");
+      } else {
+        throw new Error(data.error || 'Erro ao resetar senha');
+      }
+    } catch (error: unknown) {
+      toast({
+        title: "Erro ao resetar senha",
         description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
@@ -437,8 +490,8 @@ export default function MemberEdit() {
 
             <div className="pt-4">
               <Button variant="outline" onClick={() => setShowPasswordDialog(true)}>
-                Alterar Senha
-              </Button>
+                  Alterar Senha
+                </Button>
             </div>
           </CardContent>
         </Card>
@@ -799,26 +852,35 @@ export default function MemberEdit() {
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Password Dialog */}
+        {/* Password Reset Dialog */}
         <AlertDialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Alterar Senha</AlertDialogTitle>
               <AlertDialogDescription>
-                Digite a nova senha para o membro (mínimo 6 caracteres)
+                Temporariamente, ambos os botões irão gerar uma senha automática de 6 dígitos. A funcionalidade de senha personalizada será habilitada em breve.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <div className="py-4">
-              <Input
-                type="password"
-                placeholder="Nova senha"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="password">Nova Senha</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Digite a nova senha (mínimo 6 caracteres)"
+                />
+              </div>
             </div>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setNewPassword("")}>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleChangePassword}>Alterar Senha</AlertDialogAction>
+            <AlertDialogFooter className="gap-2">
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <Button variant="outline" onClick={handleResetPassword}>
+                Resetar (Gerar Automática)
+              </Button>
+              <AlertDialogAction onClick={handleChangePassword}>
+                Salvar Senha
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

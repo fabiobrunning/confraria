@@ -39,11 +39,10 @@ Deno.serve(async (req) => {
 
     const { fullName, phone, role } = await req.json()
 
-    // Generate random password
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    // Generate simple 6-digit numeric password for first access
     let password = ""
-    for (let i = 0; i < 8; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length))
+    for (let i = 0; i < 6; i++) {
+      password += Math.floor(Math.random() * 10).toString()
     }
 
     const email = `${phone.replace(/\D/g, "")}@confraria.local`
