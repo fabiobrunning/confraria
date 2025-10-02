@@ -88,23 +88,30 @@ export default function PreRegister() {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('pre-register-member', {
-        body: {
-          fullName: formData.fullName,
-          phone: formData.phone,
-          role: formData.role,
-        },
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pre-register-member`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          },
+          body: JSON.stringify({
+            fullName: formData.fullName,
+            phone: formData.phone,
+            role: formData.role,
+          }),
+        }
+      );
 
-      console.log('Edge Function Response:', { data, error });
+      const data = await response.json();
+      console.log('Edge Function Response:', { status: response.status, data });
 
-      if (error) {
-        console.error('Edge Function Error:', error);
-        throw error;
+      if (!response.ok) {
+        throw new Error(data.error || `Erro ${response.status}: ${response.statusText}`);
       }
 
       if (!data.success) {
-        console.error('Edge Function returned error:', data.error);
         throw new Error(data.error);
       }
 
