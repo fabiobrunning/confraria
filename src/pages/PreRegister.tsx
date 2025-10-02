@@ -193,11 +193,11 @@ export default function PreRegister() {
 
   return (
     <Layout>
-      <div className="p-6">
-        <div className="max-w-2xl mx-auto space-y-6">
+      <div className="p-4 sm:p-6">
+        <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
           <div>
-            <h1 className="text-3xl font-bold">Pré-Cadastro de Membros</h1>
-            <p className="text-muted-foreground">Cadastre novos membros no sistema</p>
+            <h1 className="text-2xl sm:text-3xl font-bold">Pré-Cadastro de Membros</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Cadastre novos membros no sistema</p>
           </div>
 
           <Card>
@@ -273,64 +273,67 @@ export default function PreRegister() {
                   Nenhum membro pré-cadastrado encontrado
                 </p>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Telefone</TableHead>
-                      <TableHead>Nível</TableHead>
-                      <TableHead>Data</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {preRegisteredMembers.map((member) => (
-                      <TableRow key={member.id}>
-                        <TableCell className="font-medium">{member.full_name}</TableCell>
-                        <TableCell>{member.phone}</TableCell>
-                        <TableCell>
-                          <Badge variant={member.role === "admin" ? "default" : "secondary"}>
-                            {member.role === "admin" ? "Administrador" : "Membro"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(member.created_at).toLocaleDateString("pt-BR")}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => handleResendCredentials(member.id, member.phone, member.full_name)}
-                              disabled={resendingId === member.id || deletingId === member.id}
-                              title="Reenviar mensagem"
-                            >
-                              {resendingId === member.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <ArrowRight className="h-4 w-4" />
-                              )}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => handleDeletePreRegister(member.id)}
-                              disabled={resendingId === member.id || deletingId === member.id}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                              title="Excluir pré-cadastro"
-                            >
-                              {deletingId === member.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <Trash2 className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </div>
-                        </TableCell>
+                <div className="overflow-x-auto -mx-2 sm:mx-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="min-w-[120px]">Nome</TableHead>
+                        <TableHead className="min-w-[100px]">Telefone</TableHead>
+                        <TableHead className="hidden sm:table-cell">Nível</TableHead>
+                        <TableHead className="hidden md:table-cell">Data</TableHead>
+                        <TableHead className="text-right min-w-[100px]">Ações</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {preRegisteredMembers.map((member) => (
+                        <TableRow key={member.id}>
+                          <TableCell className="font-medium text-sm">{member.full_name}</TableCell>
+                          <TableCell className="text-sm">{member.phone}</TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                            <Badge variant={member.role === "admin" ? "default" : "secondary"}>
+                              {member.role === "admin" ? "Admin" : "Membro"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell text-sm">
+                            {new Date(member.created_at).toLocaleDateString("pt-BR")}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleResendCredentials(member.id, member.phone, member.full_name)}
+                                disabled={resendingId === member.id || deletingId === member.id}
+                                title="Reenviar mensagem"
+                              >
+                                {resendingId === member.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <ArrowRight className="h-3 w-3" />
+                                )}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => handleDeletePreRegister(member.id)}
+                                disabled={resendingId === member.id || deletingId === member.id}
+                                title="Excluir pré-cadastro"
+                              >
+                                {deletingId === member.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-3 w-3" />
+                                )}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </CardContent>
           </Card>

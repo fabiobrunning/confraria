@@ -367,10 +367,10 @@ export default function Profile() {
 
   return (
     <Layout>
-      <div className="p-6 space-y-6 max-w-4xl mx-auto">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-4xl mx-auto">
         <div>
-          <h1 className="text-3xl font-bold">Meu Perfil</h1>
-          <p className="text-muted-foreground">Gerencie suas informações pessoais e empresas</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Meu Perfil</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Gerencie suas informações pessoais e empresas</p>
         </div>
 
         {/* Personal Information */}
@@ -379,7 +379,7 @@ export default function Profile() {
             <CardTitle>Informações Pessoais</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="full_name">Nome Completo *</Label>
                 <Input
@@ -409,7 +409,7 @@ export default function Profile() {
             </div>
 
             <div className="pt-4 border-t mt-4">
-              <Button variant="outline" onClick={() => setShowPasswordDialog(true)}>
+              <Button variant="outline" onClick={() => setShowPasswordDialog(true)} className="w-full sm:w-auto">
                 Alterar Senha
               </Button>
             </div>
@@ -532,7 +532,7 @@ export default function Profile() {
                 <CardTitle>Empresas</CardTitle>
                 <CardDescription>Gerencie suas empresas</CardDescription>
               </div>
-              <Button onClick={addCompany} size="sm">
+              <Button onClick={addCompany} size="sm" className="w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
                 Adicionar Empresa
               </Button>
@@ -737,15 +737,15 @@ export default function Profile() {
         </Card>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button onClick={handleSave} disabled={saving} className="flex-1">
+        <div className="flex flex-col gap-3">
+          <Button onClick={handleSave} disabled={saving} className="w-full">
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Salvar Alterações
           </Button>
           <Button
             variant="destructive"
             onClick={() => setShowDeleteDialog(true)}
-            className="sm:w-auto"
+            className="w-full"
           >
             Excluir Conta
           </Button>

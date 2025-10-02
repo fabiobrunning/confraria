@@ -144,51 +144,51 @@ export default function Layout({ children }: LayoutProps) {
     <div className="min-h-screen flex w-full">
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex w-64 flex-col bg-sidebar border-r border-sidebar-border">
-        <div className="p-6 border-b border-sidebar-border flex justify-center">
+        <div className="p-4 border-b border-sidebar-border flex justify-center">
           <img
             src="/logo-confraria.png"
             alt="Confraria Pedra Branca"
-            className="h-32 w-auto object-contain"
+            className="h-24 w-auto object-contain"
           />
         </div>
-        <nav className="flex-1 p-4 flex flex-col">
+        <nav className="flex-1 p-3 flex flex-col">
           <NavContent />
         </nav>
       </aside>
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-sidebar border-b border-sidebar-border z-50 flex items-center px-4">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-sidebar border-b border-sidebar-border z-50 flex items-center px-3">
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="text-sidebar-foreground">
-              <Menu className="h-6 w-6" />
+            <Button variant="ghost" size="icon" className="text-sidebar-foreground h-10 w-10">
+              <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0 bg-sidebar">
-            <div className="p-6 border-b border-sidebar-border flex justify-center">
+          <SheetContent side="left" className="w-[280px] p-0 bg-sidebar">
+            <div className="p-4 border-b border-sidebar-border flex justify-center">
               <img
                 src="/logo-confraria.png"
                 alt="Confraria Pedra Branca"
-                className="h-16 w-auto object-contain"
+                className="h-20 w-auto object-contain"
               />
             </div>
-            <nav className="flex-1 p-4 flex flex-col h-[calc(100vh-5rem)]">
+            <nav className="flex-1 p-3 flex flex-col h-[calc(100vh-5.5rem)]">
               <NavContent />
             </nav>
           </SheetContent>
         </Sheet>
-        <div className="flex items-center gap-2 ml-4">
+        <div className="flex items-center gap-2 ml-2">
           <img
             src="/logo-confraria.png"
             alt="Confraria Pedra Branca"
-            className="h-8 w-8 rounded-full object-cover"
+            className="h-7 w-auto object-contain"
           />
-          <span className="font-bold text-sidebar-foreground">Confraria Pedra Branca</span>
+          <span className="font-bold text-sidebar-foreground text-sm">Confraria Pedra Branca</span>
         </div>
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 lg:ml-0 mt-16 lg:mt-0">
+      <main className="flex-1 lg:ml-0 mt-14 lg:mt-0">
         {children}
       </main>
     </div>
