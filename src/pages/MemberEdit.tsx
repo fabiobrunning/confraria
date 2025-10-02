@@ -74,6 +74,20 @@ export default function MemberEdit() {
 
   const [companies, setCompanies] = useState<Company[]>([]);
 
+  interface MemberQuota {
+    id: string;
+    quota_number: number;
+    status: string;
+    group: {
+      id: string;
+      name: string;
+      asset_value: number;
+      monthly_value: number;
+    };
+  }
+
+  const [quotas, setQuotas] = useState<MemberQuota[]>([]);
+
   useEffect(() => {
     if (!adminLoading) {
       loadMember();
@@ -93,6 +107,27 @@ export default function MemberEdit() {
 
     if (profileData) {
       setProfile(profileData);
+    }
+
+    // Load member quotas
+    const { data: quotasData } = await supabase
+      .from("quotas")
+      .select(`
+        id,
+        quota_number,
+        status,
+        group:groups (
+          id,
+          name,
+          asset_value,
+          monthly_value
+        )
+      `)
+      .eq("member_id", id)
+      .order("quota_number");
+
+    if (quotasData) {
+      setQuotas(quotasData as MemberQuota[]);
     }
 
     const { data: memberCompanies } = await supabase
@@ -571,6 +606,41 @@ export default function MemberEdit() {
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Quotas Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Grupos e Cotas</CardTitle>
+            <CardDescription>Cotas de consórcio vinculadas a este membro</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {quotas.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>Nenhuma cota vinculada a este membro</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {quotas.map((quota) => (
+                  <div key={quota.id} className="flex flex-col sm:flex-row gap-3 items-start sm:items-center p-4 border rounded-lg">
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">{quota.group.name}</span>
+                        <Badge variant="outline">Cota #{quota.quota_number}</Badge>
+                      </div>
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <p>Valor do Bem: {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(quota.group.asset_value)}</p>
+                        <p>Valor Mensal: {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(quota.group.monthly_value)}</p>
+                      </div>
+                    </div>
+                    <Badge variant={quota.status === "active" ? "default" : "secondary"} className="w-fit">
+                      {quota.status === "active" ? "Ativa" : "Contemplada"}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
