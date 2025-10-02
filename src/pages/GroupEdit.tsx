@@ -8,10 +8,21 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader as Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { useAdmin } from "@/hooks/use-admin";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Quota {
   id?: string;
@@ -31,6 +42,8 @@ export default function GroupEdit() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { isAdmin } = useAdmin();
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -181,6 +194,32 @@ export default function GroupEdit() {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!id) return;
+
+    try {
+      const { error } = await supabase
+        .from("groups")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Grupo excluído",
+        description: "O grupo foi removido com sucesso",
+      });
+
+      navigate("/groups");
+    } catch (error: unknown) {
+      toast({
+        title: "Erro ao excluir",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
     }
   };
 
@@ -345,11 +384,39 @@ export default function GroupEdit() {
           <Button type="button" variant="outline" onClick={() => navigate("/groups")} className="flex-1">
             Cancelar
           </Button>
+          {isAdmin && (
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => setShowDeleteDialog(true)}
+              className="flex-1"
+            >
+              Excluir Grupo
+            </Button>
+          )}
           <Button onClick={handleSubmit} disabled={saving} className="flex-1">
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Salvar Alterações
           </Button>
         </div>
+
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir este grupo? Esta ação não pode ser desfeita.
+                Todas as cotas vinculadas a este grupo também serão excluídas.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Confirmar Exclusão
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Layout>
   );

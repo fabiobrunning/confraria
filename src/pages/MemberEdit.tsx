@@ -35,7 +35,7 @@ export default function MemberEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { loading: adminLoading } = useAdmin(true);
+  const { loading: adminLoading, isAdmin } = useAdmin(true);
   
   const formatPhone = (phone: string) => {
     const cleaned = phone.replace(/\D/g, "");
@@ -788,9 +788,11 @@ export default function MemberEdit() {
           <Button variant="outline" onClick={() => navigate("/members")} className="flex-1">
             Cancelar
           </Button>
-          <Button variant="destructive" onClick={() => setShowDeleteDialog(true)} className="flex-1">
-            Excluir Conta
-          </Button>
+          {isAdmin && (
+            <Button variant="destructive" onClick={() => setShowDeleteDialog(true)} className="flex-1">
+              Excluir Conta
+            </Button>
+          )}
           <Button onClick={handleSave} disabled={saving} className="flex-1">
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Salvar Alterações

@@ -3,8 +3,21 @@ import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Phone, Instagram, MapPin, Search } from "lucide-react";
+import { Phone, Instagram, MapPin, Search, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useAdmin } from "@/hooks/use-admin";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Company {
   id: string;
@@ -22,6 +35,9 @@ export default function Companies() {
   const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const { isAdmin } = useAdmin();
+  const { toast } = useToast();
 
   useEffect(() => {
     loadCompanies();
@@ -59,6 +75,34 @@ export default function Companies() {
     return `https://wa.me/55${cleaned}`;
   };
 
+  const handleDelete = async () => {
+    if (!deleteId) return;
+
+    try {
+      const { error } = await supabase
+        .from("companies")
+        .delete()
+        .eq("id", deleteId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Empresa excluída",
+        description: "A empresa foi removida com sucesso",
+      });
+
+      await loadCompanies();
+    } catch (error: unknown) {
+      toast({
+        title: "Erro ao excluir",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteId(null);
+    }
+  };
+
   return (
     <Layout>
       <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
@@ -86,10 +130,27 @@ export default function Companies() {
             {filteredCompanies.map((company) => (
               <Card key={company.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
-                  <CardTitle className="text-lg">{company.name}</CardTitle>
-                  {company.cnpj && (
-                    <CardDescription>CNPJ: {company.cnpj}</CardDescription>
-                  )}
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">{company.name}</CardTitle>
+                      {company.cnpj && (
+                        <CardDescription>CNPJ: {company.cnpj}</CardDescription>
+                      )}
+                    </div>
+                    {isAdmin && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteId(company.id);
+                        }}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {company.description && (
@@ -156,6 +217,24 @@ export default function Companies() {
             </CardContent>
           </Card>
         )}
+
+        <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir esta empresa? Esta ação não pode ser desfeita.
+                Os vínculos desta empresa com membros também serão removidos.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Confirmar Exclusão
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Layout>
   );
