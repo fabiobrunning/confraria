@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { Search, Phone, Instagram } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAdmin } from "@/hooks/use-admin";
+import { formatPhone as formatPhoneDisplay } from "@/utils/phone";
 
 interface Member {
   id: string;
@@ -66,7 +67,7 @@ const MemberCard = memo(({ member, isAdmin, onNavigate, formatPhone }: MemberCar
             onClick={handlePhoneClick}
             className="text-sm hover:text-accent hover:underline transition-colors text-left cursor-pointer"
           >
-            {member.phone}
+            {formatPhoneDisplay(member.phone)}
           </button>
         </div>
 

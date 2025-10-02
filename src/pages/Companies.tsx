@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
+import { formatPhone as formatPhoneDisplay } from "@/utils/phone";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Phone, Instagram, MapPin, Search, Trash2 } from "lucide-react";
@@ -171,7 +172,7 @@ export default function Companies() {
                           }}
                           className="text-sm hover:text-accent hover:underline transition-colors text-left cursor-pointer"
                         >
-                          {company.phone}
+                          {formatPhoneDisplay(company.phone)}
                         </button>
                       </div>
                     )}

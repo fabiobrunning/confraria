@@ -10,6 +10,7 @@ import { Loader2 } from "lucide-react";
 import { useAsyncAction } from "@/hooks/use-async";
 import { authSchema, type AuthFormData } from "@/schemas";
 import { logError } from "@/utils/logger";
+import { maskPhone } from "@/utils/phone";
 
 export default function Auth() {
   const [formData, setFormData] = useState<AuthFormData>({
@@ -116,9 +117,10 @@ export default function Auth() {
                 type="tel"
                 placeholder="(00) 00000-0000"
                 value={formData.phone}
-                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, phone: maskPhone(e.target.value) }))}
                 disabled={loading}
                 className={validationErrors.phone ? "border-destructive" : ""}
+                maxLength={15}
               />
               {validationErrors.phone && (
                 <p className="text-sm text-destructive">{validationErrors.phone}</p>

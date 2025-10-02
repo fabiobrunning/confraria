@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader as Loader2, Plus, Trash2, Search } from "lucide-react";
 import { fetchAddressByCep, fetchCompanyByCnpj } from "@/utils/apis";
 import { logError } from "@/utils/logger";
+import { cleanPhone, maskPhone } from "@/utils/phone";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -385,8 +386,11 @@ export default function Profile() {
                 <Label htmlFor="phone">Telefone *</Label>
                 <Input
                   id="phone"
-                  value={profile.phone}
-                  onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                  type="tel"
+                  placeholder="(00) 00000-0000"
+                  value={maskPhone(profile.phone)}
+                  onChange={(e) => setProfile({ ...profile, phone: cleanPhone(e.target.value) })}
+                  maxLength={15}
                 />
               </div>
             </div>
@@ -573,12 +577,15 @@ export default function Profile() {
                   <div className="space-y-2">
                     <Label>Telefone</Label>
                     <Input
-                      value={company.phone}
+                      type="tel"
+                      placeholder="(00) 00000-0000"
+                      value={maskPhone(company.phone)}
                       onChange={(e) => {
                         const newCompanies = [...companies];
-                        newCompanies[index].phone = e.target.value;
+                        newCompanies[index].phone = cleanPhone(e.target.value);
                         setCompanies(newCompanies);
                       }}
+                      maxLength={15}
                     />
                   </div>
                   <div className="space-y-2">

@@ -12,6 +12,7 @@ import { useAdmin } from "@/hooks/use-admin";
 import { Loader as Loader2, Search, Plus, Trash2 } from "lucide-react";
 import { fetchAddressByCep, fetchCompanyByCnpj } from "@/utils/apis";
 import { logError } from "@/utils/logger";
+import { cleanPhone, maskPhone } from "@/utils/phone";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -479,8 +480,11 @@ export default function MemberEdit() {
                 <Label>Telefone</Label>
                 <div className="flex gap-2">
                   <Input
-                    value={profile.phone}
-                    onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                    type="tel"
+                    placeholder="(00) 00000-0000"
+                    value={maskPhone(profile.phone)}
+                    onChange={(e) => setProfile({ ...profile, phone: cleanPhone(e.target.value) })}
+                    maxLength={15}
                   />
                   {profile.phone && (
                     <Button
@@ -729,12 +733,15 @@ export default function MemberEdit() {
                       <div className="space-y-2">
                         <Label>Telefone</Label>
                         <Input
-                          value={company.phone}
+                          type="tel"
+                          placeholder="(00) 00000-0000"
+                          value={maskPhone(company.phone)}
                           onChange={(e) => {
                             const newCompanies = [...companies];
-                            newCompanies[index].phone = e.target.value;
+                            newCompanies[index].phone = cleanPhone(e.target.value);
                             setCompanies(newCompanies);
                           }}
+                          maxLength={15}
                         />
                       </div>
                       <div className="space-y-2">

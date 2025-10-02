@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAdmin } from "@/hooks/use-admin";
 import { logError } from "@/utils/logger";
+import { formatPhone, cleanPhone, maskPhone } from "@/utils/phone";
 
 interface PreRegisteredMember {
   id: string;
@@ -98,7 +99,7 @@ export default function PreRegister() {
           },
           body: JSON.stringify({
             fullName: formData.fullName,
-            phone: formData.phone,
+            phone: cleanPhone(formData.phone),
             role: formData.role,
           }),
         }
@@ -241,9 +242,10 @@ export default function PreRegister() {
                     type="tel"
                     placeholder="(00) 00000-0000"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
                     required
                     disabled={loading}
+                    maxLength={15}
                   />
                 </div>
 
@@ -302,7 +304,7 @@ export default function PreRegister() {
                       {preRegisteredMembers.map((member) => (
                         <TableRow key={member.id}>
                           <TableCell className="font-medium text-sm">{member.full_name}</TableCell>
-                          <TableCell className="text-sm">{member.phone}</TableCell>
+                          <TableCell className="text-sm">{formatPhone(member.phone)}</TableCell>
                           <TableCell className="hidden sm:table-cell">
                             <Badge variant={member.role === "admin" ? "default" : "secondary"}>
                               {member.role === "admin" ? "Admin" : "Membro"}
