@@ -96,11 +96,15 @@ export default function PreRegister() {
         },
       });
 
+      console.log('Edge Function Response:', { data, error });
+
       if (error) {
+        console.error('Edge Function Error:', error);
         throw error;
       }
 
       if (!data.success) {
+        console.error('Edge Function returned error:', data.error);
         throw new Error(data.error);
       }
 
@@ -109,16 +113,15 @@ export default function PreRegister() {
         description: `Senha gerada: ${data.password}`,
       });
 
-      // Reset form
       setFormData({
         fullName: "",
         phone: "",
         role: "member",
       });
 
-      // Refresh list
       fetchPreRegisteredMembers();
     } catch (error: unknown) {
+      console.error('Erro capturado:', error);
       const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
       toast({
         title: "Erro ao realizar pré-cadastro",
