@@ -42,7 +42,7 @@ export default function PreRegister() {
     const { data, error } = await supabase
       .from("profiles")
       .select("id, full_name, phone, role, created_at, address_street")
-      .is("address_street", null)
+      .eq("pre_registered", true)
       .order("created_at", { ascending: false });
 
     if (error) {
