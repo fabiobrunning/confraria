@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useAdmin } from "@/hooks/use-admin";
-import { Loader as Loader2, Search } from "lucide-react";
-import { fetchAddressByCep } from "@/utils/apis";
+import { Loader as Loader2, Search, Plus, Trash2 } from "lucide-react";
+import { fetchAddressByCep, fetchCompanyByCnpj } from "@/utils/apis";
 import { logError } from "@/utils/logger";
 import {
   AlertDialog,
@@ -56,6 +56,23 @@ export default function MemberEdit() {
     address_state: "",
   });
 
+  interface Company {
+    id?: string;
+    name: string;
+    cnpj: string;
+    description: string;
+    phone: string;
+    instagram: string;
+    address_cep: string;
+    address_street: string;
+    address_number: string;
+    address_complement: string;
+    address_neighborhood: string;
+    address_city: string;
+    address_state: string;
+  }
+
+  const [companies, setCompanies] = useState<Company[]>([]);
 
   useEffect(() => {
     if (!adminLoading) {
@@ -78,7 +95,16 @@ export default function MemberEdit() {
       setProfile(profileData);
     }
 
-    // Note: Company and quota management will be added in a future update
+    const { data: memberCompanies } = await supabase
+      .from("member_companies")
+      .select(`
+        companies (*)
+      `)
+      .eq("member_id", id);
+
+    if (memberCompanies) {
+      setCompanies(memberCompanies.map((mc: any) => mc.companies));
+    }
 
     setLoading(false);
   };
@@ -120,6 +146,64 @@ export default function MemberEdit() {
     }
   };
 
+  const handleCnpjSearch = async (cnpj: string, companyIndex: number) => {
+    try {
+      const companyData = await fetchCompanyByCnpj(cnpj);
+
+      const newCompanies = [...companies];
+      newCompanies[companyIndex] = {
+        ...newCompanies[companyIndex],
+        name: companyData.name,
+        address_cep: companyData.cep.replace(/\D/g, ""),
+        address_street: companyData.street,
+        address_number: companyData.number,
+        address_complement: companyData.complement,
+        address_neighborhood: companyData.neighborhood,
+        address_city: companyData.city,
+        address_state: companyData.state,
+      };
+      setCompanies(newCompanies);
+
+      toast({
+        title: "Dados encontrados",
+        description: "Os campos foram preenchidos automaticamente",
+      });
+    } catch (error: unknown) {
+      toast({
+        title: "Erro ao buscar CNPJ",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const addCompany = () => {
+    setCompanies([
+      ...companies,
+      {
+        name: "",
+        cnpj: "",
+        description: "",
+        phone: "",
+        instagram: "",
+        address_cep: "",
+        address_street: "",
+        address_number: "",
+        address_complement: "",
+        address_neighborhood: "",
+        address_city: "",
+        address_state: "",
+      },
+    ]);
+  };
+
+  const removeCompany = async (index: number) => {
+    const company = companies[index];
+    if (company.id) {
+      await supabase.from("member_companies").delete().eq("member_id", id).eq("company_id", company.id);
+    }
+    setCompanies(companies.filter((_, i) => i !== index));
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -132,7 +216,46 @@ export default function MemberEdit() {
 
       if (profileError) throw profileError;
 
-      // Note: Company management will be added in a future update
+      // Handle companies
+      for (const company of companies) {
+        if (company.id) {
+          // Update existing company
+          await supabase
+            .from("companies")
+            .update(company)
+            .eq("id", company.id);
+        } else {
+          // Insert new company
+          const { data: newCompany, error: companyError } = await supabase
+            .from("companies")
+            .insert({
+              name: company.name,
+              cnpj: company.cnpj || null,
+              description: company.description || null,
+              phone: company.phone || null,
+              instagram: company.instagram || null,
+              address_cep: company.address_cep || null,
+              address_street: company.address_street || null,
+              address_number: company.address_number || null,
+              address_complement: company.address_complement || null,
+              address_neighborhood: company.address_neighborhood || null,
+              address_city: company.address_city || null,
+              address_state: company.address_state || null,
+            })
+            .select()
+            .single();
+
+          if (companyError) throw companyError;
+
+          // Link company to member
+          await supabase
+            .from("member_companies")
+            .insert({
+              member_id: id,
+              company_id: newCompany.id,
+            });
+        }
+      }
 
       toast({
         title: "Membro atualizado",
@@ -451,6 +574,215 @@ export default function MemberEdit() {
           </CardContent>
         </Card>
 
+        {/* Companies Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle>Empresas</CardTitle>
+              <Button onClick={addCompany} size="sm">
+                <Plus className="mr-2 h-4 w-4" />
+                Adicionar Empresa
+              </Button>
+            </div>
+            <CardDescription>Empresas vinculadas a este membro</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {companies.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>Nenhuma empresa cadastrada</p>
+              </div>
+            ) : (
+              companies.map((company, index) => (
+                <Card key={index} className="border-2">
+                  <CardHeader>
+                    <div className="flex justify-between items-center">
+                      <CardTitle className="text-lg">Empresa {index + 1}</CardTitle>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeCompany(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>CNPJ</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            value={company.cnpj}
+                            onChange={(e) => {
+                              const newCompanies = [...companies];
+                              newCompanies[index].cnpj = e.target.value;
+                              setCompanies(newCompanies);
+                            }}
+                          />
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleCnpjSearch(company.cnpj, index)}
+                            disabled={!company.cnpj}
+                          >
+                            <Search className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Nome *</Label>
+                        <Input
+                          value={company.name}
+                          onChange={(e) => {
+                            const newCompanies = [...companies];
+                            newCompanies[index].name = e.target.value;
+                            setCompanies(newCompanies);
+                          }}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Descrição</Label>
+                      <Textarea
+                        value={company.description}
+                        onChange={(e) => {
+                          const newCompanies = [...companies];
+                          newCompanies[index].description = e.target.value;
+                          setCompanies(newCompanies);
+                        }}
+                      />
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Telefone</Label>
+                        <Input
+                          value={company.phone}
+                          onChange={(e) => {
+                            const newCompanies = [...companies];
+                            newCompanies[index].phone = e.target.value;
+                            setCompanies(newCompanies);
+                          }}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Instagram</Label>
+                        <Input
+                          placeholder="@empresa"
+                          value={company.instagram}
+                          onChange={(e) => {
+                            const newCompanies = [...companies];
+                            newCompanies[index].instagram = e.target.value;
+                            setCompanies(newCompanies);
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div className="space-y-2">
+                        <Label>CEP</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            value={company.address_cep}
+                            onChange={(e) => {
+                              const newCompanies = [...companies];
+                              newCompanies[index].address_cep = e.target.value;
+                              setCompanies(newCompanies);
+                            }}
+                          />
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleCepSearch(company.address_cep, true, index)}
+                            disabled={!company.address_cep}
+                          >
+                            <Search className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="sm:col-span-2 space-y-2">
+                        <Label>Rua</Label>
+                        <Input
+                          value={company.address_street}
+                          onChange={(e) => {
+                            const newCompanies = [...companies];
+                            newCompanies[index].address_street = e.target.value;
+                            setCompanies(newCompanies);
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div className="space-y-2">
+                        <Label>Número</Label>
+                        <Input
+                          value={company.address_number}
+                          onChange={(e) => {
+                            const newCompanies = [...companies];
+                            newCompanies[index].address_number = e.target.value;
+                            setCompanies(newCompanies);
+                          }}
+                        />
+                      </div>
+                      <div className="sm:col-span-2 space-y-2">
+                        <Label>Complemento</Label>
+                        <Input
+                          value={company.address_complement}
+                          onChange={(e) => {
+                            const newCompanies = [...companies];
+                            newCompanies[index].address_complement = e.target.value;
+                            setCompanies(newCompanies);
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div className="space-y-2">
+                        <Label>Bairro</Label>
+                        <Input
+                          value={company.address_neighborhood}
+                          onChange={(e) => {
+                            const newCompanies = [...companies];
+                            newCompanies[index].address_neighborhood = e.target.value;
+                            setCompanies(newCompanies);
+                          }}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Cidade</Label>
+                        <Input
+                          value={company.address_city}
+                          onChange={(e) => {
+                            const newCompanies = [...companies];
+                            newCompanies[index].address_city = e.target.value;
+                            setCompanies(newCompanies);
+                          }}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Estado</Label>
+                        <Input
+                          maxLength={2}
+                          value={company.address_state}
+                          onChange={(e) => {
+                            const newCompanies = [...companies];
+                            newCompanies[index].address_state = e.target.value.toUpperCase();
+                            setCompanies(newCompanies);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </CardContent>
+        </Card>
 
         <div className="flex flex-col sm:flex-row gap-4">
           <Button variant="outline" onClick={() => navigate("/members")} className="flex-1">
