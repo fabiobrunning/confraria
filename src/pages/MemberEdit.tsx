@@ -290,27 +290,26 @@ export default function MemberEdit() {
         return;
       }
 
-      // Por enquanto, vamos usar apenas reset automático
-      // até conseguirmos fazer deploy da Edge Function para senha personalizada
-      const { data, error } = await supabase.functions.invoke('reset-user-password', {
-        body: { 
-          userId: id
+      const { data, error } = await supabase.functions.invoke('update-user-password', {
+        body: {
+          userId: id,
+          newPassword: newPassword
         }
       });
 
-      if (error) throw error;
-
-      if (data.newPassword) {
-        toast({
-          title: "Senha alterada",
-          description: `Nova senha gerada: ${data.newPassword}`,
-        });
-      } else {
-        toast({
-          title: "Senha alterada",
-          description: "A senha foi alterada com sucesso",
-        });
+      if (error) {
+        console.error("Erro ao chamar função:", error);
+        throw new Error(error.message || "Erro ao alterar senha");
       }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      toast({
+        title: "Senha alterada",
+        description: "A senha foi alterada com sucesso",
+      });
       
       setShowPasswordDialog(false);
       setNewPassword("");
@@ -340,9 +339,16 @@ export default function MemberEdit() {
         body: { userId: id }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao chamar função:", error);
+        throw new Error(error.message || "Erro ao resetar senha");
+      }
 
-      if (data.newPassword) {
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      if (data?.newPassword) {
         toast({
           title: "Senha resetada",
           description: `Nova senha gerada: ${data.newPassword}`,
@@ -350,9 +356,10 @@ export default function MemberEdit() {
         setShowPasswordDialog(false);
         setNewPassword("");
       } else {
-        throw new Error(data.error || 'Erro ao resetar senha');
+        throw new Error('Erro ao gerar nova senha');
       }
     } catch (error: unknown) {
+      console.error("Erro completo:", error);
       toast({
         title: "Erro ao resetar senha",
         description: error instanceof Error ? error.message : "Erro desconhecido",
