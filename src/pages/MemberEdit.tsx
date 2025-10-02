@@ -425,15 +425,23 @@ export default function MemberEdit() {
 
   const handleDeleteAccount = async () => {
     try {
-      const { error } = await supabase.auth.admin.deleteUser(id!);
-      
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: {
+          userId: id!,
+        },
+      });
+
       if (error) throw error;
+
+      if (!data.success) {
+        throw new Error(data.error);
+      }
 
       toast({
         title: "Conta excluída",
         description: "A conta foi excluída com sucesso",
       });
-      
+
       navigate("/members");
     } catch (error: unknown) {
       toast({

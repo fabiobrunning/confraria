@@ -222,15 +222,25 @@ export default function Profile() {
 
   const handleDeleteAccount = async () => {
     try {
-      const { error } = await supabase.auth.admin.deleteUser(userId);
-      
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: {
+          userId: userId,
+        },
+      });
+
       if (error) throw error;
+
+      if (!data.success) {
+        throw new Error(data.error);
+      }
+
+      await supabase.auth.signOut();
 
       toast({
         title: "Conta excluída",
         description: "Sua conta foi excluída com sucesso",
       });
-      
+
       navigate("/auth");
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Erro desconhecido ao excluir conta";
