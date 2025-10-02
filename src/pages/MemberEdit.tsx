@@ -290,33 +290,40 @@ export default function MemberEdit() {
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke('update-user-password', {
-        body: {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/update-user-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': supabaseAnonKey,
+        },
+        body: JSON.stringify({
           userId: id,
           newPassword: newPassword
-        }
+        })
       });
 
-      if (error) {
-        console.error("Erro ao chamar função:", error);
-        throw new Error(error.message || "Erro ao alterar senha");
-      }
+      const data = await response.json();
 
-      if (data?.error) {
-        throw new Error(data.error);
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Erro ao alterar senha');
       }
 
       toast({
         title: "Senha alterada",
         description: "A senha foi alterada com sucesso",
       });
-      
+
       setShowPasswordDialog(false);
       setNewPassword("");
     } catch (error: unknown) {
+      console.error("Erro ao alterar senha:", error);
       toast({
         title: "Erro ao alterar senha",
-        description: error instanceof Error ? error.message : "Erro desconhecido",
+        description: error instanceof Error ? error.message : "Erro desconhecido. Verifique se as Edge Functions estão implantadas.",
         variant: "destructive",
       });
     }
@@ -335,17 +342,23 @@ export default function MemberEdit() {
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke('reset-user-password', {
-        body: { userId: id }
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/reset-user-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': supabaseAnonKey,
+        },
+        body: JSON.stringify({ userId: id })
       });
 
-      if (error) {
-        console.error("Erro ao chamar função:", error);
-        throw new Error(error.message || "Erro ao resetar senha");
-      }
+      const data = await response.json();
 
-      if (data?.error) {
-        throw new Error(data.error);
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Erro ao resetar senha');
       }
 
       if (data?.newPassword) {
@@ -359,10 +372,10 @@ export default function MemberEdit() {
         throw new Error('Erro ao gerar nova senha');
       }
     } catch (error: unknown) {
-      console.error("Erro completo:", error);
+      console.error("Erro ao resetar senha:", error);
       toast({
         title: "Erro ao resetar senha",
-        description: error instanceof Error ? error.message : "Erro desconhecido",
+        description: error instanceof Error ? error.message : "Erro desconhecido. Verifique se as Edge Functions estão implantadas.",
         variant: "destructive",
       });
     }
