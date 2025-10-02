@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader as Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
 export default function GroupEdit() {
