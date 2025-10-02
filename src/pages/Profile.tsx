@@ -292,6 +292,18 @@ export default function Profile() {
     }
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        toast({
+          title: "Sessão expirada",
+          description: "Por favor, faça login novamente",
+          variant: "destructive",
+        });
+        navigate("/auth");
+        return;
+      }
+
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
