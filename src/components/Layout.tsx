@@ -157,7 +157,7 @@ export default function Layout({ children }: LayoutProps) {
       </aside>
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-sidebar border-b border-sidebar-border z-50 flex items-center px-3">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-sidebar border-b border-sidebar-border z-50 flex items-center justify-between px-3">
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="text-sidebar-foreground h-10 w-10">
@@ -177,14 +177,14 @@ export default function Layout({ children }: LayoutProps) {
             </nav>
           </SheetContent>
         </Sheet>
-        <div className="flex items-center gap-2 ml-2">
+        <div className="flex items-center justify-center flex-1">
           <img
             src="/logo-confraria.png"
             alt="Confraria Pedra Branca"
-            className="h-7 w-auto object-contain"
+            className="h-10 w-auto object-contain"
           />
-          <span className="font-bold text-sidebar-foreground text-sm">Confraria Pedra Branca</span>
         </div>
+        <div className="w-10"></div>
       </div>
 
       {/* Main Content */}
