@@ -157,22 +157,6 @@ export default function PreRegister() {
         throw new Error(data.error);
       }
 
-      try {
-        await fetch("https://n8n-n8n.xm9jj7.easypanel.host/webhook-test/cadastro", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            nome: fullName,
-            telefone: phone,
-            senha: data.newPassword,
-          }),
-        });
-      } catch (webhookError) {
-        console.error("Erro ao enviar webhook (não crítico):", webhookError);
-      }
-
       toast({
         title: "Senha resetada!",
         description: `Nova senha: ${data.newPassword}`,
