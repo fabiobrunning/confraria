@@ -145,11 +145,9 @@ export default function PreRegister() {
     setResendingId(memberId);
 
     try {
-      const { data, error } = await supabase.functions.invoke('pre-register-member', {
+      const { data, error } = await supabase.functions.invoke('reset-user-password', {
         body: {
-          fullName,
-          phone,
-          role: "member",
+          userId: memberId,
         },
       });
 
@@ -159,14 +157,30 @@ export default function PreRegister() {
         throw new Error(data.error);
       }
 
+      try {
+        await fetch("https://n8n-n8n.xm9jj7.easypanel.host/webhook-test/cadastro", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            nome: fullName,
+            telefone: phone,
+            senha: data.newPassword,
+          }),
+        });
+      } catch (webhookError) {
+        console.error("Erro ao enviar webhook (não crítico):", webhookError);
+      }
+
       toast({
-        title: "Credenciais reenviadas!",
-        description: `Nova senha gerada: ${data.password}`,
+        title: "Senha resetada!",
+        description: `Nova senha: ${data.newPassword}`,
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
       toast({
-        title: "Erro ao reenviar credenciais",
+        title: "Erro ao resetar senha",
         description: errorMessage,
         variant: "destructive",
       });
@@ -179,19 +193,22 @@ export default function PreRegister() {
     setDeletingId(memberId);
 
     try {
-      // Excluir o perfil do usuário pré-cadastrado
-      const { error } = await supabase
-        .from("profiles")
-        .delete()
-        .eq("id", memberId);
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: {
+          userId: memberId,
+        },
+      });
 
       if (error) throw error;
 
-      // Atualizar a lista após excluir
+      if (!data.success) {
+        throw new Error(data.error);
+      }
+
       setPreRegisteredMembers(preRegisteredMembers.filter(member => member.id !== memberId));
 
       toast({
-        title: "Pré-cadastro excluído com sucesso!",
+        title: "Pré-cadastro excluído!",
         description: "O usuário foi removido do sistema",
       });
     } catch (error: unknown) {
