@@ -79,59 +79,85 @@ export default function Profile() {
 
   const loadProfile = async () => {
     setLoading(true);
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      navigate("/auth");
-      return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+
+      setUserId(session.user.id);
+
+      // Load profile
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error("Erro ao carregar perfil:", profileError);
+        toast({
+          title: "Erro ao carregar perfil",
+          description: profileError.message,
+          variant: "destructive",
+        });
+      } else if (profileData) {
+        setProfile(profileData);
+      } else {
+        toast({
+          title: "Perfil não encontrado",
+          description: "Não foi possível carregar o perfil do usuário",
+          variant: "destructive",
+        });
+      }
+
+      // Load companies
+      const { data: memberCompanies, error: companiesError } = await supabase
+        .from("member_companies")
+        .select(`
+          companies (*)
+        `)
+        .eq("member_id", session.user.id);
+
+      if (companiesError) {
+        console.error("Erro ao carregar empresas:", companiesError);
+      } else if (memberCompanies) {
+        setCompanies(memberCompanies.map((mc: any) => mc.companies));
+      }
+
+      // Load quotas
+      const { data: quotasData, error: quotasError } = await supabase
+        .from("quotas")
+        .select(`
+          id,
+          quota_number,
+          status,
+          consortium_groups (
+            description
+          )
+        `)
+        .eq("member_id", session.user.id);
+
+      if (quotasError) {
+        console.error("Erro ao carregar cotas:", quotasError);
+      } else if (quotasData) {
+        setQuotas(quotasData.map((q: any) => ({
+          ...q,
+          group: q.consortium_groups,
+        })));
+      }
+    } catch (error: any) {
+      console.error("Erro geral ao carregar perfil:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar as informações do perfil",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-
-    setUserId(session.user.id);
-
-    // Load profile
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
-
-    if (profileData) {
-      setProfile(profileData);
-    }
-
-    // Load companies
-    const { data: memberCompanies } = await supabase
-      .from("member_companies")
-      .select(`
-        companies (*)
-      `)
-      .eq("member_id", session.user.id);
-
-    if (memberCompanies) {
-      setCompanies(memberCompanies.map((mc: any) => mc.companies));
-    }
-
-    // Load quotas
-    const { data: quotasData } = await supabase
-      .from("quotas")
-      .select(`
-        id,
-        quota_number,
-        status,
-        consortium_groups (
-          description
-        )
-      `)
-      .eq("member_id", session.user.id);
-
-    if (quotasData) {
-      setQuotas(quotasData.map((q: any) => ({
-        ...q,
-        group: q.consortium_groups,
-      })));
-    }
-
-    setLoading(false);
   };
 
   const handleCepSearch = async (cep: string, isCompany: boolean, companyIndex?: number) => {
