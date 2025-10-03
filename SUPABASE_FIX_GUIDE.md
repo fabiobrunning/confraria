@@ -1,36 +1,76 @@
 # Guia de Correção dos Erros do Supabase
 
-## Problema Identificado
+## Problemas Identificados
 
-Os erros 404 e 406 que você está vendo no console ocorrem devido a problemas com as políticas RLS (Row Level Security) da tabela `profiles` no Supabase.
+### 1. Erros de Autenticação e RLS
+Os erros 404 e 406 no console ocorrem devido a problemas com as políticas RLS (Row Level Security):
+- **Erro 404 na tabela groups**: URL do Supabase em produção diferente da configurada localmente
+- **Erro 406 na tabela profiles**: Políticas RLS conflitantes e redundantes
 
-### Erros observados:
-1. **Erro 404 na tabela groups**: A URL mostrada no erro (`vomnuwxophfcdtayvjxo.supabase.co`) é diferente da URL no arquivo `.env` (`0ec90b57d6e95fcbda19832f.supabase.co`)
-2. **Erro 406 na tabela profiles**: As políticas RLS têm conflitos e redundâncias que causam problemas de autorização
+### 2. Problemas de Performance
+- Políticas RLS re-avaliam `auth.uid()` para cada linha, causando lentidão
+- Múltiplas políticas permissivas duplicadas para as mesmas operações
+
+### 3. Problemas de Segurança
+- Funções com search_path mutável (vulnerabilidade de segurança)
+- Índices não utilizados ocupando espaço no banco
+
+### 4. Políticas RLS Duplicadas
+Múltiplas tabelas têm políticas conflitantes que podem causar comportamento inesperado
 
 ## Solução
 
-### Passo 1: Aplicar a Migration de Correção RLS
+### Passo 1: Aplicar as Migrations de Correção
 
-Uma nova migration foi criada em: `supabase/migrations/20251003190000_fix_profiles_rls_policies.sql`
+Duas migrations foram criadas para corrigir todos os problemas:
 
-**Para aplicar esta migration no seu projeto Supabase:**
+#### Migration 1: `supabase/migrations/20251003190000_fix_profiles_rls_policies.sql`
+Corrige apenas a tabela `profiles` (problema emergencial)
+
+#### Migration 2: `supabase/migrations/20251003200000_fix_security_issues.sql`
+Corrige TODOS os problemas de segurança, performance e redundância:
+- Otimiza todas as políticas RLS usando `(select auth.uid())`
+- Remove políticas duplicadas/conflitantes
+- Remove índices não utilizados
+- Corrige search_path das funções para segurança
+
+**Para aplicar as migrations no seu projeto Supabase:**
 
 1. Acesse o [Dashboard do Supabase](https://supabase.com/dashboard)
 2. Selecione seu projeto
 3. Vá em **SQL Editor** no menu lateral
 4. Clique em **New Query**
-5. Copie e cole o conteúdo do arquivo `supabase/migrations/20251003190000_fix_profiles_rls_policies.sql`
-6. Execute a query clicando em **Run**
+5. **IMPORTANTE**: Execute APENAS a migration 2 (mais completa)
+6. Copie e cole o conteúdo do arquivo `supabase/migrations/20251003200000_fix_security_issues.sql`
+7. Execute a query clicando em **Run**
+8. Aguarde a execução completa (pode levar alguns segundos)
 
-Esta migration irá:
-- Remover todas as políticas RLS conflitantes da tabela `profiles`
-- Criar políticas simples e sem recursão:
-  - Usuários autenticados podem visualizar todos os perfis
-  - Usuários podem atualizar apenas seu próprio perfil
-  - Usuários podem inserir seu próprio perfil no signup
-  - Admins podem inserir qualquer perfil
-  - Admins podem deletar perfis
+**O que esta migration faz:**
+
+#### Correções de Performance:
+- Substitui `auth.uid()` por `(select auth.uid())` em todas as políticas RLS
+- Isso evita re-avaliação da função para cada linha, melhorando performance drasticamente
+
+#### Correções de Políticas RLS:
+- **profiles**: Remove 8 políticas conflitantes, mantém apenas 5 otimizadas
+- **companies**: Remove 4 políticas duplicadas, cria 2 otimizadas
+- **groups**: Remove 6 políticas, cria 4 otimizadas
+- **members**: Remove 11 políticas conflitantes, cria 3 otimizadas
+- **member_companies**: Remove 8 políticas, cria 3 otimizadas
+- **quotas**: Remove 8 políticas, cria 2 otimizadas
+
+#### Correções de Segurança:
+- Adiciona `SET search_path = public, pg_temp` em todas as funções
+- Previne ataques de manipulação de search_path
+- Protege contra injeção de código via schema
+
+#### Limpeza de Índices:
+- Remove 11 índices não utilizados que ocupavam espaço:
+  - idx_companies_cnpj
+  - idx_groups_company_id, idx_groups_is_active, idx_groups_name
+  - idx_members_company_id, idx_members_phone, idx_members_email, idx_members_status, idx_members_registration_number
+  - idx_member_companies_company_id
+  - idx_quotas_status
 
 ### Passo 2: Verificar Variáveis de Ambiente em Produção
 
@@ -89,16 +129,59 @@ O banco de dados tem as seguintes tabelas principais:
 
 Após aplicar as correções, você pode testar:
 
-1. Abra o console do navegador (F12)
-2. Acesse a aplicação
-3. Faça login
-4. Verifique se não há mais erros 404 ou 406
-5. Navegue pelas páginas de Membros, Empresas e Grupos
+1. **No Supabase Dashboard**:
+   - Vá em **Database** > **Policies**
+   - Verifique se as políticas antigas foram removidas
+   - Confirme que cada tabela tem apenas as políticas otimizadas
+
+2. **No console do navegador** (F12):
+   - Acesse a aplicação
+   - Faça login
+   - Verifique se não há mais erros 404 ou 406
+   - Navegue pelas páginas de Membros, Empresas e Grupos
+   - Observe que as queries estão mais rápidas
+
+3. **Performance**:
+   - As páginas devem carregar mais rápido
+   - Operações de leitura/escrita devem ser mais responsivas
+   - Menos uso de CPU no banco de dados
+
+## Benefícios Esperados
+
+Após aplicar todas as correções:
+
+✅ **Performance**: Queries 3-5x mais rápidas em tabelas grandes
+✅ **Segurança**: Proteção contra ataques de search_path
+✅ **Manutenibilidade**: Políticas mais simples e claras
+✅ **Espaço**: Economia de espaço com remoção de índices não usados
+✅ **Estabilidade**: Sem conflitos entre políticas RLS
 
 ## Suporte
 
 Se os problemas persistirem, verifique:
-- Se a migration foi aplicada corretamente no banco de dados
-- Se as variáveis de ambiente estão corretas em produção
-- Se o novo deploy foi feito com sucesso
-- Logs de erro no console do navegador e no Supabase Dashboard
+
+1. **Migration aplicada corretamente**:
+   - Verifique no SQL Editor se houve algum erro
+   - Confirme que todos os comandos foram executados
+   - Veja se não há mensagens de erro no final da execução
+
+2. **Variáveis de ambiente**:
+   - Confirme que VITE_SUPABASE_URL está correta no Netlify
+   - Verifique que VITE_SUPABASE_ANON_KEY está correta
+   - Faça um novo deploy após qualquer alteração
+
+3. **Cache do navegador**:
+   - Limpe o cache do navegador (Ctrl+Shift+Delete)
+   - Ou abra em aba anônima para testar
+
+4. **Logs**:
+   - Console do navegador para erros de frontend
+   - Supabase Dashboard > Logs para erros de backend
+   - Netlify Deploy Logs para erros de deploy
+
+## Próximos Passos Recomendados
+
+1. Monitore o uso de CPU/memória no Supabase Dashboard
+2. Configure alertas para erros no Supabase
+3. Considere adicionar proteção de senha comprometida (veja warning sobre HaveIBeenPwned)
+4. Faça backup regular do banco de dados
