@@ -179,6 +179,24 @@ export default function PreRegister() {
         title: "Senha resetada!",
         description: `Nova senha: ${data.newPassword}`,
       });
+
+      try {
+        await fetch('https://n8n-n8n.xm9jj7.easypanel.host/webhook/cadastro', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fullName: fullName,
+            phone: phone,
+            password: data.newPassword,
+            isResend: true,
+            createdAt: new Date().toISOString(),
+          }),
+        });
+      } catch (webhookError) {
+        console.error('Erro ao enviar para webhook:', webhookError);
+      }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
       toast({
