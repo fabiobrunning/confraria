@@ -6,10 +6,25 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  console.error('Supabase configuration missing:', {
-    url: SUPABASE_URL,
-    hasKey: !!SUPABASE_PUBLISHABLE_KEY
-  });
+  const errorMessage = `
+Supabase configuration is missing. Please ensure the following environment variables are set:
+
+1. VITE_SUPABASE_URL (Current: ${SUPABASE_URL || 'undefined'})
+2. VITE_SUPABASE_ANON_KEY (Current: ${SUPABASE_PUBLISHABLE_KEY ? 'set' : 'undefined'})
+
+For Netlify deployment:
+- Go to Site settings > Environment variables
+- Add both variables with your Supabase project credentials
+- Make sure they are set to "Available during build"
+- Trigger a new deploy after saving the variables
+
+For local development:
+- Copy .env.example to .env
+- Fill in your Supabase credentials from your Supabase project dashboard
+  `.trim();
+
+  console.error(errorMessage);
+  throw new Error('Missing Supabase configuration. Check console for details.');
 }
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
