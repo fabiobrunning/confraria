@@ -1,10 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import LoginDialog from "@/components/LoginDialog";
 
 export default function Index() {
   const navigate = useNavigate();
   const numbersAnimated = useRef(false);
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -94,7 +96,7 @@ export default function Index() {
             />
           </div>
           <button
-            onClick={() => navigate("/auth")}
+            onClick={() => setLoginDialogOpen(true)}
             className="animate-slide-in-right opacity-0 delay-200 bg-transparent border border-white/30 text-white font-medium px-4 sm:px-6 py-1.5 sm:py-2 rounded text-xs sm:text-sm btn-login transition-all duration-300 relative overflow-hidden hover:bg-white hover:text-black hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(255,255,255,0.2)]"
           >
             Login
@@ -264,6 +266,8 @@ export default function Index() {
           left: 100%;
         }
       `}</style>
+
+      <LoginDialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen} />
     </div>
   );
 }
