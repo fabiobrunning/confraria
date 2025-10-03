@@ -149,15 +149,6 @@ export default function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
             Entrar
           </Button>
         </form>
-        <div className="text-center mt-4">
-          <a
-            href="/setup"
-            className="text-xs font-sans text-gray-500 hover:text-accent transition-colors"
-            onClick={() => onOpenChange(false)}
-          >
-            Configuração inicial
-          </a>
-        </div>
       </DialogContent>
     </Dialog>
   );
