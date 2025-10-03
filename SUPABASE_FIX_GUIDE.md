@@ -74,7 +74,9 @@ Corrige TODOS os problemas de segurança, performance e redundância:
 
 ### Passo 2: Verificar Variáveis de Ambiente em Produção
 
-O erro mostra que a URL do Supabase usada em produção (`vomnuwxophfcdtayvjxo`) é diferente da URL no arquivo `.env`.
+As novas credenciais do Supabase já foram configuradas no projeto:
+- **URL**: `https://iztvzodfhuqaarsioptb.supabase.co`
+- **Projeto**: `bolt-native-database-57920392`
 
 **Se você fez deploy no Netlify:**
 
@@ -87,23 +89,24 @@ O erro mostra que a URL do Supabase usada em produção (`vomnuwxophfcdtayvjxo`)
 5. Certifique-se de que elas correspondem ao seu projeto Supabase de produção
 6. Se você fez alterações, faça um novo deploy
 
-**Para obter as credenciais corretas do Supabase:**
+**Credenciais atuais do projeto:**
 
-1. Acesse o [Dashboard do Supabase](https://supabase.com/dashboard)
-2. Selecione seu projeto
-3. Vá em **Settings** > **API**
-4. Copie:
-   - **Project URL** (ex: `https://vomnuwxophfcdtayvjxo.supabase.co`)
-   - **anon/public key** (a chave pública)
+- **Project Name**: `bolt-native-database-57920392`
+- **Project URL**: `https://iztvzodfhuqaarsioptb.supabase.co`
+- **Anon Key**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6dHZ6b2RmaHVxYWFyc2lvcHRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MjMxOTksImV4cCI6MjA3NDk5OTE5OX0.98kklKnvZtx4fGbwHean6QPwOLKr0LnGi46c9XcqodA`
 
-### Passo 3: Atualizar arquivo .env Local
+Essas credenciais já estão configuradas nos arquivos `.env` e `.env.example`.
 
-Atualize o arquivo `.env` com as credenciais corretas:
+### Passo 3: Variáveis de Ambiente já Configuradas ✅
+
+Os arquivos `.env` e `.env.example` já foram atualizados com as novas credenciais:
 
 ```env
-VITE_SUPABASE_URL=https://SUA_URL.supabase.co
-VITE_SUPABASE_ANON_KEY=SUA_ANON_KEY_AQUI
+VITE_SUPABASE_URL=https://iztvzodfhuqaarsioptb.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6dHZ6b2RmaHVxYWFyc2lvcHRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MjMxOTksImV4cCI6MjA3NDk5OTE5OX0.98kklKnvZtx4fGbwHean6QPwOLKr0LnGi46c9XcqodA
 ```
+
+**Não é necessário fazer alterações manuais.**
 
 ### Passo 4: Fazer Novo Deploy
 
