@@ -97,21 +97,29 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-4">
-      <Card className="w-full max-w-md shadow-2xl border-accent/20">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 rounded-full bg-accent flex items-center justify-center">
-              <span className="text-2xl font-bold text-accent-foreground">CP</span>
-            </div>
+    <div className="min-h-screen flex items-center justify-center bg-black p-4">
+      <Card className="w-full max-w-md shadow-2xl border-accent/20 bg-white">
+        <CardHeader className="space-y-4 text-center pt-8">
+          <div className="flex justify-center mb-2">
+            <img
+              src="/logo-confraria.png"
+              alt="Confraria Pedra Branca"
+              className="h-20 w-auto"
+            />
           </div>
-          <CardTitle className="text-2xl font-bold">Confraria Pedra Branca</CardTitle>
-          <CardDescription>Sistema de Gestão de Consórcios</CardDescription>
+          <CardTitle className="text-3xl font-display tracking-wide text-black">
+            CONFRARIA PEDRA BRANCA
+          </CardTitle>
+          <CardDescription className="font-serif text-base text-gray-600">
+            Sistema de Gestão de Consórcios
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+        <CardContent className="px-8 pb-8">
+          <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="phone">Telefone</Label>
+              <Label htmlFor="phone" className="font-sans text-sm font-medium text-gray-700">
+                Telefone
+              </Label>
               <Input
                 id="phone"
                 type="tel"
@@ -119,15 +127,17 @@ export default function Auth() {
                 value={formData.phone}
                 onChange={(e) => setFormData(prev => ({ ...prev, phone: maskPhone(e.target.value) }))}
                 disabled={loading}
-                className={validationErrors.phone ? "border-destructive" : ""}
+                className={`font-sans ${validationErrors.phone ? "border-destructive" : ""}`}
                 maxLength={15}
               />
               {validationErrors.phone && (
-                <p className="text-sm text-destructive">{validationErrors.phone}</p>
+                <p className="text-sm text-destructive font-sans">{validationErrors.phone}</p>
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password" className="font-sans text-sm font-medium text-gray-700">
+                Senha
+              </Label>
               <Input
                 id="password"
                 type="password"
@@ -135,19 +145,26 @@ export default function Auth() {
                 value={formData.password}
                 onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                 disabled={loading}
-                className={validationErrors.password ? "border-destructive" : ""}
+                className={`font-sans ${validationErrors.password ? "border-destructive" : ""}`}
               />
               {validationErrors.password && (
-                <p className="text-sm text-destructive">{validationErrors.password}</p>
+                <p className="text-sm text-destructive font-sans">{validationErrors.password}</p>
               )}
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full bg-accent hover:bg-accent/90 text-white font-sans font-medium"
+              disabled={loading}
+            >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Entrar
             </Button>
           </form>
-          <div className="mt-4 text-center">
-            <a href="/setup" className="text-xs text-muted-foreground hover:text-accent transition-colors">
+          <div className="mt-6 text-center">
+            <a
+              href="/setup"
+              className="text-xs font-sans text-gray-500 hover:text-accent transition-colors"
+            >
               Configuração inicial
             </a>
           </div>
