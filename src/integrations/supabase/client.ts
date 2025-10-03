@@ -2,15 +2,15 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const SUPABASE_URL = import.meta.env.VITE_BOLT_DATABASE_URL || import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_BOLT_DATABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   const errorMessage = `
 Supabase configuration is missing. Please ensure the following environment variables are set:
 
-1. VITE_SUPABASE_URL (Current: ${SUPABASE_URL || 'undefined'})
-2. VITE_SUPABASE_ANON_KEY (Current: ${SUPABASE_PUBLISHABLE_KEY ? 'set' : 'undefined'})
+1. VITE_BOLT_DATABASE_URL (Current: ${SUPABASE_URL || 'undefined'})
+2. VITE_BOLT_DATABASE_ANON_KEY (Current: ${SUPABASE_PUBLISHABLE_KEY ? 'set' : 'undefined'})
 
 For Netlify deployment:
 - Go to Site settings > Environment variables

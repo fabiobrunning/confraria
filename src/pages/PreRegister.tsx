@@ -90,7 +90,7 @@ export default function PreRegister() {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pre-register-member`,
+        `${import.meta.env.VITE_BOLT_DATABASE_URL || import.meta.env.VITE_SUPABASE_URL}/functions/v1/pre-register-member`,
         {
           method: 'POST',
           headers: {
