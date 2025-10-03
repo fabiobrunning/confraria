@@ -9,9 +9,13 @@ export default function Index() {
   useEffect(() => {
     // Check if user is already logged in
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/dashboard");
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          navigate("/dashboard");
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
       }
     };
     checkUser();
