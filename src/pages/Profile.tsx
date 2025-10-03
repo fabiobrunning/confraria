@@ -48,6 +48,7 @@ export default function Profile() {
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [userId, setUserId] = useState("");
+  const [isPreRegistered, setIsPreRegistered] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -98,6 +99,7 @@ export default function Profile() {
         });
       } else if (profileData) {
         setProfile(profileData);
+        setIsPreRegistered(profileData.pre_registered || false);
       } else {
         toast({
           title: "Perfil não encontrado",
@@ -106,8 +108,22 @@ export default function Profile() {
         });
       }
 
-      // Note: Companies and quotas features are not implemented yet
-      // These will be added in a future update
+      const { data: memberCompanies } = await supabase
+        .from("member_companies")
+        .select("company_id")
+        .eq("member_id", session.user.id);
+
+      if (memberCompanies && memberCompanies.length > 0) {
+        const companyIds = memberCompanies.map(mc => mc.company_id);
+        const { data: companiesData } = await supabase
+          .from("companies")
+          .select("*")
+          .in("id", companyIds);
+
+        if (companiesData) {
+          setCompanies(companiesData);
+        }
+      }
     } catch (error: unknown) {
       logError(error, "Profile - loadProfile general");
       toast({
@@ -191,23 +207,116 @@ export default function Profile() {
   };
 
   const handleSave = async () => {
+    const missingFields: string[] = [];
+
+    if (!profile.full_name.trim()) {
+      missingFields.push("Nome Completo");
+    }
+
+    const hasAddress = profile.address_street &&
+                       profile.address_number &&
+                       profile.address_neighborhood &&
+                       profile.address_city &&
+                       profile.address_state;
+
+    if (!hasAddress) {
+      missingFields.push("Endereço completo (rua, número, bairro, cidade e estado)");
+    }
+
+    if (companies.length === 0 || !companies.some(c => c.name.trim())) {
+      missingFields.push("Pelo menos uma empresa com nome");
+    }
+
+    if (missingFields.length > 0) {
+      toast({
+        title: "Campos obrigatórios faltando",
+        description: `Por favor, preencha: ${missingFields.join(", ")}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSaving(true);
 
     try {
-      // Update profile
+      const profileUpdate = {
+        ...profile,
+        pre_registered: false
+      };
+
       const { error: profileError } = await supabase
         .from("profiles")
-        .update(profile)
+        .update(profileUpdate)
         .eq("id", userId);
 
       if (profileError) throw profileError;
 
-      // Note: Company management will be added in a future update
+      for (const company of companies) {
+        if (!company.name.trim()) continue;
+
+        if (company.id) {
+          const { error: updateError } = await supabase
+            .from("companies")
+            .update({
+              name: company.name,
+              cnpj: company.cnpj,
+              description: company.description,
+              phone: company.phone,
+              instagram: company.instagram,
+              address_cep: company.address_cep,
+              address_street: company.address_street,
+              address_number: company.address_number,
+              address_complement: company.address_complement,
+              address_neighborhood: company.address_neighborhood,
+              address_city: company.address_city,
+              address_state: company.address_state,
+            })
+            .eq("id", company.id);
+
+          if (updateError) throw updateError;
+        } else {
+          const { data: newCompany, error: insertError } = await supabase
+            .from("companies")
+            .insert({
+              name: company.name,
+              cnpj: company.cnpj,
+              description: company.description,
+              phone: company.phone,
+              instagram: company.instagram,
+              address_cep: company.address_cep,
+              address_street: company.address_street,
+              address_number: company.address_number,
+              address_complement: company.address_complement,
+              address_neighborhood: company.address_neighborhood,
+              address_city: company.address_city,
+              address_state: company.address_state,
+            })
+            .select()
+            .single();
+
+          if (insertError) throw insertError;
+
+          if (newCompany) {
+            const { error: linkError } = await supabase
+              .from("member_companies")
+              .insert({
+                member_id: userId,
+                company_id: newCompany.id,
+              });
+
+            if (linkError) throw linkError;
+          }
+        }
+      }
+
+      setIsPreRegistered(false);
 
       toast({
         title: "Perfil atualizado",
-        description: "Suas informações foram salvas com sucesso",
+        description: "Suas informações foram salvas com sucesso. Seu cadastro está completo!",
       });
+
+      loadProfile();
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Erro desconhecido ao salvar";
       toast({
@@ -376,6 +485,26 @@ export default function Profile() {
           <h1 className="text-2xl sm:text-3xl font-bold">Meu Perfil</h1>
           <p className="text-sm sm:text-base text-muted-foreground">Gerencie suas informações pessoais e empresas</p>
         </div>
+
+        {isPreRegistered && (
+          <Card className="border-yellow-500 bg-yellow-50">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <Badge variant="outline" className="bg-yellow-500 text-white border-yellow-500">
+                  Cadastro Incompleto
+                </Badge>
+                <div>
+                  <p className="text-sm font-medium text-yellow-800">
+                    Complete seu cadastro para acessar todos os recursos
+                  </p>
+                  <p className="text-xs text-yellow-700 mt-1">
+                    Preencha seu nome completo, endereço e cadastre pelo menos uma empresa
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Personal Information */}
         <Card>

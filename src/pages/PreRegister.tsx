@@ -213,28 +213,23 @@ export default function PreRegister() {
     setDeletingId(memberId);
 
     try {
-      const { data, error } = await supabase.functions.invoke('delete-user', {
-        body: {
-          userId: memberId,
-        },
-      });
+      const { error } = await supabase
+        .from("profiles")
+        .update({ pre_registered: false })
+        .eq("id", memberId);
 
       if (error) throw error;
-
-      if (!data.success) {
-        throw new Error(data.error);
-      }
 
       setPreRegisteredMembers(preRegisteredMembers.filter(member => member.id !== memberId));
 
       toast({
-        title: "Pré-cadastro excluído!",
-        description: "O usuário foi removido do sistema",
+        title: "Removido da lista",
+        description: "O membro foi removido da lista de pré-cadastrados",
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
       toast({
-        title: "Erro ao excluir pré-cadastro",
+        title: "Erro ao remover da lista",
         description: errorMessage,
         variant: "destructive",
       });
@@ -372,7 +367,7 @@ export default function PreRegister() {
                                 className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
                                 onClick={() => handleDeletePreRegister(member.id)}
                                 disabled={resendingId === member.id || deletingId === member.id}
-                                title="Excluir pré-cadastro"
+                                title="Remover da lista de pré-cadastrados"
                               >
                                 {deletingId === member.id ? (
                                   <Loader2 className="h-3 w-3 animate-spin" />

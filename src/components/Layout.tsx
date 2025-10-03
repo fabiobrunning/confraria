@@ -149,7 +149,7 @@ function Layout({ children }: LayoutProps) {
       <aside className="hidden lg:flex w-64 flex-col bg-sidebar border-r border-sidebar-border">
         <div className="p-4 border-b border-sidebar-border flex justify-center">
           <img
-            src="/logo-confraria.png"
+            src="/Confraria branca.png"
             alt="Confraria Pedra Branca"
             className="h-24 w-auto object-contain"
           />
@@ -170,7 +170,7 @@ function Layout({ children }: LayoutProps) {
           <SheetContent side="left" className="w-[280px] p-0 bg-sidebar">
             <div className="p-4 border-b border-sidebar-border flex justify-center">
               <img
-                src="/logo-confraria.png"
+                src="/Confraria branca.png"
                 alt="Confraria Pedra Branca"
                 className="h-20 w-auto object-contain"
               />
@@ -182,7 +182,7 @@ function Layout({ children }: LayoutProps) {
         </Sheet>
         <div className="flex items-center justify-center flex-1">
           <img
-            src="/logo-confraria.png"
+            src="/Confraria branca.png"
             alt="Confraria Pedra Branca"
             className="h-12 w-auto object-contain"
           />

@@ -95,17 +95,14 @@ export default function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
         <DialogHeader>
           <div className="flex justify-center mb-4">
             <img
-              src="/logo-confraria.png"
+              src="/3.png"
               alt="Confraria Pedra Branca"
-              className="h-20 w-auto"
+              className="h-16 w-auto"
             />
           </div>
-          <DialogTitle className="text-2xl font-display tracking-wide text-center">
-            CONFRARIA PEDRA BRANCA
+          <DialogTitle className="text-xl font-sans font-normal text-center text-gray-700">
+            Acesse a plataforma
           </DialogTitle>
-          <DialogDescription className="font-serif text-center">
-            Sistema de Gestão de Consórcios
-          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleLogin} className="space-y-4 mt-4">
           <div className="space-y-2">
