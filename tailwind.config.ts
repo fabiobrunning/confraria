@@ -18,6 +18,9 @@ export default {
         'sans': ['Inter', 'system-ui', 'sans-serif'],
         'serif': ['Cormorant Garamond', 'Georgia', 'serif'],
         'display': ['Archive', 'system-ui', 'sans-serif'],
+        'inter': ['Inter', 'system-ui', 'sans-serif'],
+        'archive': ['Archive', 'system-ui', 'sans-serif'],
+        'cormorant': ['Cormorant Garamond', 'Georgia', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",
