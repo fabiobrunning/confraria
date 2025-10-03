@@ -152,14 +152,6 @@ export default function Auth() {
               Entrar
             </Button>
           </form>
-          <div className="mt-6 text-center">
-            <a
-              href="/setup"
-              className="text-xs font-sans text-gray-500 hover:text-accent transition-colors"
-            >
-              Configuração inicial
-            </a>
-          </div>
         </CardContent>
       </Card>
     </div>
