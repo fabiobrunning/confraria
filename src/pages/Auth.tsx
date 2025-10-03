@@ -94,7 +94,7 @@ export default function Auth() {
         <CardHeader className="space-y-4 text-center pt-8">
           <div className="flex justify-center mb-2">
             <img
-              src="/logo-confraria.svg"
+              src="/Confraria branca.png"
               alt="Confraria Pedra Branca"
               className="h-20 w-auto"
             />
