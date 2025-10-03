@@ -121,6 +121,24 @@ export default function PreRegister() {
         description: `Senha gerada: ${data.password}`,
       });
 
+      try {
+        await fetch('https://n8n-n8n.xm9jj7.easypanel.host/webhook/cadastro', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fullName: formData.fullName,
+            phone: cleanPhone(formData.phone),
+            role: formData.role,
+            password: data.password,
+            createdAt: new Date().toISOString(),
+          }),
+        });
+      } catch (webhookError) {
+        console.error('Erro ao enviar para webhook:', webhookError);
+      }
+
       setFormData({
         fullName: "",
         phone: "",
