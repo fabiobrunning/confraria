@@ -1,7 +1,7 @@
 import { Component, ReactNode } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertCircle } from 'lucide-react';
+import { CircleAlert as AlertCircle } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
