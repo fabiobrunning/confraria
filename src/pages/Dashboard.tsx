@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback, memo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/Layout";
@@ -14,7 +14,7 @@ interface StatCardProps {
   onNavigate: (link: string) => void;
 }
 
-const StatCard = memo(({ title, value, icon: Icon, color, link, onNavigate }: StatCardProps) => {
+const StatCard = ({ title, value, icon: Icon, color, link, onNavigate }: StatCardProps) => {
   const handleClick = useCallback(() => {
     if (link) {
       onNavigate(link);
@@ -35,7 +35,7 @@ const StatCard = memo(({ title, value, icon: Icon, color, link, onNavigate }: St
       </CardContent>
     </Card>
   );
-});
+};
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -138,4 +138,4 @@ function Dashboard() {
   );
 }
 
-export default memo(Dashboard);
+export default Dashboard;

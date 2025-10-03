@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState, useMemo, useCallback, memo } from "react";
+import { ReactNode, useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -198,4 +198,4 @@ function Layout({ children }: LayoutProps) {
   );
 }
 
-export default memo(Layout);
+export default Layout;

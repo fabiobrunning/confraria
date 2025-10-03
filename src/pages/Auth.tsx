@@ -23,20 +23,11 @@ export default function Auth() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         navigate("/dashboard");
       }
     });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
-        navigate("/dashboard");
-      }
-    });
-
-    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const validateForm = (): boolean => {
@@ -61,30 +52,31 @@ export default function Auth() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     const success = await execute(async () => {
-      // Remove non-digits from phone and create email
       const cleanPhone = formData.phone.replace(/\D/g, "");
       const email = `${cleanPhone}@confraria.local`;
 
-      // Try to sign in with the email/password
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password: formData.password,
       });
 
       if (error) {
-        // Check if it's an invalid credentials error
         if (error.message.includes("Invalid login credentials")) {
           throw new Error("Telefone ou senha incorretos.");
         } else {
           throw new Error(error.message);
         }
       }
+
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 100);
     });
 
     if (!success && error) {
