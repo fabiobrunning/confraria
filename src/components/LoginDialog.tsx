@@ -95,7 +95,7 @@ export default function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
         <DialogHeader>
           <div className="flex justify-center mb-4">
             <img
-              src="/logo-confraria.png"
+              src="/logo-confraria.svg"
               alt="Confraria Pedra Branca"
               className="h-20 w-auto"
             />

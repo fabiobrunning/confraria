@@ -90,7 +90,7 @@ export default function Index() {
         <div className="max-w-screen-2xl mx-auto h-full flex items-center justify-between px-4 sm:px-6">
           <div className="animate-slide-in-left opacity-0 delay-100 flex items-center">
             <img 
-              src="/logo-confraria.png" 
+              src="/logo-confraria.svg" 
               alt="Confraria Pedra Branca" 
               className="animate-float h-36 sm:h-48 w-auto object-contain"
             />
