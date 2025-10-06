@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import LoginDialog from "@/components/LoginDialog";
+import { Instagram } from "lucide-react";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -179,7 +180,18 @@ export default function Index() {
 
       {/* Footer */}
       <footer className="relative z-10 py-8 sm:py-12 px-4 sm:px-6 border-t border-white/10">
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="max-w-4xl mx-auto text-center space-y-4">
+          <div className="flex justify-center">
+            <a
+              href="https://www.instagram.com/confrariapedrabranca/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/70 hover:text-white transition-colors duration-300 hover:scale-110 transform inline-block"
+              aria-label="Instagram da Confraria Pedra Branca"
+            >
+              <Instagram className="w-6 h-6 sm:w-7 sm:h-7" />
+            </a>
+          </div>
           <p className="text-xs sm:text-sm text-white/50 animate-fade-simple">
             © 2025 | Desenvolvido por Seivi | CNPJ: 52.607.164/0001-85
           </p>
