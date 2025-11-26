@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 // GET - Fetch current draw state and available quotas for a group
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ groupId: string }> }
 ) {
   try {
@@ -64,7 +64,7 @@ export async function GET(
 
 // DELETE - Soft delete (reset) the current draw
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ groupId: string }> }
 ) {
   try {
@@ -80,19 +80,21 @@ export async function DELETE(
     }
 
     // Verify admin role
-    const { data: profile } = await supabase
+    const { data: profileData } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', session.user.id)
       .single()
+
+    const profile = profileData as { role: string } | null
 
     if (profile?.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // Soft delete the current draw
-    const { error } = await supabase
-      .from('draws')
+    const { error } = await (supabase
+      .from('draws') as any)
       .update({ deleted_at: new Date().toISOString() })
       .eq('group_id', groupId)
       .is('deleted_at', null)

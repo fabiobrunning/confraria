@@ -35,12 +35,13 @@ export function useAdmin(redirectNonAdmin = false, showToast = false) {
       }
 
       // Check if user is admin
-      const { data } = await supabase
+      const { data: profileData } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', session.user.id)
         .single()
 
+      const data = profileData as { role: string } | null
       const userIsAdmin = data?.role === 'admin'
       setIsAdmin(userIsAdmin)
 

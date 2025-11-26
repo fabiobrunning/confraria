@@ -1,4 +1,4 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
@@ -39,10 +39,6 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getSession()
 
   const path = request.nextUrl.pathname
-
-  // Public routes - no auth required
-  const publicRoutes = ['/', '/auth']
-  const isPublicRoute = publicRoutes.includes(path)
 
   // Protected routes - require auth
   const protectedRoutes = [

@@ -38,8 +38,8 @@ export default function GroupNewPage() {
     setLoading(true)
 
     try {
-      const { data, error } = await supabase
-        .from('groups')
+      const { data, error } = await (supabase
+        .from('groups') as any)
         .insert({
           name: formData.name,
           description: formData.description || null,

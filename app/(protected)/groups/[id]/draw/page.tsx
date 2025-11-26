@@ -26,7 +26,7 @@ export default async function DrawPage({ params }: Props) {
     .eq('id', session.user.id)
     .single()
 
-  if (profile?.role !== 'admin') {
+  if ((profile as { role: string } | null)?.role !== 'admin') {
     redirect('/dashboard')
   }
 

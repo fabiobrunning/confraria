@@ -17,11 +17,13 @@ export default async function ProtectedLayout({
     redirect('/auth')
   }
 
-  const { data: profile } = await supabase
+  const { data: profileData } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', session.user.id)
     .single()
+
+  const profile = profileData as { role: string } | null
 
   return (
     <div className="min-h-screen flex w-full">

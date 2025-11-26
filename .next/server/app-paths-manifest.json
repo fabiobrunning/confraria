@@ -1,10 +1,17 @@
 {
-  "/(auth)/auth/page": "app/(auth)/auth/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
   "/api/draws/[groupId]/execute/route": "app/api/draws/[groupId]/execute/route.js",
   "/page": "app/page.js",
-  "/(protected)/groups/[id]/draw/page": "app/(protected)/groups/[id]/draw/page.js",
+  "/api/draws/[groupId]/route": "app/api/draws/[groupId]/route.js",
+  "/(auth)/auth/page": "app/(auth)/auth/page.js",
+  "/(protected)/companies/page": "app/(protected)/companies/page.js",
+  "/(protected)/groups/new/page": "app/(protected)/groups/new/page.js",
   "/(protected)/dashboard/page": "app/(protected)/dashboard/page.js",
-  "/(protected)/groups/page": "app/(protected)/groups/page.js",
+  "/(protected)/groups/[id]/draw/page": "app/(protected)/groups/[id]/draw/page.js",
+  "/(protected)/members/[id]/page": "app/(protected)/members/[id]/page.js",
+  "/(protected)/members/page": "app/(protected)/members/page.js",
+  "/(protected)/pre-register/page": "app/(protected)/pre-register/page.js",
   "/(protected)/groups/[id]/page": "app/(protected)/groups/[id]/page.js",
-  "/(protected)/companies/page": "app/(protected)/companies/page.js"
+  "/(protected)/profile/page": "app/(protected)/profile/page.js",
+  "/(protected)/groups/page": "app/(protected)/groups/page.js"
 }

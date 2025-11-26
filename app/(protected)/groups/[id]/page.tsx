@@ -25,7 +25,7 @@ export default async function GroupDetailPage({ params }: Props) {
     .eq('id', session.user.id)
     .single()
 
-  if (profile?.role !== 'admin') {
+  if ((profile as { role: string } | null)?.role !== 'admin') {
     redirect('/groups')
   }
 
@@ -41,7 +41,7 @@ export default async function GroupDetailPage({ params }: Props) {
   }
 
   // Get quotas with member info
-  const { data: quotas } = await supabase
+  const { data: quotasData } = await supabase
     .from('quotas')
     .select(
       `
@@ -55,11 +55,21 @@ export default async function GroupDetailPage({ params }: Props) {
     .eq('group_id', groupId)
     .order('quota_number')
 
+  const quotas = quotasData as Array<{
+    id: string
+    quota_number: number
+    status: string
+    member_id: string | null
+    member: { id: string; full_name: string } | null
+  }> | null
+
   // Get all members for dropdown
-  const { data: members } = await supabase
+  const { data: membersData } = await supabase
     .from('profiles')
     .select('id, full_name')
     .order('full_name')
+
+  const members = membersData as Array<{ id: string; full_name: string }> | null
 
   // Get active quotas count for draw eligibility
   const activeQuotasCount = quotas?.filter((q) => q.status === 'active').length ?? 0

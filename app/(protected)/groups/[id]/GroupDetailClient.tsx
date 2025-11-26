@@ -62,7 +62,7 @@ interface GroupDetailClientProps {
 export default function GroupDetailClient({
   group,
   quotas,
-  members,
+  members: _members,
   activeQuotasCount,
 }: GroupDetailClientProps) {
   const [saving, setSaving] = useState(false)
@@ -78,18 +78,11 @@ export default function GroupDetailClient({
   const { toast } = useToast()
   const supabase = createClient()
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value)
-  }
-
   const handleSave = async () => {
     setSaving(true)
     try {
       const { error } = await supabase
-        .from('groups')
+        .from('groups' as never)
         .update({
           name: formData.name,
           description: formData.description || null,
@@ -97,7 +90,7 @@ export default function GroupDetailClient({
           monthly_value: parseFloat(formData.monthly_value),
           adjustment_type: formData.adjustment_type,
           adjustment_value: formData.adjustment_value ? parseFloat(formData.adjustment_value) : 0,
-        })
+        } as never)
         .eq('id', group.id)
 
       if (error) throw error

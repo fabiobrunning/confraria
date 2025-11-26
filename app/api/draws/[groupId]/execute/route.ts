@@ -28,11 +28,13 @@ export async function POST(
     }
 
     // Verify admin role
-    const { data: profile } = await supabase
+    const { data: profileData } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', session.user.id)
       .single()
+
+    const profile = profileData as { role: string } | null
 
     if (profile?.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -55,12 +57,14 @@ export async function POST(
     }
 
     // Find the winning quota
-    const { data: winningQuota } = await supabase
+    const { data: winningQuotaData } = await supabase
       .from('quotas')
       .select('id, member_id, status')
       .eq('group_id', groupId)
       .eq('quota_number', winningNumber)
       .single()
+
+    const winningQuota = winningQuotaData as { id: string; member_id: string | null; status: string } | null
 
     if (!winningQuota) {
       return NextResponse.json(
@@ -79,15 +83,15 @@ export async function POST(
     // Start transaction: soft delete existing draw, create new, update quota
 
     // 1. Soft delete any existing active draw for this group
-    await supabase
-      .from('draws')
+    await (supabase
+      .from('draws') as any)
       .update({ deleted_at: new Date().toISOString() })
       .eq('group_id', groupId)
       .is('deleted_at', null)
 
     // 2. Create new draw record
-    const { data: draw, error: drawError } = await supabase
-      .from('draws')
+    const { data: draw, error: drawError } = await (supabase
+      .from('draws') as any)
       .insert({
         group_id: groupId,
         winning_quota_id: winningQuota.id,
@@ -104,8 +108,8 @@ export async function POST(
     }
 
     // 3. Update the winning quota to contemplated
-    const { error: quotaError } = await supabase
-      .from('quotas')
+    const { error: quotaError } = await (supabase
+      .from('quotas') as any)
       .update({ status: 'contemplated' })
       .eq('id', winningQuota.id)
 
@@ -115,16 +119,16 @@ export async function POST(
     }
 
     // 4. Check if all quotas are now contemplated -> deactivate group
-    const { count: activeCount } = await supabase
-      .from('quotas')
+    const { count: activeCount } = await (supabase
+      .from('quotas') as any)
       .select('*', { count: 'exact', head: true })
       .eq('group_id', groupId)
       .eq('status', 'active')
 
     let groupClosed = false
     if (activeCount === 0) {
-      await supabase
-        .from('groups')
+      await (supabase
+        .from('groups') as any)
         .update({ is_active: false })
         .eq('id', groupId)
       groupClosed = true

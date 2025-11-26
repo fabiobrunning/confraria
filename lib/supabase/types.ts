@@ -218,7 +218,7 @@ export type Database = {
             foreignKeyName: "quotas_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
-            referencedRelation: "consortium_groups"
+            referencedRelation: "groups"
             referencedColumns: ["id"]
           },
           {
@@ -283,6 +283,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      groups: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          asset_value: number
+          total_quotas: number
+          monthly_value: number
+          adjustment_type: 'monthly' | 'annual' | 'none' | null
+          adjustment_value: number | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          asset_value: number
+          total_quotas: number
+          monthly_value: number
+          adjustment_type?: 'monthly' | 'annual' | 'none' | null
+          adjustment_value?: number | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          asset_value?: number
+          total_quotas?: number
+          monthly_value?: number
+          adjustment_type?: 'monthly' | 'annual' | 'none' | null
+          adjustment_value?: number | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {
