@@ -38,18 +38,18 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Validate minimum 5 numbers drawn
-    if (!drawnNumbers || drawnNumbers.length < 5) {
+    // Validate at least 1 number drawn
+    if (!drawnNumbers || drawnNumbers.length < 1) {
       return NextResponse.json(
-        { error: 'Minimum 5 numbers must be drawn before saving' },
+        { error: 'At least 1 number must be drawn before saving' },
         { status: 400 }
       )
     }
 
     // Validate winner position
-    if (winnerPosition < 5) {
+    if (winnerPosition < 1) {
       return NextResponse.json(
-        { error: 'Winner position must be at least 5' },
+        { error: 'Winner position must be at least 1' },
         { status: 400 }
       )
     }

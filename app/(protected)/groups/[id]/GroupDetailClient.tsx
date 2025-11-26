@@ -42,6 +42,8 @@ interface Group {
   asset_value: number
   total_quotas: number
   monthly_value: number
+  adjustment_type: 'monthly' | 'annual' | 'none' | null
+  adjustment_value: number | null
   is_active: boolean
 }
 
@@ -69,6 +71,8 @@ export default function GroupDetailClient({
     description: group.description ?? '',
     asset_value: group.asset_value.toString(),
     monthly_value: group.monthly_value.toString(),
+    adjustment_type: (group.adjustment_type ?? 'none') as 'monthly' | 'annual' | 'none',
+    adjustment_value: (group.adjustment_value ?? 0).toString(),
   })
   const router = useRouter()
   const { toast } = useToast()
@@ -91,6 +95,8 @@ export default function GroupDetailClient({
           description: formData.description || null,
           asset_value: parseFloat(formData.asset_value),
           monthly_value: parseFloat(formData.monthly_value),
+          adjustment_type: formData.adjustment_type,
+          adjustment_value: formData.adjustment_value ? parseFloat(formData.adjustment_value) : 0,
         })
         .eq('id', group.id)
 
@@ -198,6 +204,49 @@ export default function GroupDetailClient({
               />
             </div>
           </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="adjustment_type">Tipo de Reajuste</Label>
+              <Select
+                value={formData.adjustment_type}
+                onValueChange={(value: 'monthly' | 'annual' | 'none') =>
+                  setFormData((prev) => ({ ...prev, adjustment_type: value, adjustment_value: value === 'none' ? '0' : prev.adjustment_value }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo de reajuste" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem reajuste</SelectItem>
+                  <SelectItem value="monthly">Reajuste Mensal</SelectItem>
+                  <SelectItem value="annual">Reajuste Anual</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {formData.adjustment_type !== 'none' && (
+              <div className="space-y-2">
+                <Label htmlFor="adjustment_value">Valor do Reajuste (R$)</Label>
+                <Input
+                  id="adjustment_value"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.adjustment_value}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, adjustment_value: e.target.value }))
+                  }
+                  placeholder="Ex: 10.00"
+                />
+              </div>
+            )}
+          </div>
+          {formData.adjustment_type !== 'none' && (
+            <p className="text-xs text-muted-foreground">
+              {formData.adjustment_type === 'monthly'
+                ? 'O valor sera acrescido a parcela e ao bem todo mes'
+                : 'O valor sera acrescido a parcela e ao bem uma vez por ano'}
+            </p>
+          )}
           <div className="flex justify-end">
             <Button onClick={handleSave} disabled={saving}>
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

@@ -7,8 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dices, Trophy, RotateCcw, Sparkles } from 'lucide-react'
 
+interface QuotaOwner {
+  number: number
+  name: string | null
+}
+
 interface DrawMachineProps {
   availableNumbers: number[]
+  quotaOwners?: QuotaOwner[]
   excludedNumbers?: number[]
   onNumberDrawn?: (number: number) => void
   onDrawComplete: (
@@ -22,12 +28,18 @@ interface DrawMachineProps {
 
 export function DrawMachine({
   availableNumbers,
+  quotaOwners = [],
   excludedNumbers = [],
   onNumberDrawn,
   onDrawComplete,
-  minDraws = 5,
+  minDraws = 1,
   disabled = false,
 }: DrawMachineProps) {
+  // Helper function to get owner name by quota number
+  const getOwnerName = (number: number): string | null => {
+    const owner = quotaOwners.find((q) => q.number === number)
+    return owner?.name ?? null
+  }
   const [isSpinning, setIsSpinning] = useState(false)
   const [currentNumber, setCurrentNumber] = useState<number | null>(null)
   const [drawnNumbers, setDrawnNumbers] = useState<number[]>([])
@@ -117,7 +129,8 @@ export function DrawMachine({
       </CardHeader>
       <CardContent className="space-y-6 p-6">
         {/* Current Number Display */}
-        <div className="flex justify-center py-8">
+        <div className="flex justify-center items-center py-8 gap-6">
+          {/* Ball container */}
           <div className="relative">
             {/* Glow effect background */}
             <motion.div
@@ -169,6 +182,31 @@ export function DrawMachine({
               </AnimatePresence>
             </motion.div>
           </div>
+
+          {/* Owner name display */}
+          <AnimatePresence mode="wait">
+            {currentNumber && (
+              <motion.div
+                key={currentNumber}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.2 }}
+                className={`
+                  min-w-[120px] max-w-[200px] px-4 py-3 rounded-lg border-2 shadow-lg
+                  ${
+                    winner
+                      ? 'bg-green-500/10 border-green-500'
+                      : 'bg-muted/50 border-border'
+                  }
+                `}
+              >
+                <p className={`font-semibold text-lg truncate ${winner ? 'text-green-600' : ''}`}>
+                  {getOwnerName(currentNumber) ?? 'Sem membro'}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Celebration overlay */}
@@ -194,10 +232,14 @@ export function DrawMachine({
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3 }}
+                  className="space-y-2"
                 >
                   <p className="text-3xl font-bold text-white">GANHADOR!</p>
-                  <p className="text-5xl font-bold text-yellow-400">
+                  <p className="text-4xl font-bold text-yellow-400">
                     Cota #{winner}
+                  </p>
+                  <p className="text-6xl font-bold text-white mt-4">
+                    {winner ? getOwnerName(winner) ?? 'Sem membro' : ''}
                   </p>
                 </motion.div>
                 {/* Sparkles animation */}
@@ -247,6 +289,9 @@ export function DrawMachine({
                   GANHADOR: Cota #{winner}
                 </p>
               </div>
+              <p className="text-2xl font-bold text-green-700 mt-2">
+                {getOwnerName(winner) ?? 'Sem membro'}
+              </p>
               <p className="text-sm text-muted-foreground mt-1">
                 Sorteio salvo com sucesso!
               </p>
@@ -261,35 +306,42 @@ export function DrawMachine({
               Numeros sorteados:
             </p>
             <Badge variant="outline" className="text-xs">
-              {drawnNumbers.length}/{minDraws} minimo
+              {drawnNumbers.length} sorteado(s)
             </Badge>
           </div>
-          <div className="flex flex-wrap gap-2 min-h-[40px] p-3 bg-muted/30 rounded-lg">
+          <div className="flex flex-wrap gap-3 min-h-[60px] p-3 bg-muted/30 rounded-lg">
             <AnimatePresence>
-              {drawnNumbers.map((num, idx) => (
-                <motion.div
-                  key={`${num}-${idx}`}
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                >
-                  <Badge
-                    variant={num === winner ? 'default' : 'secondary'}
-                    className={`text-lg px-3 py-1 ${
-                      num === winner
-                        ? 'bg-green-500 hover:bg-green-600'
-                        : ''
-                    }`}
+              {drawnNumbers.map((num, idx) => {
+                const ownerName = getOwnerName(num)
+                return (
+                  <motion.div
+                    key={`${num}-${idx}`}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                    className="flex flex-col items-center gap-1"
                   >
-                    {num}
-                    {idx === drawnNumbers.length - 1 && !winner && (
-                      <span className="ml-1 text-xs opacity-70">
-                        (ultimo)
-                      </span>
-                    )}
-                  </Badge>
-                </motion.div>
-              ))}
+                    <Badge
+                      variant={num === winner ? 'default' : 'secondary'}
+                      className={`text-lg px-3 py-1 ${
+                        num === winner
+                          ? 'bg-green-500 hover:bg-green-600'
+                          : ''
+                      }`}
+                    >
+                      {num}
+                      {idx === drawnNumbers.length - 1 && !winner && (
+                        <span className="ml-1 text-xs opacity-70">
+                          (ultimo)
+                        </span>
+                      )}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground text-center max-w-[80px] truncate" title={ownerName ?? 'Sem membro'}>
+                      {ownerName ?? 'Sem membro'}
+                    </span>
+                  </motion.div>
+                )
+              })}
             </AnimatePresence>
             {drawnNumbers.length === 0 && (
               <p className="text-sm text-muted-foreground italic">
@@ -356,12 +408,6 @@ export function DrawMachine({
             Cotas disponiveis: {remainingNumbers.length}
             {drawnNumbers.length > 0 && ` (${availableNumbers.length} total)`}
           </p>
-          {!canFinish && drawnNumbers.length > 0 && drawnNumbers.length < minDraws && (
-            <p className="text-amber-600 font-medium">
-              Sorteie mais {minDraws - drawnNumbers.length} numero(s) antes de
-              finalizar
-            </p>
-          )}
           {canFinish && !winner && (
             <p className="text-green-600 font-medium">
               Voce pode salvar o ganhador ou continuar sorteando

@@ -56,6 +56,10 @@ export default function DrawPageClient({
   const { toast } = useToast()
 
   const availableNumbers = quotas.map((q) => q.quota_number)
+  const quotaOwners = quotas.map((q) => ({
+    number: q.quota_number,
+    name: q.member?.full_name ?? null,
+  }))
 
   const handleDrawComplete = async (
     drawnNumbers: number[],
@@ -197,8 +201,9 @@ export default function DrawPageClient({
       {availableNumbers.length > 0 ? (
         <DrawMachine
           availableNumbers={availableNumbers}
+          quotaOwners={quotaOwners}
           onDrawComplete={handleDrawComplete}
-          minDraws={5}
+          minDraws={1}
           disabled={saving}
         />
       ) : (

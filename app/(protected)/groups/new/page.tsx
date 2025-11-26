@@ -8,6 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 
@@ -19,6 +26,8 @@ export default function GroupNewPage() {
     asset_value: '',
     total_quotas: '',
     monthly_value: '',
+    adjustment_type: 'none' as 'monthly' | 'annual' | 'none',
+    adjustment_value: '',
   })
   const router = useRouter()
   const { toast } = useToast()
@@ -37,6 +46,8 @@ export default function GroupNewPage() {
           asset_value: parseFloat(formData.asset_value),
           total_quotas: parseInt(formData.total_quotas),
           monthly_value: parseFloat(formData.monthly_value),
+          adjustment_type: formData.adjustment_type,
+          adjustment_value: formData.adjustment_value ? parseFloat(formData.adjustment_value) : 0,
           is_active: true,
         })
         .select()
@@ -156,6 +167,50 @@ export default function GroupNewPage() {
                 placeholder="Ex: 100"
               />
             </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="adjustment_type">Tipo de Reajuste</Label>
+                <Select
+                  value={formData.adjustment_type}
+                  onValueChange={(value: 'monthly' | 'annual' | 'none') =>
+                    setFormData({ ...formData, adjustment_type: value, adjustment_value: value === 'none' ? '' : formData.adjustment_value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tipo de reajuste" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sem reajuste</SelectItem>
+                    <SelectItem value="monthly">Reajuste Mensal</SelectItem>
+                    <SelectItem value="annual">Reajuste Anual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {formData.adjustment_type !== 'none' && (
+                <div className="space-y-2">
+                  <Label htmlFor="adjustment_value">Valor do Reajuste (R$)</Label>
+                  <Input
+                    id="adjustment_value"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.adjustment_value}
+                    onChange={(e) =>
+                      setFormData({ ...formData, adjustment_value: e.target.value })
+                    }
+                    placeholder="Ex: 10.00"
+                  />
+                </div>
+              )}
+            </div>
+            {formData.adjustment_type !== 'none' && (
+              <p className="text-xs text-muted-foreground">
+                {formData.adjustment_type === 'monthly'
+                  ? 'O valor sera acrescido a parcela e ao bem todo mes'
+                  : 'O valor sera acrescido a parcela e ao bem uma vez por ano'}
+              </p>
+            )}
 
             <div className="flex gap-4">
               <Link href="/groups" className="flex-1">
