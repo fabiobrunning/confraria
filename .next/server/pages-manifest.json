@@ -1,0 +1,17 @@
+{
+  "/_app": "pages/_app.js",
+  "/_error": "pages/_error.js",
+  "/Auth": "pages/Auth.js",
+  "/Companies": "pages/Companies.js",
+  "/Dashboard": "pages/Dashboard.js",
+  "/GroupNew": "pages/GroupNew.js",
+  "/GroupEdit": "pages/GroupEdit.js",
+  "/Groups": "pages/Groups.js",
+  "/MemberEdit": "pages/MemberEdit.js",
+  "/Members": "pages/Members.js",
+  "/NotFound": "pages/NotFound.js",
+  "/PreRegister": "pages/PreRegister.js",
+  "/Profile": "pages/Profile.js",
+  "/Index": "pages/Index.js",
+  "/_document": "pages/_document.js"
+}
