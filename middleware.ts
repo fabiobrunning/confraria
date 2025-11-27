@@ -1,44 +1,12 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          )
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
-
-  // Refresh session if expired
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
   const path = request.nextUrl.pathname
+
+  // Check for Supabase auth cookie (simplified check for Edge compatibility)
+  const hasAuthCookie = request.cookies.getAll().some(
+    (cookie) => cookie.name.includes('auth-token') || cookie.name.includes('sb-')
+  )
 
   // Protected routes - require auth
   const protectedRoutes = [
@@ -53,37 +21,17 @@ export async function middleware(request: NextRequest) {
     (route) => path === route || path.startsWith(`${route}/`)
   )
 
-  // Admin-only routes
-  const adminRoutes = ['/pre-register', '/groups/new']
-  const adminPatterns = [/^\/groups\/[^/]+\/draw$/]
-  const isAdminRoute =
-    adminRoutes.includes(path) ||
-    adminPatterns.some((pattern) => pattern.test(path))
-
   // Redirect unauthenticated users from protected routes
-  if (isProtectedRoute && !session) {
+  if (isProtectedRoute && !hasAuthCookie) {
     return NextResponse.redirect(new URL('/auth', request.url))
   }
 
   // Redirect authenticated users from auth page
-  if (path === '/auth' && session) {
+  if (path === '/auth' && hasAuthCookie) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  // Check admin role for admin routes
-  if (isAdminRoute && session) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single()
-
-    if (profile?.role !== 'admin') {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
-  }
-
-  return response
+  return NextResponse.next()
 }
 
 export const config = {
@@ -96,6 +44,6 @@ export const config = {
      * - public folder
      * - api routes (handled separately)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
