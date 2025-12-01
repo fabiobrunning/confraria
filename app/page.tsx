@@ -22,9 +22,9 @@ const bgImages = [
 
 export default function HomePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [membros, setMembros] = useState(0)
-  const [empresas, setEmpresas] = useState(0)
-  const [valor, setValor] = useState(0)
+  const [membros, setMembros] = useState(140)
+  const [empresas, setEmpresas] = useState(150)
+  const [valor, setValor] = useState(15)
   const [countersStarted, setCountersStarted] = useState(false)
 
   const menuOverlayRef = useRef<HTMLDivElement>(null)
@@ -286,23 +286,23 @@ export default function HomePage() {
           <div className="px-4 sm:px-6 lg:px-8 w-full max-w-[1200px] mx-auto text-center pt-32 sm:pt-28 pb-16 sm:pb-12">
             {/* Main Headline */}
             <h1 className="font-display text-[2.5rem] sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl leading-[0.95] tracking-tight uppercase bg-gradient-to-b from-white via-white to-accent/80 bg-clip-text text-transparent mb-8 sm:mb-6">
-              Pessoas com Visao geram Negocios com Proposito
+              Pessoas com visão geram negócios com propósito
             </h1>
 
             {/* Subheadline */}
             <p className="font-serif text-2xl sm:text-3xl md:text-4xl text-white/80 max-w-[900px] mx-auto mb-10 sm:mb-8 leading-relaxed font-medium">
-              O networking autentico que todo empresario procura, mas raramente encontra.
+              O networking autêntico que todo empresário procura, mas raramente encontra.
             </p>
 
             {/* Description */}
             <p className="text-white/60 text-lg sm:text-xl md:text-2xl max-w-[850px] mx-auto mb-12 sm:mb-10 leading-relaxed">
-              Fortalecemos lideres de negocios da nossa regiao, criando um ambiente de confianca mutua. Conhecimento compartilhado sem segundas intencoes, desafios divididos por escolha, conquistas celebradas com orgulho genuino.
+              Fortalecemos líderes de negócios da nossa região, criando um ambiente de confiança mútua. Conhecimento compartilhado sem segundas intenções, desafios divididos por escolha, conquistas celebradas com orgulho genuíno.
             </p>
 
             {/* Scroll indicator */}
-            <div className="mt-16 sm:mt-12 flex flex-col items-center gap-3 text-white/40 animate-pulse">
-              <span className="text-xs uppercase tracking-[0.2em] font-medium">Nossos numeros</span>
-              <div className="w-px h-10 bg-gradient-to-b from-white/40 via-white/20 to-transparent" />
+            <div className="mt-8 sm:mt-6 flex flex-col items-center gap-3 animate-pulse">
+              <p className="font-serif text-2xl sm:text-3xl md:text-4xl text-white/80 max-w-[900px] mx-auto leading-relaxed font-medium">E nossos números refletem exatamente isso:</p>
+              <div className="w-0.5 h-40 bg-gradient-to-b from-white/40 via-white/20 to-transparent" />
             </div>
           </div>
         </section>
@@ -310,25 +310,20 @@ export default function HomePage() {
         {/* Counter Section */}
         <section
           ref={counterSectionRef}
-          className="bg-black px-4 sm:px-6 py-20 sm:py-28 border-t border-white/5"
+          className="bg-black px-4 sm:px-6 py-10 sm:py-14 border-t border-white/5"
           aria-label="Estatisticas da Confraria"
         >
           <div className="mx-auto max-w-6xl">
-            <div className="text-center mb-16 sm:mb-20">
-              <p className="font-serif text-white/70 text-xl sm:text-2xl md:text-3xl font-medium leading-relaxed">
-                E nossos numeros refletem exatamente isso:
-              </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-16 md:gap-12 text-center">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8 text-center">
               {/* Membros */}
               <div className="group">
                 <div
-                  className="text-white font-bold font-cormorant mb-1 text-7xl sm:text-8xl md:text-[7rem] leading-none transition-all duration-300 group-hover:text-accent"
+                  className="text-white font-bold font-cormorant mb-1 text-8xl sm:text-9xl md:text-[10rem] leading-none transition-all duration-300 group-hover:text-accent"
                   aria-label={`${membros} membros ativos`}
                 >
                   {membros}
                 </div>
-                <div className="text-sm sm:text-base font-medium text-white/60 tracking-[0.15em] uppercase">
+                <div className="text-base sm:text-lg font-medium text-white/60 tracking-[0.15em] uppercase">
                   Membros Ativos
                 </div>
               </div>
@@ -336,12 +331,12 @@ export default function HomePage() {
               {/* Empresas */}
               <div className="group">
                 <div
-                  className="text-white font-bold font-cormorant mb-1 text-7xl sm:text-8xl md:text-[7rem] leading-none transition-all duration-300 group-hover:text-accent"
+                  className="text-white font-bold font-cormorant mb-1 text-8xl sm:text-9xl md:text-[10rem] leading-none transition-all duration-300 group-hover:text-accent"
                   aria-label={`${empresas} empresas conectadas`}
                 >
                   {empresas}
                 </div>
-                <div className="text-sm sm:text-base font-medium text-white/60 tracking-[0.15em] uppercase">
+                <div className="text-base sm:text-lg font-medium text-white/60 tracking-[0.15em] uppercase">
                   Empresas Conectadas
                 </div>
               </div>
@@ -349,12 +344,12 @@ export default function HomePage() {
               {/* Valor */}
               <div className="group">
                 <div
-                  className="text-accent font-bold font-cormorant mb-1 text-7xl sm:text-8xl md:text-[7rem] leading-none transition-all duration-300 group-hover:scale-105"
-                  aria-label={`Mais de ${valor} milhoes em valor movimentado`}
+                  className="text-accent font-bold font-cormorant mb-1 text-8xl sm:text-9xl md:text-[10rem] leading-none transition-all duration-300 group-hover:scale-105"
+                  aria-label={`Mais de ${valor} milhões em valor movimentado`}
                 >
                   +{valor}M
                 </div>
-                <div className="text-sm sm:text-base font-medium text-white/60 tracking-[0.15em] uppercase">
+                <div className="text-base sm:text-lg font-medium text-white/60 tracking-[0.15em] uppercase">
                   Valor Movimentado
                 </div>
               </div>
