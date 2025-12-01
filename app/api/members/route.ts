@@ -61,6 +61,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = (page - 1) * limit
+    const preRegistered = searchParams.get('pre_registered')
 
     // Build query for members with their companies and quotas
     let query = supabase
@@ -90,6 +91,13 @@ export async function GET(request: NextRequest) {
     // Apply search filter if provided
     if (search) {
       query = query.ilike('full_name', `%${search}%`)
+    }
+
+    // Filter by pre_registered status
+    if (preRegistered === 'true') {
+      query = query.eq('pre_registered', true)
+    } else if (preRegistered === 'false') {
+      query = query.eq('pre_registered', false)
     }
 
     const { data: members, error, count } = await query

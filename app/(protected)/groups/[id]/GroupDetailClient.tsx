@@ -25,7 +25,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useToast } from '@/hooks/use-toast'
-import { ArrowLeft, Dices, Save, Loader2 } from 'lucide-react'
+import { ArrowLeft, Dices, Save, Loader2, TrendingUp } from 'lucide-react'
 
 interface Quota {
   id: string
@@ -66,6 +66,7 @@ export default function GroupDetailClient({
   activeQuotasCount,
 }: GroupDetailClientProps) {
   const [saving, setSaving] = useState(false)
+  const [applyingAdjustment, setApplyingAdjustment] = useState(false)
   const [quotas, setQuotas] = useState(initialQuotas)
   const [savingQuota, setSavingQuota] = useState<string | null>(null)
   const [formData, setFormData] = useState({
@@ -80,22 +81,40 @@ export default function GroupDetailClient({
   const { toast } = useToast()
   const supabase = createClient()
 
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value)
+  }
+
+  // Calcula o valor do bem baseado no valor mensal x total de cotas
+  const calculateAssetValue = (monthlyValue: number) => {
+    return monthlyValue * group.total_quotas
+  }
+
   const handleSave = async () => {
     setSaving(true)
     try {
+      const monthlyValue = parseFloat(formData.monthly_value)
+      const calculatedAssetValue = calculateAssetValue(monthlyValue)
+
       const { error } = await supabase
         .from('groups' as never)
         .update({
           name: formData.name,
           description: formData.description || null,
-          asset_value: parseFloat(formData.asset_value),
-          monthly_value: parseFloat(formData.monthly_value),
+          asset_value: calculatedAssetValue,
+          monthly_value: monthlyValue,
           adjustment_type: formData.adjustment_type,
           adjustment_value: formData.adjustment_value ? parseFloat(formData.adjustment_value) : 0,
         } as never)
         .eq('id', group.id)
 
       if (error) throw error
+
+      // Atualiza o formData com o valor calculado
+      setFormData(prev => ({ ...prev, asset_value: calculatedAssetValue.toString() }))
 
       toast({
         title: 'Grupo atualizado',
@@ -112,6 +131,58 @@ export default function GroupDetailClient({
       })
     } finally {
       setSaving(false)
+    }
+  }
+
+  // Aplica o reajuste ao valor mensal e recalcula o valor do bem
+  const handleApplyAdjustment = async () => {
+    if (formData.adjustment_type === 'none' || parseFloat(formData.adjustment_value) === 0) {
+      toast({
+        title: 'Nenhum reajuste configurado',
+        description: 'Configure o tipo e valor do reajuste primeiro.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setApplyingAdjustment(true)
+    try {
+      const currentMonthlyValue = parseFloat(formData.monthly_value)
+      const adjustmentValue = parseFloat(formData.adjustment_value)
+      const newMonthlyValue = currentMonthlyValue + adjustmentValue
+      const newAssetValue = calculateAssetValue(newMonthlyValue)
+
+      const { error } = await supabase
+        .from('groups' as never)
+        .update({
+          monthly_value: newMonthlyValue,
+          asset_value: newAssetValue,
+        } as never)
+        .eq('id', group.id)
+
+      if (error) throw error
+
+      // Atualiza o formData com os novos valores
+      setFormData(prev => ({
+        ...prev,
+        monthly_value: newMonthlyValue.toString(),
+        asset_value: newAssetValue.toString(),
+      }))
+
+      toast({
+        title: 'Reajuste aplicado',
+        description: `Valor mensal atualizado de ${formatCurrency(currentMonthlyValue)} para ${formatCurrency(newMonthlyValue)}`,
+      })
+
+      router.refresh()
+    } catch (error) {
+      toast({
+        title: 'Erro ao aplicar reajuste',
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
+        variant: 'destructive',
+      })
+    } finally {
+      setApplyingAdjustment(false)
     }
   }
 
@@ -211,19 +282,19 @@ export default function GroupDetailClient({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="asset_value">Valor do Bem</Label>
-              <Input
-                id="asset_value"
-                type="number"
-                step="0.01"
-                value={formData.asset_value}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    asset_value: e.target.value,
-                  }))
-                }
-              />
+              <Label htmlFor="asset_value">Valor do Bem (calculado automaticamente)</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="asset_value"
+                  type="text"
+                  value={formatCurrency(calculateAssetValue(parseFloat(formData.monthly_value) || 0))}
+                  disabled
+                  className="bg-muted"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                = Valor Mensal x {group.total_quotas} cotas
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="monthly_value">Valor Mensal</Label>
@@ -278,14 +349,37 @@ export default function GroupDetailClient({
             )}
           </div>
           {formData.adjustment_type !== 'none' && (
-            <p className="text-xs text-muted-foreground">
-              {formData.adjustment_type === 'monthly'
-                ? 'O valor sera acrescido a parcela e ao bem todo mes'
-                : 'O valor sera acrescido a parcela e ao bem uma vez por ano'}
-            </p>
+            <div className="p-4 bg-amber-500/10 rounded-lg border border-amber-500/20 space-y-2">
+              <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                {formData.adjustment_type === 'monthly'
+                  ? 'Reajuste Mensal Configurado'
+                  : 'Reajuste Anual Configurado'}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Ao aplicar o reajuste, o valor de {formatCurrency(parseFloat(formData.adjustment_value) || 0)} sera somado ao valor mensal atual.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Novo valor mensal: {formatCurrency((parseFloat(formData.monthly_value) || 0) + (parseFloat(formData.adjustment_value) || 0))}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Novo valor do bem: {formatCurrency(calculateAssetValue((parseFloat(formData.monthly_value) || 0) + (parseFloat(formData.adjustment_value) || 0)))}
+              </p>
+            </div>
           )}
-          <div className="flex justify-end">
-            <Button onClick={handleSave} disabled={saving}>
+          <div className="flex flex-wrap gap-2 justify-end">
+            {formData.adjustment_type !== 'none' && parseFloat(formData.adjustment_value) > 0 && (
+              <Button
+                variant="outline"
+                onClick={handleApplyAdjustment}
+                disabled={applyingAdjustment || saving}
+                className="border-amber-500 text-amber-600 hover:bg-amber-500/10"
+              >
+                {applyingAdjustment && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <TrendingUp className="mr-2 h-4 w-4" />
+                Aplicar Reajuste
+              </Button>
+            )}
+            <Button onClick={handleSave} disabled={saving || applyingAdjustment}>
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               <Save className="mr-2 h-4 w-4" />
               Salvar Alteracoes

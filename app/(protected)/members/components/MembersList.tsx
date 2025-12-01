@@ -14,8 +14,10 @@ import {
   User,
   AlertCircle,
   Crown,
-  Coins
+  Coins,
+  UserPlus
 } from 'lucide-react'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useMembers, Member } from '@/hooks/use-members'
 
 interface MembersListProps {
@@ -187,9 +189,21 @@ function ErrorState({ error, onRetry }: { error: string; onRetry: () => void }) 
   )
 }
 
-export function MembersList({ currentUserId }: MembersListProps) {
-  const { members, loading, error, search, setSearch, pagination, refetch } = useMembers()
+export function MembersList({ isAdmin, currentUserId }: MembersListProps) {
+  const { members, loading, error, search, setSearch, setPreRegistered, pagination, refetch } = useMembers()
   const [debouncedSearch, setDebouncedSearch] = useState(search)
+  const [activeTab, setActiveTab] = useState<string>('all')
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value)
+    if (value === 'all') {
+      setPreRegistered(undefined)
+    } else if (value === 'members') {
+      setPreRegistered(false)
+    } else if (value === 'pre-registered') {
+      setPreRegistered(true)
+    }
+  }
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -228,15 +242,29 @@ export function MembersList({ currentUserId }: MembersListProps) {
 
   return (
     <div className="space-y-4">
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          type="text"
-          placeholder="Buscar por nome..."
-          value={debouncedSearch}
-          onChange={(e) => setDebouncedSearch(e.target.value)}
-          className="pl-10"
-        />
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="relative max-w-md flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Buscar por nome..."
+            value={debouncedSearch}
+            onChange={(e) => setDebouncedSearch(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        {isAdmin && (
+          <Tabs value={activeTab} onValueChange={handleTabChange}>
+            <TabsList>
+              <TabsTrigger value="all">Todos</TabsTrigger>
+              <TabsTrigger value="members">Membros</TabsTrigger>
+              <TabsTrigger value="pre-registered" className="gap-1">
+                <UserPlus className="h-3 w-3" />
+                Pre-cadastro
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        )}
       </div>
 
       {loading && (

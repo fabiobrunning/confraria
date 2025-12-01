@@ -49,11 +49,12 @@ export interface MembersResponse {
   }
 }
 
-export function useMembers(initialSearch = '') {
+export function useMembers(initialSearch = '', preRegisteredFilter?: boolean) {
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState(initialSearch)
+  const [preRegistered, setPreRegistered] = useState<boolean | undefined>(preRegisteredFilter)
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 50,
@@ -61,7 +62,7 @@ export function useMembers(initialSearch = '') {
     totalPages: 0
   })
 
-  const fetchMembers = useCallback(async (searchTerm = search, page = 1) => {
+  const fetchMembers = useCallback(async (searchTerm = search, page = 1, preReg = preRegistered) => {
     setLoading(true)
     setError(null)
 
@@ -70,6 +71,7 @@ export function useMembers(initialSearch = '') {
       if (searchTerm) params.set('search', searchTerm)
       params.set('page', page.toString())
       params.set('limit', '50')
+      if (preReg !== undefined) params.set('pre_registered', preReg.toString())
 
       const response = await fetch(`/api/members?${params.toString()}`)
 
@@ -86,15 +88,15 @@ export function useMembers(initialSearch = '') {
     } finally {
       setLoading(false)
     }
-  }, [search])
+  }, [search, preRegistered])
 
   useEffect(() => {
-    fetchMembers(search)
-  }, [search, fetchMembers])
+    fetchMembers(search, 1, preRegistered)
+  }, [search, preRegistered, fetchMembers])
 
   const refetch = useCallback(() => {
-    fetchMembers(search, pagination.page)
-  }, [fetchMembers, search, pagination.page])
+    fetchMembers(search, pagination.page, preRegistered)
+  }, [fetchMembers, search, pagination.page, preRegistered])
 
   return {
     members,
@@ -102,6 +104,8 @@ export function useMembers(initialSearch = '') {
     error,
     search,
     setSearch,
+    preRegistered,
+    setPreRegistered,
     pagination,
     refetch
   }
