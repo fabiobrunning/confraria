@@ -25,7 +25,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useToast } from '@/hooks/use-toast'
-import { ArrowLeft, Dices, Save, Loader2, TrendingUp } from 'lucide-react'
+import { ArrowLeft, Dices, Save, Loader2, TrendingUp, Plus } from 'lucide-react'
 
 interface Quota {
   id: string
@@ -67,6 +67,7 @@ export default function GroupDetailClient({
 }: GroupDetailClientProps) {
   const [saving, setSaving] = useState(false)
   const [applyingAdjustment, setApplyingAdjustment] = useState(false)
+  const [creatingQuotas, setCreatingQuotas] = useState(false)
   const [quotas, setQuotas] = useState(initialQuotas)
   const [savingQuota, setSavingQuota] = useState<string | null>(null)
   const [formData, setFormData] = useState({
@@ -225,6 +226,55 @@ export default function GroupDetailClient({
       })
     } finally {
       setSavingQuota(null)
+    }
+  }
+
+  // Criar cotas para grupos que não têm
+  const handleCreateQuotas = async () => {
+    setCreatingQuotas(true)
+    try {
+      const quotasToCreate = Array.from({ length: group.total_quotas }, (_, i) => ({
+        group_id: group.id,
+        quota_number: i + 1,
+        status: 'active',
+        member_id: null,
+      }))
+
+      const { data: newQuotas, error } = await supabase
+        .from('quotas' as never)
+        .insert(quotasToCreate as never)
+        .select(`
+          id,
+          quota_number,
+          status,
+          member_id,
+          member:profiles(id, full_name)
+        `)
+
+      if (error) throw error
+
+      // Atualiza o estado local com as novas cotas
+      const formattedQuotas = (newQuotas as Quota[])?.map(q => ({
+        ...q,
+        member: null
+      })) || []
+
+      setQuotas(formattedQuotas)
+
+      toast({
+        title: 'Cotas criadas!',
+        description: `${group.total_quotas} cotas foram criadas com sucesso`,
+      })
+
+      router.refresh()
+    } catch (error) {
+      toast({
+        title: 'Erro ao criar cotas',
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
+        variant: 'destructive',
+      })
+    } finally {
+      setCreatingQuotas(false)
     }
   }
 
@@ -475,9 +525,23 @@ export default function GroupDetailClient({
                   <TableRow>
                     <TableCell
                       colSpan={3}
-                      className="text-center text-muted-foreground py-8"
+                      className="text-center py-8"
                     >
-                      Nenhuma cota cadastrada
+                      <div className="space-y-4">
+                        <p className="text-muted-foreground">Nenhuma cota cadastrada</p>
+                        <Button
+                          onClick={handleCreateQuotas}
+                          disabled={creatingQuotas}
+                          className="gap-2"
+                        >
+                          {creatingQuotas ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Plus className="h-4 w-4" />
+                          )}
+                          Criar {group.total_quotas} Cotas
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}

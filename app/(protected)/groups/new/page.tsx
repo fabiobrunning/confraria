@@ -40,13 +40,16 @@ export default function GroupNewPage() {
     setLoading(true)
 
     try {
-      const { data, error } = await (supabase
+      const totalQuotas = parseInt(formData.total_quotas)
+
+      // 1. Criar o grupo
+      const { data: groupData, error: groupError } = await (supabase
         .from('groups') as any)
         .insert({
           name: formData.name,
           description: formData.description || null,
           asset_value: parseFloat(formData.asset_value),
-          total_quotas: parseInt(formData.total_quotas),
+          total_quotas: totalQuotas,
           monthly_value: parseFloat(formData.monthly_value),
           adjustment_type: formData.adjustment_type,
           adjustment_value: formData.adjustment_value ? parseFloat(formData.adjustment_value) : 0,
@@ -55,14 +58,33 @@ export default function GroupNewPage() {
         .select()
         .single()
 
-      if (error) throw error
+      if (groupError) throw groupError
+
+      // 2. Criar as cotas automaticamente
+      const quotasToCreate = Array.from({ length: totalQuotas }, (_, i) => ({
+        group_id: groupData.id,
+        quota_number: i + 1,
+        status: 'active',
+        member_id: null,
+      }))
+
+      const { error: quotasError } = await (supabase
+        .from('quotas') as any)
+        .insert(quotasToCreate)
+
+      if (quotasError) {
+        console.error('Erro ao criar cotas:', quotasError)
+        // Se falhar ao criar cotas, deletar o grupo para manter consistência
+        await supabase.from('groups').delete().eq('id', groupData.id)
+        throw new Error('Erro ao criar cotas do grupo')
+      }
 
       toast({
         title: 'Grupo criado com sucesso!',
-        description: 'Agora voce pode vincular cotas aos membros',
+        description: `${totalQuotas} cotas foram criadas automaticamente`,
       })
 
-      router.push(`/groups/${data.id}`)
+      router.push(`/groups/${groupData.id}`)
     } catch (error) {
       toast({
         title: 'Erro ao criar grupo',
