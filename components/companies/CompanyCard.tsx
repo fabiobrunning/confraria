@@ -94,12 +94,35 @@ export function CompanyCard({ company, onSelect }: CompanyCardProps) {
           )}
         </div>
 
-        {/* Membros */}
-        <div className="flex items-center gap-2 mt-4 pt-3 border-t border-white/10">
-          <Users className="w-4 h-4 text-gray-500" />
-          <span className="text-sm text-gray-400">
-            {company.members_count} {company.members_count === 1 ? 'membro' : 'membros'}
-          </span>
+        {/* Membros Vinculados */}
+        <div className="mt-4 pt-3 border-t border-white/10">
+          <div className="flex items-center gap-2 mb-2">
+            <Users className="w-4 h-4 text-gray-500" />
+            <span className="text-sm text-gray-400">
+              {company.members_count === 0
+                ? 'Sem membros vinculados'
+                : company.members_count === 1
+                  ? '1 membro vinculado'
+                  : `${company.members_count} membros vinculados`}
+            </span>
+          </div>
+          {company.members && company.members.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {company.members.slice(0, 3).map((member) => (
+                <span
+                  key={member.id}
+                  className="text-xs px-2 py-1 rounded-full bg-amber-500/10 text-amber-400"
+                >
+                  {member.full_name.split(' ')[0]}
+                </span>
+              ))}
+              {company.members.length > 3 && (
+                <span className="text-xs px-2 py-1 rounded-full bg-gray-700 text-gray-400">
+                  +{company.members.length - 3}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

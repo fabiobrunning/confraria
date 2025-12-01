@@ -103,7 +103,7 @@ export default async function CompaniesPage() {
   });
 
   return (
-    <div className="p-4 sm:p-6 bg-gray-900 min-h-screen">
+    <div className="p-4 sm:p-6">
       <CompaniesClient
         initialCompanies={companies}
         isAdmin={isAdmin}

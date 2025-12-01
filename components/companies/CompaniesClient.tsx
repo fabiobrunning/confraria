@@ -1,12 +1,10 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, Plus, Building2, Loader2 } from 'lucide-react';
+import { Search, Building2, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { CompanyCard } from './CompanyCard';
 import { CompanyDetailModal } from './CompanyDetailModal';
-import { CreateCompanyModal } from './CreateCompanyModal';
 import type { Company, CompanyFormData } from './types';
 
 interface CompaniesClientProps {
@@ -19,7 +17,6 @@ export function CompaniesClient({ initialCompanies, isAdmin }: CompaniesClientPr
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isLoading] = useState(false);
 
   // Filtrar empresas localmente
@@ -72,49 +69,6 @@ export function CompaniesClient({ initialCompanies, isAdmin }: CompaniesClientPr
     }
   };
 
-  const handleCreateCompany = async (data: CompanyFormData) => {
-    try {
-      const response = await fetch('/api/companies', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.error || 'Erro ao criar empresa');
-      }
-
-      // Adicionar nova empresa a lista
-      const newCompany: Company = {
-        ...result.data,
-        members_count: 0,
-        members: [],
-      };
-      setCompanies(prev => [...prev, newCompany].sort((a, b) => a.name.localeCompare(b.name)));
-    } catch (error) {
-      console.error('Erro ao criar empresa:', error);
-      throw error;
-    }
-  };
-
-  // Note: refreshCompanies can be used for manual refresh if needed
-  // const refreshCompanies = async () => {
-  //   setIsLoading(true);
-  //   try {
-  //     const response = await fetch('/api/companies');
-  //     const result = await response.json();
-  //     if (result.success) {
-  //       setCompanies(result.data);
-  //     }
-  //   } catch (error) {
-  //     console.error('Erro ao recarregar empresas:', error);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -124,16 +78,10 @@ export function CompaniesClient({ initialCompanies, isAdmin }: CompaniesClientPr
           <p className="text-gray-400 mt-1">
             {filteredCompanies.length} {filteredCompanies.length === 1 ? 'empresa conectada' : 'empresas conectadas'}
           </p>
+          <p className="text-xs text-gray-500 mt-1">
+            As empresas sao cadastradas atraves do perfil de cada membro
+          </p>
         </div>
-        {isAdmin && (
-          <Button
-            onClick={() => setIsCreateOpen(true)}
-            className="bg-amber-500 hover:bg-amber-600 text-black font-medium"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nova Empresa
-          </Button>
-        )}
       </div>
 
       {/* Busca */}
@@ -180,17 +128,8 @@ export function CompaniesClient({ initialCompanies, isAdmin }: CompaniesClientPr
           <p className="text-gray-400 text-center max-w-md">
             {searchTerm
               ? `Nao encontramos empresas com "${searchTerm}". Tente outro termo.`
-              : 'Ainda nao ha empresas cadastradas no sistema.'}
+              : 'As empresas sao cadastradas atraves do perfil de cada membro.'}
           </p>
-          {isAdmin && !searchTerm && (
-            <Button
-              onClick={() => setIsCreateOpen(true)}
-              className="mt-6 bg-amber-500 hover:bg-amber-600 text-black font-medium"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Cadastrar Primeira Empresa
-            </Button>
-          )}
         </div>
       )}
 
@@ -202,15 +141,6 @@ export function CompaniesClient({ initialCompanies, isAdmin }: CompaniesClientPr
         isAdmin={isAdmin}
         onUpdate={handleUpdateCompany}
       />
-
-      {/* Modal de Criacao */}
-      {isAdmin && (
-        <CreateCompanyModal
-          isOpen={isCreateOpen}
-          onClose={() => setIsCreateOpen(false)}
-          onCreate={handleCreateCompany}
-        />
-      )}
     </div>
   );
 }
