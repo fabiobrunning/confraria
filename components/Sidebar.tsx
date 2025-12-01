@@ -56,7 +56,7 @@ export default function Sidebar({ role }: SidebarProps) {
       role === 'admin'
         ? [
             { path: '/admin/companies', icon: Building2, label: 'Empresas' },
-            { path: '/admin/consortium', icon: Coins, label: 'Grupos e Cotas' },
+            { path: '/groups', icon: Coins, label: 'Grupos e Cotas' },
             { path: '/admin/prospects', icon: UserCheck, label: 'Interessados' },
             { path: '/pre-register', icon: UserPlus, label: 'Pre-Cadastro' },
           ]
