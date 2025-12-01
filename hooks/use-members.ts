@@ -33,6 +33,7 @@ export interface Member {
   address_state: string | null
   address_cep: string | null
   role: 'admin' | 'member'
+  pre_registered: boolean
   created_at: string
   updated_at: string
   companies: Company[]

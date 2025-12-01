@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
 import {
   Search,
   Phone,
@@ -14,11 +15,15 @@ import {
   User,
   AlertCircle,
   Crown,
-  Coins,
-  UserPlus
+  UserPlus,
+  KeyRound,
+  Loader2,
+  Copy,
+  Check
 } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useMembers, Member } from '@/hooks/use-members'
+import { useToast } from '@/hooks/use-toast'
 
 interface MembersListProps {
   isAdmin: boolean
@@ -124,30 +129,140 @@ function MemberCard({ member, currentUserId }: { member: Member; currentUserId: 
                   </span>
                 </div>
               )}
-
-              {member.quotas && member.quotas.length > 0 && (
-                <div className="mt-2 space-y-1">
-                  {member.quotas.map((quota) => (
-                    <div key={quota.id} className="flex items-center gap-2 text-sm">
-                      <Coins className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
-                      <span className="text-muted-foreground">
-                        {quota.group?.name} - Cota #{quota.quota_number}
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className={`text-xs ${quota.status === 'contemplated' ? 'bg-green-500/10 text-green-600' : 'bg-blue-500/10 text-blue-600'}`}
-                      >
-                        {quota.status === 'contemplated' ? 'Contemplada' : 'Ativa'}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         </CardContent>
       </Card>
     </Link>
+  )
+}
+
+function PreRegisteredCard({ member }: { member: Member }) {
+  const [loading, setLoading] = useState(false)
+  const [tempPassword, setTempPassword] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+  const { toast } = useToast()
+
+  const handleResendPassword = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/admin/resend-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: member.id })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao gerar senha')
+      }
+
+      setTempPassword(data.tempPassword)
+      toast({
+        title: 'Senha gerada!',
+        description: 'Copie a senha e envie para o membro',
+      })
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: error instanceof Error ? error.message : 'Erro ao gerar senha',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const copyPassword = () => {
+    if (tempPassword) {
+      navigator.clipboard.writeText(tempPassword)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+      toast({
+        title: 'Copiado!',
+        description: 'Senha copiada para a area de transferencia',
+      })
+    }
+  }
+
+  return (
+    <Card className="overflow-hidden bg-card border-amber-500/30">
+      <CardContent className="p-4">
+        <div className="flex items-start gap-4">
+          <div className="relative flex-shrink-0">
+            <div className="h-12 w-12 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-600 font-semibold">
+              {getInitials(member.full_name)}
+            </div>
+            <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-amber-500 flex items-center justify-center">
+              <UserPlus className="h-3 w-3 text-white" />
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-semibold text-foreground truncate">
+                {member.full_name}
+              </h3>
+              <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/30">
+                Pre-cadastro
+              </Badge>
+            </div>
+
+            <div className="mt-2 space-y-1">
+              {member.phone && (
+                <a
+                  href={getWhatsAppLink(member.phone)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-green-500 transition-colors"
+                >
+                  <Phone className="h-3.5 w-3.5" />
+                  <span>{formatPhone(member.phone)}</span>
+                </a>
+              )}
+            </div>
+
+            <div className="mt-3 space-y-2">
+              {tempPassword ? (
+                <div className="flex items-center gap-2">
+                  <code className="px-2 py-1 bg-muted rounded text-sm font-mono">
+                    {tempPassword}
+                  </code>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={copyPassword}
+                    className="h-8 w-8 p-0"
+                  >
+                    {copied ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResendPassword}
+                  disabled={loading}
+                  className="gap-2 border-amber-500/50 text-amber-600 hover:bg-amber-500/10"
+                >
+                  {loading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <KeyRound className="h-3.5 w-3.5" />
+                  )}
+                  Gerar Senha Temporaria
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -294,11 +409,18 @@ export function MembersList({ isAdmin, currentUserId }: MembersListProps) {
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {displayMembers.map((member) => (
-              <MemberCard
-                key={member.id}
-                member={member}
-                currentUserId={currentUserId}
-              />
+              activeTab === 'pre-registered' ? (
+                <PreRegisteredCard
+                  key={member.id}
+                  member={member}
+                />
+              ) : (
+                <MemberCard
+                  key={member.id}
+                  member={member}
+                  currentUserId={currentUserId}
+                />
+              )
             ))}
           </div>
 

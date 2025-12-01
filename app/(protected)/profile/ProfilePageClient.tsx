@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, Mail, Phone, Instagram, MapPin, Calendar, Loader2, Search, Lock, Eye, EyeOff, Building2, Plus, Pencil, Trash2, Globe, AlertTriangle } from 'lucide-react'
+import { User, Mail, Phone, Instagram, MapPin, Calendar, Loader2, Search, Lock, Eye, EyeOff, Building2, Plus, Pencil, Trash2, Globe, AlertTriangle, Coins } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -39,6 +39,16 @@ interface Company {
   website: string | null
 }
 
+interface Quota {
+  id: string
+  quota_number: number
+  status: string
+  group: {
+    id: string
+    name: string
+  } | null
+}
+
 interface Profile {
   id: string
   full_name: string
@@ -59,6 +69,7 @@ interface Profile {
 interface ProfilePageClientProps {
   initialProfile: Profile
   email: string
+  quotas?: Quota[]
 }
 
 // Mascara de telefone: (99) 99999-9999
@@ -96,7 +107,7 @@ function getInitials(name: string): string {
   return name.slice(0, 2).toUpperCase()
 }
 
-export default function ProfilePageClient({ initialProfile, email }: ProfilePageClientProps) {
+export default function ProfilePageClient({ initialProfile, email, quotas = [] }: ProfilePageClientProps) {
   const supabase = createClient()
   const [isLoading, setIsLoading] = useState(false)
   const [isCepLoading, setIsCepLoading] = useState(false)
@@ -513,6 +524,46 @@ export default function ProfilePageClient({ initialProfile, email }: ProfilePage
           </div>
         </CardContent>
       </Card>
+
+      {/* Minhas Cotas */}
+      {quotas.length > 0 && (
+        <Card className="border-amber-500/20">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Coins className="h-5 w-5 text-amber-500" />
+              Minhas Cotas
+            </CardTitle>
+            <CardDescription>Acompanhe seus investimentos</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {quotas.map((quota) => (
+                <Card key={quota.id} className="bg-muted/30">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold">{quota.group?.name || 'Grupo'}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Cota #{quota.quota_number}
+                        </p>
+                      </div>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          quota.status === 'contemplated'
+                            ? 'bg-green-500/20 text-green-600'
+                            : 'bg-blue-500/20 text-blue-600'
+                        }`}
+                      >
+                        {quota.status === 'contemplated' ? 'Contemplada' : 'Ativa'}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Formulario */}
       <form onSubmit={handleSubmit}>
