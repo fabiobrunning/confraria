@@ -1,15 +1,43 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, Mail, Phone, Instagram, MapPin, Calendar, Loader2, Search, Lock, Eye, EyeOff } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { User, Mail, Phone, Instagram, MapPin, Calendar, Loader2, Search, Lock, Eye, EyeOff, Building2, Plus, Pencil, Trash2, Globe, AlertTriangle } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
+
+interface Company {
+  id: string
+  name: string
+  description: string | null
+  phone: string | null
+  instagram: string | null
+  website: string | null
+}
 
 interface Profile {
   id: string
@@ -85,6 +113,23 @@ export default function ProfilePageClient({ initialProfile, email }: ProfilePage
     confirmPassword: '',
   })
 
+  // Estados para empresas
+  const [companies, setCompanies] = useState<Company[]>([])
+  const [loadingCompanies, setLoadingCompanies] = useState(true)
+  const [companyModalOpen, setCompanyModalOpen] = useState(false)
+  const [editingCompany, setEditingCompany] = useState<Company | null>(null)
+  const [savingCompany, setSavingCompany] = useState(false)
+  const [companyForm, setCompanyForm] = useState({
+    name: '',
+    description: '',
+    phone: '',
+    instagram: '',
+    website: '',
+  })
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null)
+  const [deletingCompany, setDeletingCompany] = useState(false)
+
   const [formData, setFormData] = useState({
     full_name: initialProfile.full_name || '',
     phone: formatPhone(initialProfile.phone || ''),
@@ -107,6 +152,173 @@ export default function ProfilePageClient({ initialProfile, email }: ProfilePage
     )
     setHasChanges(changed)
   }, [formData, originalData])
+
+  // Carregar empresas do membro
+  useEffect(() => {
+    async function loadCompanies() {
+      try {
+        const { data, error } = await supabase
+          .from('member_companies')
+          .select(`
+            company_id,
+            companies (
+              id,
+              name,
+              description,
+              phone,
+              instagram,
+              website
+            )
+          `)
+          .eq('member_id', initialProfile.id)
+
+        if (error) throw error
+
+        const memberCompanies = (data || [])
+          .map((mc: { companies: Company | null }) => mc.companies)
+          .filter((c): c is Company => c !== null)
+
+        setCompanies(memberCompanies)
+      } catch (error) {
+        console.error('Erro ao carregar empresas:', error)
+      } finally {
+        setLoadingCompanies(false)
+      }
+    }
+
+    loadCompanies()
+  }, [supabase, initialProfile.id])
+
+  // Funções para gerenciar empresas
+  const openCompanyModal = (company?: Company) => {
+    if (company) {
+      setEditingCompany(company)
+      setCompanyForm({
+        name: company.name,
+        description: company.description || '',
+        phone: company.phone || '',
+        instagram: company.instagram || '',
+        website: company.website || '',
+      })
+    } else {
+      setEditingCompany(null)
+      setCompanyForm({ name: '', description: '', phone: '', instagram: '', website: '' })
+    }
+    setCompanyModalOpen(true)
+  }
+
+  const saveCompany = async () => {
+    if (!companyForm.name.trim()) {
+      toast.error('Nome da empresa é obrigatório')
+      return
+    }
+
+    setSavingCompany(true)
+    try {
+      if (editingCompany) {
+        // Atualizar empresa existente
+        const { error } = await supabase
+          .from('companies')
+          .update({
+            name: companyForm.name,
+            description: companyForm.description || null,
+            phone: companyForm.phone || null,
+            instagram: companyForm.instagram || null,
+            website: companyForm.website || null,
+          } as never)
+          .eq('id', editingCompany.id)
+
+        if (error) throw error
+        toast.success('Empresa atualizada!')
+      } else {
+        // Criar nova empresa
+        const { data: newCompany, error: companyError } = await supabase
+          .from('companies')
+          .insert({
+            name: companyForm.name,
+            description: companyForm.description || null,
+            phone: companyForm.phone || null,
+            instagram: companyForm.instagram || null,
+            website: companyForm.website || null,
+          } as never)
+          .select()
+          .single()
+
+        if (companyError) throw companyError
+
+        // Vincular ao membro
+        const { error: linkError } = await supabase
+          .from('member_companies')
+          .insert({
+            member_id: initialProfile.id,
+            company_id: (newCompany as Company).id,
+          } as never)
+
+        if (linkError) throw linkError
+        toast.success('Empresa cadastrada!')
+      }
+
+      setCompanyModalOpen(false)
+      // Recarregar empresas
+      const { data } = await supabase
+        .from('member_companies')
+        .select(`company_id, companies (id, name, description, phone, instagram, website)`)
+        .eq('member_id', initialProfile.id)
+
+      const memberCompanies = (data || [])
+        .map((mc: { companies: Company | null }) => mc.companies)
+        .filter((c): c is Company => c !== null)
+      setCompanies(memberCompanies)
+    } catch (error) {
+      console.error('Erro:', error)
+      toast.error('Erro ao salvar empresa')
+    } finally {
+      setSavingCompany(false)
+    }
+  }
+
+  const confirmDeleteCompany = (company: Company) => {
+    setCompanyToDelete(company)
+    setDeleteDialogOpen(true)
+  }
+
+  const deleteCompany = async () => {
+    if (!companyToDelete) return
+
+    setDeletingCompany(true)
+    try {
+      // Remover vínculo
+      await supabase
+        .from('member_companies')
+        .delete()
+        .eq('member_id', initialProfile.id)
+        .eq('company_id', companyToDelete.id)
+
+      // Verificar se outros membros usam essa empresa
+      const { count } = await supabase
+        .from('member_companies')
+        .select('id', { count: 'exact', head: true })
+        .eq('company_id', companyToDelete.id)
+
+      // Se ninguém mais usa, deletar a empresa
+      if (count === 0) {
+        await supabase
+          .from('companies')
+          .delete()
+          .eq('id', companyToDelete.id)
+      }
+
+      toast.success('Empresa removida!')
+      setCompanies(prev => prev.filter(c => c.id !== companyToDelete.id))
+    } catch (error) {
+      console.error('Erro:', error)
+      toast.error('Erro ao remover empresa')
+    } finally {
+      setDeletingCompany(false)
+      setDeleteDialogOpen(false)
+      setCompanyToDelete(null)
+    }
+  }
 
   const handleInputChange = (field: string, value: string) => {
     let formattedValue = value
@@ -493,6 +705,93 @@ export default function ProfilePageClient({ initialProfile, email }: ProfilePage
         </div>
       </form>
 
+      {/* Seção de Minhas Empresas */}
+      <Card className="mt-8 border-green-500/20">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Building2 className="h-5 w-5 text-green-500" />
+              Minhas Empresas
+            </CardTitle>
+            <Button size="sm" onClick={() => openCompanyModal()}>
+              <Plus className="h-4 w-4 mr-1" />
+              Nova Empresa
+            </Button>
+          </div>
+          <CardDescription>Empresas vinculadas ao seu perfil</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loadingCompanies ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : companies.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Building2 className="h-10 w-10 mx-auto mb-2 opacity-50" />
+              <p>Nenhuma empresa cadastrada</p>
+              <p className="text-sm">Clique em &quot;Nova Empresa&quot; para adicionar</p>
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {companies.map((company) => (
+                <Card key={company.id} className="bg-muted/30">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold truncate">{company.name}</h4>
+                        {company.description && (
+                          <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                            {company.description}
+                          </p>
+                        )}
+                        <div className="mt-2 space-y-1">
+                          {company.phone && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Phone className="h-3 w-3" />
+                              <span>{company.phone}</span>
+                            </div>
+                          )}
+                          {company.instagram && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Instagram className="h-3 w-3" />
+                              <span>@{company.instagram.replace('@', '')}</span>
+                            </div>
+                          )}
+                          {company.website && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Globe className="h-3 w-3" />
+                              <span className="truncate">{company.website}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-1 ml-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => openCompanyModal(company)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => confirmDeleteCompany(company)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Seção de Alteração de Senha */}
       <Card className="mt-8 border-orange-500/20">
         <CardHeader className="pb-4">
@@ -567,6 +866,105 @@ export default function ProfilePageClient({ initialProfile, email }: ProfilePage
           </form>
         </CardContent>
       </Card>
+
+      {/* Modal de Empresa */}
+      <Dialog open={companyModalOpen} onOpenChange={setCompanyModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingCompany ? 'Editar Empresa' : 'Nova Empresa'}</DialogTitle>
+            <DialogDescription>
+              Preencha os dados da empresa
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="company-name">Nome da Empresa *</Label>
+              <Input
+                id="company-name"
+                value={companyForm.name}
+                onChange={(e) => setCompanyForm(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Nome da empresa"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="company-description">O que a empresa faz</Label>
+              <Textarea
+                id="company-description"
+                value={companyForm.description}
+                onChange={(e) => setCompanyForm(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Descreva brevemente a atividade da empresa"
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="company-phone">Telefone</Label>
+                <Input
+                  id="company-phone"
+                  value={companyForm.phone}
+                  onChange={(e) => setCompanyForm(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="(00) 00000-0000"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="company-instagram">Instagram</Label>
+                <Input
+                  id="company-instagram"
+                  value={companyForm.instagram}
+                  onChange={(e) => setCompanyForm(prev => ({ ...prev, instagram: e.target.value.replace('@', '') }))}
+                  placeholder="@usuario"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="company-website">Site</Label>
+              <Input
+                id="company-website"
+                value={companyForm.website}
+                onChange={(e) => setCompanyForm(prev => ({ ...prev, website: e.target.value }))}
+                placeholder="https://www.exemplo.com.br"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCompanyModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={saveCompany} disabled={savingCompany}>
+              {savingCompany ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {editingCompany ? 'Salvar' : 'Cadastrar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Confirmação de Exclusão */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Confirmar Exclusão
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover <strong>{companyToDelete?.name}</strong>?
+              <br />
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={deleteCompany}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deletingCompany}
+            >
+              {deletingCompany ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
