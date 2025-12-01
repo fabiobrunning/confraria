@@ -58,8 +58,8 @@ function MemberCard({ member, currentUserId }: { member: Member; currentUserId: 
   const isAdmin = member.role === 'admin'
 
   return (
-    <Link href={`/members/${member.id}`}>
-      <Card className="overflow-hidden hover:shadow-lg transition-all duration-200 hover:scale-[1.02] cursor-pointer bg-card border-border">
+    <Link href={isCurrentUser ? '/profile' : `/members/${member.id}`}>
+      <Card className={`overflow-hidden hover:shadow-lg transition-all duration-200 hover:scale-[1.02] cursor-pointer bg-card ${isCurrentUser ? 'border-primary border-2 ring-2 ring-primary/20' : 'border-border'}`}>
         <CardContent className="p-4">
           <div className="flex items-start gap-4">
             <div className="relative flex-shrink-0">
@@ -178,7 +178,15 @@ export function MembersList({ currentUserId }: MembersListProps) {
     return () => clearTimeout(timer)
   }, [debouncedSearch, setSearch])
 
-  const displayMembers = useMemo(() => members, [members])
+  // Ordena para mostrar o usuário atual primeiro
+  const displayMembers = useMemo(() => {
+    if (!currentUserId) return members
+
+    const currentUser = members.find(m => m.id === currentUserId)
+    const otherMembers = members.filter(m => m.id !== currentUserId)
+
+    return currentUser ? [currentUser, ...otherMembers] : members
+  }, [members, currentUserId])
 
   if (error) {
     return (
