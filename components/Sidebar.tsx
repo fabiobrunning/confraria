@@ -6,8 +6,10 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 import {
+  LayoutDashboard,
   Users,
   Building2,
+  Layers,
   LogOut,
   UserPlus,
   UserCheck,

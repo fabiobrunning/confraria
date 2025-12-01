@@ -1,13 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, Mail, Phone, Instagram, MapPin, Calendar, Loader2, Search, Lock, Eye, EyeOff, Building2, Plus, Pencil, Trash2, Globe, AlertTriangle, Users, Coins } from 'lucide-react'
+import { User, Mail, Phone, Instagram, MapPin, Calendar, Loader2, Search, Lock, Eye, EyeOff, Building2, Plus, Pencil, Trash2, Globe, AlertTriangle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -38,18 +37,6 @@ interface Company {
   phone: string | null
   instagram: string | null
   website: string | null
-}
-
-interface MemberQuota {
-  id: string
-  quota_number: number
-  status: 'active' | 'contemplated'
-  group: {
-    id: string
-    name: string
-    asset_value: number
-    monthly_value: number
-  }
 }
 
 interface Profile {
@@ -109,14 +96,6 @@ function getInitials(name: string): string {
   return name.slice(0, 2).toUpperCase()
 }
 
-// Formatar moeda
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value)
-}
-
 export default function ProfilePageClient({ initialProfile, email }: ProfilePageClientProps) {
   const supabase = createClient()
   const [isLoading, setIsLoading] = useState(false)
@@ -125,6 +104,7 @@ export default function ProfilePageClient({ initialProfile, email }: ProfilePage
 
   // Estados para alteração de senha
   const [isPasswordLoading, setIsPasswordLoading] = useState(false)
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [passwordData, setPasswordData] = useState({
@@ -149,10 +129,6 @@ export default function ProfilePageClient({ initialProfile, email }: ProfilePage
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null)
   const [deletingCompany, setDeletingCompany] = useState(false)
-
-  // Estados para cotas do membro
-  const [memberQuotas, setMemberQuotas] = useState<MemberQuota[]>([])
-  const [loadingQuotas, setLoadingQuotas] = useState(true)
 
   const [formData, setFormData] = useState({
     full_name: initialProfile.full_name || '',
@@ -211,51 +187,6 @@ export default function ProfilePageClient({ initialProfile, email }: ProfilePage
     }
 
     loadCompanies()
-  }, [supabase, initialProfile.id])
-
-  // Carregar cotas do membro
-  useEffect(() => {
-    async function loadQuotas() {
-      try {
-        const { data, error } = await supabase
-          .from('quotas')
-          .select(`
-            id,
-            quota_number,
-            status,
-            group:groups (
-              id,
-              name,
-              asset_value,
-              monthly_value
-            )
-          `)
-          .eq('member_id', initialProfile.id)
-          .order('quota_number')
-
-        if (error) throw error
-
-        const quotas = (data || []).map((q: {
-          id: string
-          quota_number: number
-          status: string
-          group: { id: string; name: string; asset_value: number; monthly_value: number } | null
-        }) => ({
-          id: q.id,
-          quota_number: q.quota_number,
-          status: q.status as 'active' | 'contemplated',
-          group: q.group || { id: '', name: 'Grupo não encontrado', asset_value: 0, monthly_value: 0 },
-        }))
-
-        setMemberQuotas(quotas)
-      } catch (error) {
-        console.error('Erro ao carregar cotas:', error)
-      } finally {
-        setLoadingQuotas(false)
-      }
-    }
-
-    loadQuotas()
   }, [supabase, initialProfile.id])
 
   // Funções para gerenciar empresas
@@ -851,63 +782,6 @@ export default function ProfilePageClient({ initialProfile, email }: ProfilePage
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Seção de Minhas Cotas */}
-      <Card className="mt-8 border-amber-500/20">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Coins className="h-5 w-5 text-amber-500" />
-            Minhas Cotas
-          </CardTitle>
-          <CardDescription>Cotas de consórcio vinculadas ao seu perfil</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loadingQuotas ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : memberQuotas.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Coins className="h-10 w-10 mx-auto mb-2 opacity-50" />
-              <p>Nenhuma cota vinculada</p>
-              <p className="text-sm">Entre em contato com a administração para vincular suas cotas</p>
-            </div>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {memberQuotas.map((quota) => (
-                <Card key={quota.id} className="bg-muted/30">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold">Cota #{quota.quota_number}</h4>
-                          <Badge variant={quota.status === 'active' ? 'default' : 'secondary'}>
-                            {quota.status === 'active' ? 'Ativa' : 'Contemplada'}
-                          </Badge>
-                        </div>
-                        <div className="mt-2 space-y-1">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Users className="h-3 w-3" />
-                            <span>Grupo: {quota.group.name}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Coins className="h-3 w-3" />
-                            <span>Valor do Bem: {formatCurrency(quota.group.asset_value)}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Calendar className="h-3 w-3" />
-                            <span>Mensalidade: {formatCurrency(quota.group.monthly_value)}</span>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   </CardContent>
