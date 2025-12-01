@@ -104,7 +104,6 @@ export default function ProfilePageClient({ initialProfile, email }: ProfilePage
 
   // Estados para alteração de senha
   const [isPasswordLoading, setIsPasswordLoading] = useState(false)
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [passwordData, setPasswordData] = useState({
