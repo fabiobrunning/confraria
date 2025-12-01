@@ -13,7 +13,8 @@ import {
   Building2,
   User,
   AlertCircle,
-  Crown
+  Crown,
+  Coins
 } from 'lucide-react'
 import { useMembers, Member } from '@/hooks/use-members'
 
@@ -119,6 +120,25 @@ function MemberCard({ member, currentUserId }: { member: Member; currentUserId: 
                   <span className="truncate">
                     {member.companies.map(c => c.name).join(', ')}
                   </span>
+                </div>
+              )}
+
+              {member.quotas && member.quotas.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {member.quotas.map((quota) => (
+                    <div key={quota.id} className="flex items-center gap-2 text-sm">
+                      <Coins className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
+                      <span className="text-muted-foreground">
+                        {quota.group?.name} - Cota #{quota.quota_number}
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className={`text-xs ${quota.status === 'contemplated' ? 'bg-green-500/10 text-green-600' : 'bg-blue-500/10 text-blue-600'}`}
+                      >
+                        {quota.status === 'contemplated' ? 'Contemplada' : 'Ativa'}
+                      </Badge>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

@@ -61,11 +61,13 @@ interface GroupDetailClientProps {
 
 export default function GroupDetailClient({
   group,
-  quotas,
-  members: _members,
+  quotas: initialQuotas,
+  members,
   activeQuotasCount,
 }: GroupDetailClientProps) {
   const [saving, setSaving] = useState(false)
+  const [quotas, setQuotas] = useState(initialQuotas)
+  const [savingQuota, setSavingQuota] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: group.name,
     description: group.description ?? '',
@@ -110,6 +112,48 @@ export default function GroupDetailClient({
       })
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleQuotaUpdate = async (quotaId: string, field: 'member_id' | 'status', value: string | null) => {
+    setSavingQuota(quotaId)
+    try {
+      const updateData = field === 'member_id'
+        ? { member_id: value === 'none' ? null : value }
+        : { status: value }
+
+      const { error } = await supabase
+        .from('quotas' as never)
+        .update(updateData as never)
+        .eq('id', quotaId)
+
+      if (error) throw error
+
+      // Update local state
+      setQuotas(prev => prev.map(q => {
+        if (q.id === quotaId) {
+          if (field === 'member_id') {
+            const selectedMember = value === 'none' ? null : members.find(m => m.id === value)
+            return { ...q, member_id: value === 'none' ? null : value, member: selectedMember || null }
+          } else {
+            return { ...q, status: value as string }
+          }
+        }
+        return q
+      }))
+
+      toast({
+        title: 'Cota atualizada',
+        description: field === 'member_id' ? 'Proprietario alterado' : 'Status alterado',
+      })
+    } catch (error) {
+      toast({
+        title: 'Erro ao atualizar cota',
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
+        variant: 'destructive',
+      })
+    } finally {
+      setSavingQuota(null)
     }
   }
 
@@ -298,29 +342,38 @@ export default function GroupDetailClient({
                       <Badge variant="outline">#{quota.quota_number}</Badge>
                     </TableCell>
                     <TableCell>
-                      {quota.member?.full_name ?? (
-                        <span className="text-muted-foreground italic">
-                          Sem membro
-                        </span>
-                      )}
+                      <Select
+                        value={quota.member_id || 'none'}
+                        onValueChange={(value) => handleQuotaUpdate(quota.id, 'member_id', value)}
+                        disabled={savingQuota === quota.id}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Selecione o proprietario" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Sem proprietario</SelectItem>
+                          {members.map((member) => (
+                            <SelectItem key={member.id} value={member.id}>
+                              {member.full_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant={
-                          quota.status === 'contemplated'
-                            ? 'default'
-                            : 'secondary'
-                        }
-                        className={
-                          quota.status === 'contemplated'
-                            ? 'bg-accent'
-                            : 'bg-green-500/20 text-green-700'
-                        }
+                      <Select
+                        value={quota.status}
+                        onValueChange={(value) => handleQuotaUpdate(quota.id, 'status', value)}
+                        disabled={savingQuota === quota.id}
                       >
-                        {quota.status === 'contemplated'
-                          ? 'Contemplada'
-                          : 'Ativa'}
-                      </Badge>
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Ativa</SelectItem>
+                          <SelectItem value="contemplated">Contemplada</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                   </TableRow>
                 ))}

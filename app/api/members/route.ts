@@ -11,6 +11,18 @@ interface MemberCompany {
   company: Company | null
 }
 
+interface Group {
+  id: string
+  name: string
+}
+
+interface MemberQuota {
+  id: string
+  quota_number: number
+  status: string
+  group: Group | null
+}
+
 interface MemberFromDB {
   id: string
   full_name: string
@@ -27,6 +39,7 @@ interface MemberFromDB {
   created_at: string
   updated_at: string
   member_companies: MemberCompany[]
+  quotas: MemberQuota[]
 }
 
 export async function GET(request: NextRequest) {
@@ -49,7 +62,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = (page - 1) * limit
 
-    // Build query for members with their companies
+    // Build query for members with their companies and quotas
     let query = supabase
       .from('profiles')
       .select(`
@@ -57,6 +70,15 @@ export async function GET(request: NextRequest) {
         member_companies (
           id,
           company:companies (
+            id,
+            name
+          )
+        ),
+        quotas (
+          id,
+          quota_number,
+          status,
+          group:groups (
             id,
             name
           )
@@ -86,7 +108,15 @@ export async function GET(request: NextRequest) {
       ...member,
       companies: member.member_companies
         ?.map((mc) => mc.company)
-        .filter(Boolean) || []
+        .filter(Boolean) || [],
+      quotas: member.quotas
+        ?.map((q) => ({
+          id: q.id,
+          quota_number: q.quota_number,
+          status: q.status,
+          group: q.group
+        }))
+        .filter(q => q.group) || []
     }))
 
     return NextResponse.json({

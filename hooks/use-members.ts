@@ -10,6 +10,16 @@ export interface Company {
   instagram?: string | null
 }
 
+export interface MemberQuota {
+  id: string
+  quota_number: number
+  status: string
+  group: {
+    id: string
+    name: string
+  } | null
+}
+
 export interface Member {
   id: string
   full_name: string
@@ -26,6 +36,7 @@ export interface Member {
   created_at: string
   updated_at: string
   companies: Company[]
+  quotas: MemberQuota[]
 }
 
 export interface MembersResponse {
