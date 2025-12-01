@@ -123,7 +123,6 @@ export default async function MemberPage({ params }: PageProps) {
     <div className="p-4 sm:p-6">
       <MemberDetails
         member={data.member}
-        isAdmin={data.isAdmin}
         isOwnProfile={data.isOwnProfile}
         canEdit={data.canEdit}
       />
