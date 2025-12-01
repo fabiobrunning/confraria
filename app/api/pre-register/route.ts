@@ -68,35 +68,20 @@ export async function POST(request: NextRequest) {
     // Gerar UUID para o profile
     const userId = crypto.randomUUID()
 
-    // Criar profile na tabela profiles - usando SQL raw para evitar problemas de tipo
-    const { error: profileError } = await supabase.rpc('insert_profile_simple', {
-      p_id: userId,
-      p_full_name: data.full_name,
-      p_phone: data.phone,
-    })
+    // Criar profile na tabela profiles
+    const { error: insertError } = await supabase
+      .from('profiles')
+      .insert({
+        id: userId,
+        full_name: data.full_name,
+        phone: data.phone,
+        role: 'member',
+      } as never)
 
-    // Se a função RPC não existir, tenta insert direto
-    if (profileError && profileError.message.includes('function')) {
-      const { error: insertError } = await supabase
-        .from('profiles')
-        .insert({
-          id: userId,
-          full_name: data.full_name,
-          phone: data.phone,
-          role: 'member',
-        } as never)
-
-      if (insertError) {
-        console.error('Erro ao criar profile:', insertError)
-        return NextResponse.json(
-          { success: false, error: 'Erro ao criar perfil do membro: ' + insertError.message },
-          { status: 500 }
-        )
-      }
-    } else if (profileError) {
-      console.error('Erro ao criar profile:', profileError)
+    if (insertError) {
+      console.error('Erro ao criar profile:', insertError)
       return NextResponse.json(
-        { success: false, error: 'Erro ao criar perfil do membro: ' + profileError.message },
+        { success: false, error: 'Erro ao criar perfil do membro: ' + insertError.message },
         { status: 500 }
       )
     }
