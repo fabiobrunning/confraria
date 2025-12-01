@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Dialog,
@@ -29,22 +30,40 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { createClient } from '@/lib/supabase/client'
 
 interface Group {
   id: string
   name: string
   description: string | null
-  color: string
+  asset_value: number
+  total_quotas: number
+  monthly_value: number
+  is_active: boolean
   created_at: string
 }
 
 interface Quota {
   id: string
-  name: string
-  description: string | null
-  value: number | null
+  group_id: string
+  quota_number: number
+  member_id: string | null
+  status: 'active' | 'contemplated'
   created_at: string
+  group?: { name: string }
+  member?: { full_name: string }
+}
+
+interface Member {
+  id: string
+  full_name: string
 }
 
 export default function ConsortiumPage() {
@@ -58,15 +77,27 @@ export default function ConsortiumPage() {
   const [groups, setGroups] = useState<Group[]>([])
   const [groupModalOpen, setGroupModalOpen] = useState(false)
   const [editingGroup, setEditingGroup] = useState<Group | null>(null)
-  const [groupForm, setGroupForm] = useState({ name: '', description: '', color: '#6366f1' })
+  const [groupForm, setGroupForm] = useState({
+    name: '',
+    description: '',
+    asset_value: '',
+    total_quotas: '',
+    monthly_value: '',
+  })
   const [savingGroup, setSavingGroup] = useState(false)
 
   // Quotas state
   const [quotas, setQuotas] = useState<Quota[]>([])
   const [quotaModalOpen, setQuotaModalOpen] = useState(false)
   const [editingQuota, setEditingQuota] = useState<Quota | null>(null)
-  const [quotaForm, setQuotaForm] = useState({ name: '', description: '', value: '' })
+  const [quotaForm, setQuotaForm] = useState({
+    group_id: '',
+    quota_number: '',
+    member_id: '',
+    status: 'active' as 'active' | 'contemplated',
+  })
   const [savingQuota, setSavingQuota] = useState(false)
+  const [members, setMembers] = useState<Member[]>([])
 
   // Delete confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -116,23 +147,41 @@ export default function ConsortiumPage() {
 
     if (groupsData) setGroups(groupsData as Group[])
 
-    // Load quotas
+    // Load quotas with related data
     const { data: quotasData } = await supabase
       .from('quotas')
-      .select('*')
-      .order('name')
+      .select(`
+        *,
+        group:groups(name),
+        member:profiles(full_name)
+      `)
+      .order('quota_number')
 
-    if (quotasData) setQuotas(quotasData as Quota[])
+    if (quotasData) setQuotas(quotasData as unknown as Quota[])
+
+    // Load members for dropdown
+    const { data: membersData } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .order('full_name')
+
+    if (membersData) setMembers(membersData as Member[])
   }
 
   // Group functions
   const openGroupModal = (group?: Group) => {
     if (group) {
       setEditingGroup(group)
-      setGroupForm({ name: group.name, description: group.description || '', color: group.color })
+      setGroupForm({
+        name: group.name,
+        description: group.description || '',
+        asset_value: group.asset_value.toString(),
+        total_quotas: group.total_quotas.toString(),
+        monthly_value: group.monthly_value.toString(),
+      })
     } else {
       setEditingGroup(null)
-      setGroupForm({ name: '', description: '', color: '#6366f1' })
+      setGroupForm({ name: '', description: '', asset_value: '', total_quotas: '', monthly_value: '' })
     }
     setGroupModalOpen(true)
   }
@@ -145,14 +194,18 @@ export default function ConsortiumPage() {
 
     setSavingGroup(true)
     try {
+      const groupData = {
+        name: groupForm.name,
+        description: groupForm.description || null,
+        asset_value: parseFloat(groupForm.asset_value) || 0,
+        total_quotas: parseInt(groupForm.total_quotas) || 0,
+        monthly_value: parseFloat(groupForm.monthly_value) || 0,
+      }
+
       if (editingGroup) {
         const { error } = await supabase
           .from('groups')
-          .update({
-            name: groupForm.name,
-            description: groupForm.description || null,
-            color: groupForm.color,
-          } as never)
+          .update(groupData as never)
           .eq('id', editingGroup.id)
 
         if (error) throw error
@@ -160,11 +213,7 @@ export default function ConsortiumPage() {
       } else {
         const { error } = await supabase
           .from('groups')
-          .insert({
-            name: groupForm.name,
-            description: groupForm.description || null,
-            color: groupForm.color,
-          } as never)
+          .insert(groupData as never)
 
         if (error) throw error
         toast.success('Grupo criado!')
@@ -185,29 +234,31 @@ export default function ConsortiumPage() {
     if (quota) {
       setEditingQuota(quota)
       setQuotaForm({
-        name: quota.name,
-        description: quota.description || '',
-        value: quota.value?.toString() || '',
+        group_id: quota.group_id,
+        quota_number: quota.quota_number.toString(),
+        member_id: quota.member_id || '',
+        status: quota.status,
       })
     } else {
       setEditingQuota(null)
-      setQuotaForm({ name: '', description: '', value: '' })
+      setQuotaForm({ group_id: '', quota_number: '', member_id: '', status: 'active' })
     }
     setQuotaModalOpen(true)
   }
 
   const saveQuota = async () => {
-    if (!quotaForm.name.trim()) {
-      toast.error('Nome da cota é obrigatório')
+    if (!quotaForm.group_id || !quotaForm.quota_number) {
+      toast.error('Grupo e número da cota são obrigatórios')
       return
     }
 
     setSavingQuota(true)
     try {
       const quotaData = {
-        name: quotaForm.name,
-        description: quotaForm.description || null,
-        value: quotaForm.value ? parseFloat(quotaForm.value) : null,
+        group_id: quotaForm.group_id,
+        quota_number: parseInt(quotaForm.quota_number),
+        member_id: quotaForm.member_id || null,
+        status: quotaForm.status,
       }
 
       if (editingQuota) {
@@ -267,6 +318,14 @@ export default function ConsortiumPage() {
     }
   }
 
+  // Format currency
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value)
+  }
+
   if (isLoading || isAdmin === null) {
     return (
       <div className="p-6 flex items-center justify-center min-h-[60vh]">
@@ -279,18 +338,18 @@ export default function ConsortiumPage() {
     <div className="p-4 sm:p-6 space-y-6">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold">Grupos e Cotas</h1>
-        <p className="text-muted-foreground">Gerencie grupos e cotas de consórcio</p>
+        <p className="text-muted-foreground">Gerencie grupos de consórcio e cotas dos membros</p>
       </div>
 
       <Tabs defaultValue="groups" className="space-y-4">
         <TabsList>
           <TabsTrigger value="groups" className="gap-2">
             <Users className="h-4 w-4" />
-            Grupos
+            Grupos ({groups.length})
           </TabsTrigger>
           <TabsTrigger value="quotas" className="gap-2">
             <Coins className="h-4 w-4" />
-            Cotas
+            Cotas ({quotas.length})
           </TabsTrigger>
         </TabsList>
 
@@ -307,19 +366,32 @@ export default function ConsortiumPage() {
             {groups.map((group) => (
               <Card key={group.id}>
                 <CardHeader className="pb-3">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: group.color }}
-                    />
+                  <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">{group.name}</CardTitle>
+                    <Badge variant={group.is_active ? 'default' : 'secondary'}>
+                      {group.is_active ? 'Ativo' : 'Inativo'}
+                    </Badge>
                   </div>
                   {group.description && (
                     <CardDescription>{group.description}</CardDescription>
                   )}
                 </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex gap-2">
+                <CardContent className="pt-0 space-y-3">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Valor do Bem:</span>
+                      <p className="font-medium">{formatCurrency(group.asset_value)}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Mensalidade:</span>
+                      <p className="font-medium">{formatCurrency(group.monthly_value)}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Total de Cotas:</span>
+                      <p className="font-medium">{group.total_quotas}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -366,17 +438,23 @@ export default function ConsortiumPage() {
             {quotas.map((quota) => (
               <Card key={quota.id}>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">{quota.name}</CardTitle>
-                  {quota.description && (
-                    <CardDescription>{quota.description}</CardDescription>
-                  )}
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">Cota #{quota.quota_number}</CardTitle>
+                    <Badge variant={quota.status === 'active' ? 'default' : 'secondary'}>
+                      {quota.status === 'active' ? 'Ativa' : 'Contemplada'}
+                    </Badge>
+                  </div>
+                  <CardDescription>
+                    Grupo: {quota.group?.name || 'N/A'}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0 space-y-3">
-                  {quota.value && (
-                    <p className="text-lg font-semibold text-primary">
-                      R$ {quota.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  <div>
+                    <span className="text-sm text-muted-foreground">Membro:</span>
+                    <p className="font-medium">
+                      {quota.member?.full_name || <span className="text-muted-foreground">Não atribuída</span>}
                     </p>
-                  )}
+                  </div>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
@@ -390,7 +468,7 @@ export default function ConsortiumPage() {
                       variant="outline"
                       size="sm"
                       className="text-destructive hover:text-destructive"
-                      onClick={() => confirmDelete('quota', quota.id, quota.name)}
+                      onClick={() => confirmDelete('quota', quota.id, `Cota #${quota.quota_number}`)}
                     >
                       <Trash2 className="h-3 w-3 mr-1" />
                       Excluir
@@ -418,7 +496,7 @@ export default function ConsortiumPage() {
           <DialogHeader>
             <DialogTitle>{editingGroup ? 'Editar Grupo' : 'Novo Grupo'}</DialogTitle>
             <DialogDescription>
-              Preencha os dados do grupo
+              Preencha os dados do grupo de consórcio
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -428,7 +506,7 @@ export default function ConsortiumPage() {
                 id="group-name"
                 value={groupForm.name}
                 onChange={(e) => setGroupForm(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Ex: Diretoria"
+                placeholder="Ex: Grupo A - Imóveis"
               />
             </div>
             <div className="space-y-2">
@@ -438,21 +516,42 @@ export default function ConsortiumPage() {
                 value={groupForm.description}
                 onChange={(e) => setGroupForm(prev => ({ ...prev, description: e.target.value }))}
                 placeholder="Descrição do grupo"
-                rows={3}
+                rows={2}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="group-color">Cor</Label>
-              <div className="flex gap-2 items-center">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="asset-value">Valor do Bem (R$)</Label>
                 <Input
-                  id="group-color"
-                  type="color"
-                  value={groupForm.color}
-                  onChange={(e) => setGroupForm(prev => ({ ...prev, color: e.target.value }))}
-                  className="w-16 h-10 p-1 cursor-pointer"
+                  id="asset-value"
+                  type="number"
+                  step="0.01"
+                  value={groupForm.asset_value}
+                  onChange={(e) => setGroupForm(prev => ({ ...prev, asset_value: e.target.value }))}
+                  placeholder="100000.00"
                 />
-                <span className="text-sm text-muted-foreground">{groupForm.color}</span>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="monthly-value">Mensalidade (R$)</Label>
+                <Input
+                  id="monthly-value"
+                  type="number"
+                  step="0.01"
+                  value={groupForm.monthly_value}
+                  onChange={(e) => setGroupForm(prev => ({ ...prev, monthly_value: e.target.value }))}
+                  placeholder="1500.00"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="total-quotas">Total de Cotas</Label>
+              <Input
+                id="total-quotas"
+                type="number"
+                value={groupForm.total_quotas}
+                onChange={(e) => setGroupForm(prev => ({ ...prev, total_quotas: e.target.value }))}
+                placeholder="100"
+              />
             </div>
           </div>
           <DialogFooter>
@@ -473,39 +572,71 @@ export default function ConsortiumPage() {
           <DialogHeader>
             <DialogTitle>{editingQuota ? 'Editar Cota' : 'Nova Cota'}</DialogTitle>
             <DialogDescription>
-              Preencha os dados da cota de investimento
+              Preencha os dados da cota
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="quota-name">Nome *</Label>
-              <Input
-                id="quota-name"
-                value={quotaForm.name}
-                onChange={(e) => setQuotaForm(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Ex: Cota Premium"
-              />
+              <Label>Grupo *</Label>
+              <Select
+                value={quotaForm.group_id}
+                onValueChange={(value) => setQuotaForm(prev => ({ ...prev, group_id: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o grupo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {groups.map((group) => (
+                    <SelectItem key={group.id} value={group.id}>
+                      {group.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="quota-description">Descrição</Label>
-              <Textarea
-                id="quota-description"
-                value={quotaForm.description}
-                onChange={(e) => setQuotaForm(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Descrição da cota"
-                rows={3}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="quota-value">Valor (R$)</Label>
+              <Label htmlFor="quota-number">Número da Cota *</Label>
               <Input
-                id="quota-value"
+                id="quota-number"
                 type="number"
-                step="0.01"
-                value={quotaForm.value}
-                onChange={(e) => setQuotaForm(prev => ({ ...prev, value: e.target.value }))}
-                placeholder="10000.00"
+                value={quotaForm.quota_number}
+                onChange={(e) => setQuotaForm(prev => ({ ...prev, quota_number: e.target.value }))}
+                placeholder="1"
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Membro (opcional)</Label>
+              <Select
+                value={quotaForm.member_id}
+                onValueChange={(value) => setQuotaForm(prev => ({ ...prev, member_id: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o membro" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Nenhum</SelectItem>
+                  {members.map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      {member.full_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select
+                value={quotaForm.status}
+                onValueChange={(value) => setQuotaForm(prev => ({ ...prev, status: value as 'active' | 'contemplated' }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Ativa</SelectItem>
+                  <SelectItem value="contemplated">Contemplada</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
