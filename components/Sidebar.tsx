@@ -12,6 +12,7 @@ import {
   Layers,
   LogOut,
   UserPlus,
+  UserCheck,
   Menu,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -55,7 +56,10 @@ export default function Sidebar({ role }: SidebarProps) {
   const adminItems = useMemo(
     () =>
       role === 'admin'
-        ? [{ path: '/pre-register', icon: UserPlus, label: 'Pre-Cadastro' }]
+        ? [
+            { path: '/admin/prospects', icon: UserCheck, label: 'Interessados' },
+            { path: '/pre-register', icon: UserPlus, label: 'Pre-Cadastro' },
+          ]
         : [],
     [role]
   )

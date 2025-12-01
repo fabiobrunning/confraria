@@ -24,6 +24,7 @@ const bgImages = [
 
 export default function HomePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [membros, setMembros] = useState(0)
   const [empresas, setEmpresas] = useState(0)
   const [valor, setValor] = useState(0)
@@ -241,21 +242,33 @@ export default function HomePage() {
               <ul className="flex gap-8 text-white/70 text-base font-medium">
                 <li>
                   <a
-                    href="#"
-                    className="social-link hover:text-accent focus:text-accent focus:outline-none focus:underline transition-colors"
+                    href="https://www.instagram.com/confrariapedrabranca/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="social-link hover:text-accent focus:text-accent focus:outline-none focus:underline transition-colors flex items-center gap-2"
                     style={{ opacity: 0 }}
                     aria-label="Instagram da Confraria"
                   >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                    </svg>
                     Instagram
                   </a>
                 </li>
                 <li>
                   <a
-                    href="#"
-                    className="social-link hover:text-accent focus:text-accent focus:outline-none focus:underline transition-colors"
+                    href="https://wa.me/5548996898577"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="social-link hover:text-accent focus:text-accent focus:outline-none focus:underline transition-colors flex items-center gap-2"
                     style={{ opacity: 0 }}
                     aria-label="WhatsApp da Confraria"
                   >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                    </svg>
                     WhatsApp
                   </a>
                 </li>
@@ -285,26 +298,74 @@ export default function HomePage() {
 
             {/* Right side: Login Card + Menu Toggle */}
             <div className="flex items-center gap-3 sm:gap-4">
-              {/* Mini Login Card - Desktop */}
-              <Link
-                href="/auth"
-                className="hidden sm:flex items-center gap-3 px-4 py-2.5 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 hover:bg-black/60 hover:border-accent/30 focus:bg-black/60 focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all duration-200 group"
-                aria-label="Acessar area do membro"
-              >
-                <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center group-hover:bg-accent/30 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent" aria-hidden="true">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
+              {/* Mini Login Card - Desktop with Dropdown */}
+              <div className="relative hidden sm:block">
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  onBlur={() => setTimeout(() => setIsDropdownOpen(false), 150)}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 hover:bg-black/60 hover:border-accent/30 focus:bg-black/60 focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all duration-200 group"
+                  aria-label="Menu area do membro"
+                  aria-expanded={isDropdownOpen}
+                  aria-haspopup="true"
+                >
+                  <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center group-hover:bg-accent/30 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent" aria-hidden="true">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-white/90 text-sm font-medium group-hover:text-accent transition-colors">Area do Membro</p>
+                    <p className="text-white/40 text-xs">Acesso exclusivo</p>
+                  </div>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`text-white/40 group-hover:text-accent transition-all ${isDropdownOpen ? 'rotate-180' : ''}`} aria-hidden="true">
+                    <path d="M6 9l6 6 6-6" />
                   </svg>
-                </div>
-                <div className="text-left">
-                  <p className="text-white/90 text-sm font-medium group-hover:text-accent transition-colors">Area do Membro</p>
-                  <p className="text-white/40 text-xs">Acesso exclusivo</p>
-                </div>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/40 group-hover:text-accent group-hover:translate-x-1 transition-all" aria-hidden="true">
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-              </Link>
+                </button>
+
+                {/* Dropdown Menu */}
+                {isDropdownOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-56 rounded-xl bg-black/90 backdrop-blur-md border border-white/10 shadow-xl overflow-hidden z-50">
+                    <Link
+                      href="/companies"
+                      className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-accent/20 hover:text-white transition-colors"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent" aria-hidden="true">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
+                      </svg>
+                      <span className="text-sm font-medium">Nossas Empresas</span>
+                    </Link>
+                    <a
+                      href="/auth"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-accent/20 hover:text-white transition-colors border-t border-white/5"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent" aria-hidden="true">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                        <polyline points="10 17 15 12 10 7" />
+                        <line x1="15" y1="12" x2="3" y2="12" />
+                      </svg>
+                      <span className="text-sm font-medium">Acesso Area de Membro</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/40 ml-auto" aria-hidden="true">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                        <polyline points="15 3 21 3 21 9" />
+                        <line x1="10" y1="14" x2="21" y2="3" />
+                      </svg>
+                    </a>
+                    <Link
+                      href="/quero-conhecer"
+                      className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-accent/20 hover:text-white transition-colors border-t border-white/5"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-accent" aria-hidden="true">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                      </svg>
+                      <span className="text-sm font-medium">Quero Conhecer</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
 
               {/* Menu Toggle */}
               <button
@@ -344,12 +405,12 @@ export default function HomePage() {
             </h1>
 
             {/* Subheadline */}
-            <p className="font-serif text-xl sm:text-2xl md:text-3xl text-white/80 max-w-[750px] mx-auto mb-10 sm:mb-8 leading-relaxed font-medium">
+            <p className="font-serif text-2xl sm:text-3xl md:text-4xl text-white/80 max-w-[900px] mx-auto mb-10 sm:mb-8 leading-relaxed font-medium">
               O networking autentico que todo empresario procura, mas raramente encontra.
             </p>
 
             {/* Description */}
-            <p className="text-white/60 text-base sm:text-lg md:text-xl max-w-[650px] mx-auto mb-12 sm:mb-10 leading-relaxed">
+            <p className="text-white/60 text-lg sm:text-xl md:text-2xl max-w-[850px] mx-auto mb-12 sm:mb-10 leading-relaxed">
               Fortalecemos lideres de negocios da nossa regiao, criando um ambiente de confianca mutua. Conhecimento compartilhado sem segundas intencoes, desafios divididos por escolha, conquistas celebradas com orgulho genuino.
             </p>
 
@@ -389,7 +450,7 @@ export default function HomePage() {
               {/* Membros */}
               <div className="group">
                 <div
-                  className="text-white font-bold font-cormorant mb-4 text-7xl sm:text-8xl md:text-[7rem] leading-none transition-all duration-300 group-hover:text-accent"
+                  className="text-white font-bold font-cormorant mb-1 text-7xl sm:text-8xl md:text-[7rem] leading-none transition-all duration-300 group-hover:text-accent"
                   aria-label={`${membros} membros ativos`}
                 >
                   {membros}
@@ -402,7 +463,7 @@ export default function HomePage() {
               {/* Empresas */}
               <div className="group">
                 <div
-                  className="text-white font-bold font-cormorant mb-4 text-7xl sm:text-8xl md:text-[7rem] leading-none transition-all duration-300 group-hover:text-accent"
+                  className="text-white font-bold font-cormorant mb-1 text-7xl sm:text-8xl md:text-[7rem] leading-none transition-all duration-300 group-hover:text-accent"
                   aria-label={`${empresas} empresas conectadas`}
                 >
                   {empresas}
@@ -415,7 +476,7 @@ export default function HomePage() {
               {/* Valor */}
               <div className="group">
                 <div
-                  className="text-accent font-bold font-cormorant mb-4 text-7xl sm:text-8xl md:text-[7rem] leading-none transition-all duration-300 group-hover:scale-105"
+                  className="text-accent font-bold font-cormorant mb-1 text-7xl sm:text-8xl md:text-[7rem] leading-none transition-all duration-300 group-hover:scale-105"
                   aria-label={`Mais de ${valor} milhoes em valor movimentado`}
                 >
                   +{valor}M
@@ -427,6 +488,54 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* Footer */}
+        <footer className="bg-black border-t border-white/5 py-8">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+              {/* Social Icons */}
+              <div className="flex items-center gap-4">
+                <a
+                  href="https://www.instagram.com/confrariapedrabranca/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-accent/20 hover:text-accent transition-colors text-white/60"
+                  aria-label="Instagram da Confraria"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                  </svg>
+                </a>
+                <a
+                  href="https://wa.me/5548996898577"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-accent/20 hover:text-accent transition-colors text-white/60"
+                  aria-label="WhatsApp da Confraria"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                  </svg>
+                </a>
+              </div>
+
+              {/* Developer Credit */}
+              <p className="text-white/40 text-sm">
+                Desenvolvido pela{' '}
+                <a
+                  href="https://looping.com.br"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent hover:text-accent/80 transition-colors font-medium"
+                >
+                  Looping
+                </a>
+              </p>
+            </div>
+          </div>
+        </footer>
       </div>
     </div>
   )
