@@ -97,19 +97,21 @@ export default function PreRegisterPage() {
     setIsLoading(true)
 
     try {
-      // Inserir diretamente na tabela profiles com dados mínimos
-      const { error } = await supabase
-        .from('profiles')
-        .insert({
-          id: crypto.randomUUID(),
+      const response = await fetch('/api/pre-register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           full_name: fullName,
           phone: phone.replace(/\D/g, ''),
-          role: 'member',
-          status: 'pending',
-        })
+        }),
+      })
 
-      if (error) {
-        throw new Error(error.message)
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao cadastrar membro')
       }
 
       toast.success('Membro pré-cadastrado com sucesso!')
