@@ -154,7 +154,7 @@ export default function DrawPageClient({
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Disponiveis</p>
-              <p className="font-semibold text-green-600">
+              <p className="font-semibold text-green-600 dark:text-green-400">
                 {availableNumbers.length}
               </p>
             </div>

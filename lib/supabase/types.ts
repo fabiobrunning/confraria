@@ -148,6 +148,7 @@ export type Database = {
           id: string
           instagram: string | null
           phone: string
+          pre_registered: boolean
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
         }
@@ -164,6 +165,7 @@ export type Database = {
           id: string
           instagram?: string | null
           phone: string
+          pre_registered?: boolean
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
@@ -180,6 +182,7 @@ export type Database = {
           id?: string
           instagram?: string | null
           phone?: string
+          pre_registered?: boolean
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }

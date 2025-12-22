@@ -448,7 +448,7 @@ export default function GroupDetailClient({
         </Card>
         <Card>
           <CardContent className="pt-6 text-center">
-            <p className="text-3xl font-bold text-green-600">
+            <p className="text-3xl font-bold text-green-600 dark:text-green-400">
               {activeQuotasCount}
             </p>
             <p className="text-sm text-muted-foreground">Cotas Ativas</p>
