@@ -136,7 +136,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Criar vinculo
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: link, error } = await (supabase as any)
       .from('member_companies')
       .insert({ member_id, company_id })
