@@ -91,7 +91,6 @@ export async function PUT(request: NextRequest) {
       updated_at: new Date().toISOString(),
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: profile, error: updateError } = await (supabase as any)
       .from('profiles')
       .update(updateData)

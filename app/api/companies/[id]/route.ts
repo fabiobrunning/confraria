@@ -172,7 +172,6 @@ export async function PUT(
     if (body.address_state !== undefined) companyData.address_state = body.address_state?.trim() || null;
     if (body.address_cep !== undefined) companyData.address_cep = body.address_cep?.trim() || null;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: updatedCompany, error } = await (supabase as any)
       .from('companies')
       .update(companyData)
