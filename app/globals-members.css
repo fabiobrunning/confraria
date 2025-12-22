@@ -1,0 +1,366 @@
+/*
+  Paleta de cores exclusiva para área de membros (após login)
+  Aplicada apenas nas rotas (protected)
+
+  REGRA DE CONTRASTE:
+  - Fundo claro → Texto/Ícone escuro
+  - Fundo escuro → Texto/Ícone claro
+*/
+
+.member-area {
+  /* Light theme - Member Area */
+  --background: 0 0% 99.2157%; /* #fdfdfd */
+  --foreground: 0 0% 0%; /* #000000 */
+
+  --card: 0 0% 99.2157%; /* #fdfdfd */
+  --card-foreground: 0 0% 0%; /* #000000 */
+
+  --popover: 0 0% 98.8235%; /* #fcfcfc */
+  --popover-foreground: 0 0% 0%; /* #000000 */
+
+  --primary: 258 68.4932% 71.3725%; /* #a284e8 - Roxo */
+  --primary-foreground: 0 0% 100%; /* #ffffff */
+
+  --secondary: 0 0% 100%; /* #ffffff */
+  --secondary-foreground: 0 0% 3.1373%; /* #080808 */
+
+  --muted: 0 0% 96.0784%; /* #f5f5f5 */
+  --muted-foreground: 0 0% 32.1569%; /* #525252 */
+
+  --accent: 0 0% 100%; /* #ffffff */
+  --accent-foreground: 216.2162 52.1127% 58.2353%; /* #5d89cc - Azul */
+
+  --destructive: 358.4211 51.3514% 70.9804%; /* #db8f91 - Vermelho suave */
+  --destructive-foreground: 0 0% 100%; /* #ffffff */
+
+  --border: 0 0% 100%; /* #ffffff */
+  --input: 0 0% 92.1569%; /* #ebebeb */
+  --ring: 0 0% 0%; /* #000000 */
+
+  /* Success state */
+  --success: 148.2353 36.9565% 63.9216%; /* #81c5a1 - Verde suave */
+  --success-foreground: 0 0% 100%; /* #ffffff */
+
+  /* Chart colors */
+  --chart-1: 148.2353 36.9565% 63.9216%; /* #81c5a1 */
+  --chart-2: 258 68.4932% 71.3725%; /* #a284e8 */
+  --chart-3: 24.6729 68.1529% 69.2157%; /* #e6a77b */
+  --chart-4: 217.2632 53.0726% 64.9020%; /* #769ad5 */
+  --chart-5: 0 0% 45.4902%; /* #747474 */
+
+  /* Sidebar */
+  --sidebar-background: 0 0% 100%; /* #ffffff */
+  --sidebar-foreground: 0 0% 0%; /* #000000 */
+  --sidebar-primary: 0 0% 0%; /* #000000 */
+  --sidebar-primary-foreground: 0 0% 100%; /* #ffffff */
+  --sidebar-accent: 0 0% 92.1569%; /* #ebebeb */
+  --sidebar-accent-foreground: 0 0% 0%; /* #000000 */
+  --sidebar-border: 0 0% 92.1569%; /* #ebebeb */
+  --sidebar-ring: 0 0% 0%; /* #000000 */
+
+  /* Radius */
+  --radius: 1rem;
+
+  /* Custom shadows */
+  --shadow-x: 25px;
+  --shadow-y: 4.5px;
+  --shadow-blur: 4px;
+  --shadow-spread: 2px;
+  --shadow-opacity: 0.11;
+  --shadow-color: #1a1a1a;
+
+  /* Shadow presets */
+  --shadow-2xs: 25px 4.5px 4px 2px hsl(0 0% 10.1961% / 0.06);
+  --shadow-xs: 25px 4.5px 4px 2px hsl(0 0% 10.1961% / 0.06);
+  --shadow-sm: 25px 4.5px 4px 2px hsl(0 0% 10.1961% / 0.11), 25px 1px 2px 1px hsl(0 0% 10.1961% / 0.11);
+  --shadow: 25px 4.5px 4px 2px hsl(0 0% 10.1961% / 0.11), 25px 1px 2px 1px hsl(0 0% 10.1961% / 0.11);
+  --shadow-md: 25px 4.5px 4px 2px hsl(0 0% 10.1961% / 0.11), 25px 2px 4px 1px hsl(0 0% 10.1961% / 0.11);
+  --shadow-lg: 25px 4.5px 4px 2px hsl(0 0% 10.1961% / 0.11), 25px 4px 6px 1px hsl(0 0% 10.1961% / 0.11);
+  --shadow-xl: 25px 4.5px 4px 2px hsl(0 0% 10.1961% / 0.11), 25px 8px 10px 1px hsl(0 0% 10.1961% / 0.11);
+  --shadow-2xl: 25px 4.5px 4px 2px hsl(0 0% 10.1961% / 0.28);
+
+  /* Letter spacing */
+  --tracking-normal: -0.025em;
+  --spacing: 0.23rem;
+}
+
+.member-area.dark {
+  /* Dark theme - Member Area */
+  --background: 20.0353 13.8354% 4.1252%; /* #0c0a09 - Marrom muito escuro */
+  --foreground: 0 0% 96%; /* #f5f5f5 - Mais claro para melhor contraste */
+
+  --card: 223.8136 0% 14.9382%; /* #262626 - Cinza escuro */
+  --card-foreground: 0 0% 96%; /* #f5f5f5 - Mais claro para melhor contraste */
+
+  --popover: 225 4.6512% 16.8627%; /* #292a2d */
+  --popover-foreground: 0 0% 96%; /* #f5f5f5 */
+
+  --primary: 44.4156 36.8421% 59.0196%; /* #bda970 - Dourado/Bege */
+  --primary-foreground: 0 0% 100%; /* #ffffff */
+
+  --secondary: 0 0% 100%; /* #ffffff */
+  --secondary-foreground: 0 0% 10%; /* #1a1a1a - Escuro para contraste */
+
+  --muted: 231.4286 6.3063% 21.7647%; /* #34353b */
+  --muted-foreground: 44 25% 80%; /* #d4c9b8 - Bege claro/dourado suave */
+
+  --accent: 217.5 22.6415% 20.7843%; /* #293241 - Azul escuro */
+  --accent-foreground: 0 0% 100%; /* #ffffff */
+
+  --destructive: 0 62.5% 84.3137%; /* #f0bebe - Rosa claro */
+  --destructive-foreground: 0 0% 10%; /* #1a1a1a - Escuro para contraste */
+
+  --border: 220 4.6154% 35%; /* #545659 - Mais claro para visibilidade */
+  --input: 220 4.6154% 25.4902%; /* #3e4044 - Mantido */
+  --ring: 257.9104 69.0722% 80.9804%; /* #c1adf0 - Roxo claro */
+
+  /* Success state */
+  --success: 142.1053 48.1013% 69.0196%; /* #8ad6a6 */
+  --success-foreground: 0 0% 10%; /* #1a1a1a - Escuro para contraste */
+
+  /* Chart colors */
+  --chart-1: 142.1053 48.1013% 69.0196%; /* #8ad6a6 */
+  --chart-2: 257.9104 69.0722% 80.9804%; /* #c1adf0 */
+  --chart-3: 0 69.2308% 97.4510%; /* #fdf4f4 */
+  --chart-4: 217.9412 59.6491% 77.6471%; /* #a4bde8 */
+  --chart-5: 0 0% 70%; /* #b3b3b3 - Mais claro */
+
+  /* Sidebar with dark theme */
+  --sidebar-background: 240 4.9180% 11.9608%; /* #1d1d20 - Quase preto */
+  --sidebar-foreground: 0 0% 96%; /* #f5f5f5 - Mais claro */
+  --sidebar-primary: 257.9104 69.0722% 80.9804%; /* #c1adf0 - Roxo claro */
+  --sidebar-primary-foreground: 0 0% 100%; /* #ffffff */
+  --sidebar-accent: 231.4286 6.3063% 21.7647%; /* #34353b */
+  --sidebar-accent-foreground: 257.9104 69.0722% 80.9804%; /* #c1adf0 */
+  --sidebar-border: 220 4.6154% 35%; /* #545659 - Mais claro para visibilidade */
+  --sidebar-ring: 257.9104 69.0722% 80.9804%; /* #c1adf0 */
+}
+
+/* Apply custom shadows to cards in member area */
+.member-area .shadow-sm {
+  box-shadow: var(--shadow-sm);
+}
+
+.member-area .shadow,
+.member-area .shadow-md {
+  box-shadow: var(--shadow);
+}
+
+.member-area .shadow-lg {
+  box-shadow: var(--shadow-lg);
+}
+
+.member-area .shadow-xl {
+  box-shadow: var(--shadow-xl);
+}
+
+.member-area .shadow-2xl {
+  box-shadow: var(--shadow-2xl);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-serif: var(--font-serif);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --shadow-2xs: var(--shadow-2xs);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow: var(--shadow);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-2xl: var(--shadow-2xl);
+
+  --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
+  --tracking-tight: calc(var(--tracking-normal) - 0.025em);
+  --tracking-normal: var(--tracking-normal);
+  --tracking-wide: calc(var(--tracking-normal) + 0.025em);
+  --tracking-wider: calc(var(--tracking-normal) + 0.05em);
+  --tracking-widest: calc(var(--tracking-normal) + 0.1em);
+}
+
+/* Letter spacing for member area */
+.member-area {
+  letter-spacing: var(--tracking-normal);
+}
+
+/* ========================================
+   REGRAS DE CONTRASTE E PADRONIZAÇÃO DE ÍCONES
+   ======================================== */
+
+/* SIDEBAR: Fundo escuro → Ícones CLAROS */
+.member-area [class*="sidebar"] svg,
+.member-area [class*="Sidebar"] svg,
+.member-area nav svg {
+  color: hsl(var(--sidebar-foreground)) !important; /* #f0f0f0 */
+}
+
+/* CARDS: Fundo claro → Ícones ESCUROS */
+.member-area [class*="card"] svg:not([class*="sidebar"] svg),
+.member-area [class*="Card"] svg:not([class*="sidebar"] svg) {
+  color: hsl(var(--card-foreground)) !important; /* #1a1a1a ou #f0f0f0 dependendo do tema */
+}
+
+/* CARDS com fundo de sucesso (verde) → Ícones ESCUROS */
+.member-area [class*="success"] svg,
+.member-area [class*="Success"] svg,
+.member-area .bg-success svg {
+  color: hsl(var(--success-foreground)) !important;
+}
+
+/* CARDS com fundo de erro (vermelho) → Ícones ESCUROS/CLAROS conforme contraste */
+.member-area [class*="destructive"] svg,
+.member-area [class*="Destructive"] svg,
+.member-area .bg-destructive svg {
+  color: hsl(var(--destructive-foreground)) !important;
+}
+
+/* BOTÕES: Ícones seguem cor do texto do botão */
+.member-area button svg,
+.member-area [role="button"] svg {
+  color: currentColor; /* Herda do botão */
+}
+
+/* BOTÕES PRIMARY: Ícones claros */
+.member-area button.bg-primary svg,
+.member-area [class*="Button"].bg-primary svg {
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+/* BADGES: Ícones seguem cor do texto */
+.member-area [class*="badge"] svg,
+.member-area [class*="Badge"] svg {
+  color: currentColor;
+}
+
+/* INPUTS: Ícones em cinza médio para visibilidade */
+.member-area input svg,
+.member-area [class*="input"] svg {
+  color: hsl(var(--muted-foreground));
+}
+
+/* TABLES: Ícones escuros em fundo claro, claros em fundo escuro */
+.member-area table svg,
+.member-area [class*="table"] svg {
+  color: hsl(var(--foreground));
+}
+
+/* ========================================
+   PADRONIZAÇÃO POR ÁREA ESPECÍFICA
+   ======================================== */
+
+/* Dashboard Stats Cards */
+.member-area [class*="stat-card"] svg,
+.member-area [class*="StatCard"] svg,
+.member-area [data-card="stat"] svg {
+  color: hsl(var(--card-foreground)) !important;
+}
+
+/* Navigation Items */
+.member-area [class*="nav-item"] svg,
+.member-area [class*="NavItem"] svg {
+  color: hsl(var(--sidebar-foreground)) !important;
+}
+
+/* Active Navigation Items */
+.member-area [class*="nav-item"][class*="active"] svg,
+.member-area [class*="NavItem"][class*="active"] svg,
+.member-area [aria-current="page"] svg {
+  color: hsl(var(--sidebar-primary-foreground)) !important;
+}
+
+/* Form Icons */
+.member-area form svg:not(button svg) {
+  color: hsl(var(--muted-foreground));
+}
+
+/* Alert/Toast Icons */
+.member-area [class*="alert"] svg,
+.member-area [class*="Alert"] svg,
+.member-area [class*="toast"] svg,
+.member-area [class*="Toast"] svg {
+  color: currentColor; /* Herda da variante (success, error, etc) */
+}
+
+/* Dialogs/Modals */
+.member-area [class*="dialog"] svg,
+.member-area [class*="Dialog"] svg,
+.member-area [class*="modal"] svg,
+.member-area [class*="Modal"] svg {
+  color: hsl(var(--popover-foreground));
+}
+
+/* ========================================
+   GARANTIA DE CONTRASTE MÍNIMO
+   ======================================== */
+
+/* Fundo amarelo/claro → Forçar ícone escuro */
+.member-area [class*="yellow"] svg,
+.member-area [class*="warning"] svg,
+.member-area .bg-yellow-400 svg,
+.member-area .bg-yellow-500 svg {
+  color: #1a1a1a !important; /* Sempre escuro */
+}
+
+/* Fundo escuro → Forçar ícone claro */
+.member-area .bg-black svg,
+.member-area .bg-gray-900 svg,
+.member-area [class*="dark"] svg:not(.member-area.dark *) {
+  color: #f0f0f0 !important; /* Sempre claro */
+}
+
+/* ========================================
+   EXCEÇÕES E CASOS ESPECIAIS
+   ======================================== */
+
+/* Ícones decorativos (não devem mudar de cor) */
+.member-area [data-icon-type="decorative"] svg,
+.member-area .icon-decorative svg {
+  color: currentColor; /* Mantém cor original */
+}
+
+/* Logos e marcas (nunca alterar) */
+.member-area [class*="logo"] svg,
+.member-area [class*="Logo"] svg,
+.member-area [class*="brand"] svg {
+  color: currentColor !important; /* Não força cor */
+}

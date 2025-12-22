@@ -15,12 +15,16 @@ export default {
     },
     extend: {
       fontFamily: {
-        'sans': ['Inter', 'system-ui', 'sans-serif'],
-        'serif': ['Cormorant Garamond', 'Georgia', 'serif'],
+        'sans': ['Afacad Flux', 'Inter', 'system-ui', 'sans-serif'],
+        'serif': ['Aleo', 'Cormorant Garamond', 'Georgia', 'serif'],
+        'mono': ['Azeret Mono', 'ui-monospace', 'monospace'],
         'display': ['Archive', 'system-ui', 'sans-serif'],
         'inter': ['Inter', 'system-ui', 'sans-serif'],
         'archive': ['Archive', 'system-ui', 'sans-serif'],
         'cormorant': ['Cormorant Garamond', 'Georgia', 'serif'],
+        'afacad': ['Afacad Flux', 'system-ui', 'sans-serif'],
+        'aleo': ['Aleo', 'Georgia', 'serif'],
+        'azeret': ['Azeret Mono', 'ui-monospace', 'monospace'],
       },
       colors: {
         border: "hsl(var(--border))",
