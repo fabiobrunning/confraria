@@ -6,13 +6,14 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 import {
-  LayoutDashboard,
   Users,
   Building2,
-  Layers,
   LogOut,
   UserPlus,
+  UserCheck,
   Menu,
+  User,
+  Coins,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -44,10 +45,8 @@ export default function Sidebar({ role }: SidebarProps) {
 
   const navigationItems = useMemo(
     () => [
-      { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+      { path: '/profile', icon: User, label: 'Meu Perfil' },
       { path: '/members', icon: Users, label: 'Membros' },
-      { path: '/companies', icon: Building2, label: 'Empresas' },
-      { path: '/groups', icon: Layers, label: 'Grupos de Consorcio' },
     ],
     []
   )
@@ -55,7 +54,12 @@ export default function Sidebar({ role }: SidebarProps) {
   const adminItems = useMemo(
     () =>
       role === 'admin'
-        ? [{ path: '/pre-register', icon: UserPlus, label: 'Pre-Cadastro' }]
+        ? [
+            { path: '/admin/companies', icon: Building2, label: 'Empresas' },
+            { path: '/groups', icon: Coins, label: 'Grupos e Cotas' },
+            { path: '/admin/prospects', icon: UserCheck, label: 'Interessados' },
+            { path: '/pre-register', icon: UserPlus, label: 'Pre-Cadastro' },
+          ]
         : [],
     [role]
   )

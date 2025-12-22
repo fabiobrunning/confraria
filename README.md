@@ -54,11 +54,14 @@ npm run dev
 
 This project is built with:
 
-- Vite
+- Next.js 14 (App Router)
 - TypeScript
 - React
+- Supabase (PostgreSQL)
 - shadcn-ui
 - Tailwind CSS
+- TanStack Query
+- React Hook Form + Zod
 
 ## How can I deploy this project?
 

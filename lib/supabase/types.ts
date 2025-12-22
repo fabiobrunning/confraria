@@ -148,6 +148,7 @@ export type Database = {
           id: string
           instagram: string | null
           phone: string
+          pre_registered: boolean
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
         }
@@ -164,6 +165,7 @@ export type Database = {
           id: string
           instagram?: string | null
           phone: string
+          pre_registered?: boolean
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
@@ -180,6 +182,7 @@ export type Database = {
           id?: string
           instagram?: string | null
           phone?: string
+          pre_registered?: boolean
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
@@ -326,6 +329,66 @@ export type Database = {
         }
         Relationships: []
       }
+      prospects: {
+        Row: {
+          id: string
+          first_name: string
+          last_name: string
+          phone: string
+          email: string
+          company_name: string
+          business_sector: string
+          how_found_us: Database["public"]["Enums"]["prospect_source"]
+          has_networking_experience: boolean
+          networking_experience: string | null
+          status: Database["public"]["Enums"]["prospect_status"]
+          notes: string | null
+          contacted_at: string | null
+          contacted_by: string | null
+          converted_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          first_name: string
+          last_name: string
+          phone: string
+          email: string
+          company_name: string
+          business_sector: string
+          how_found_us: Database["public"]["Enums"]["prospect_source"]
+          has_networking_experience?: boolean
+          networking_experience?: string | null
+          status?: Database["public"]["Enums"]["prospect_status"]
+          notes?: string | null
+          contacted_at?: string | null
+          contacted_by?: string | null
+          converted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          first_name?: string
+          last_name?: string
+          phone?: string
+          email?: string
+          company_name?: string
+          business_sector?: string
+          how_found_us?: Database["public"]["Enums"]["prospect_source"]
+          has_networking_experience?: boolean
+          networking_experience?: string | null
+          status?: Database["public"]["Enums"]["prospect_status"]
+          notes?: string | null
+          contacted_at?: string | null
+          contacted_by?: string | null
+          converted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -339,6 +402,8 @@ export type Database = {
     Enums: {
       quota_status: "active" | "contemplated"
       user_role: "admin" | "member"
+      prospect_source: "instagram" | "linkedin" | "referral" | "google" | "event" | "other"
+      prospect_status: "new" | "contacted" | "in_progress" | "converted" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -468,6 +533,50 @@ export const Constants = {
     Enums: {
       quota_status: ["active", "contemplated"],
       user_role: ["admin", "member"],
+      prospect_source: ["instagram", "linkedin", "referral", "google", "event", "other"],
+      prospect_status: ["new", "contacted", "in_progress", "converted", "rejected"],
     },
   },
 } as const
+
+// Prospect types for easier usage
+export type ProspectSource = Database["public"]["Enums"]["prospect_source"]
+export type ProspectStatus = Database["public"]["Enums"]["prospect_status"]
+
+export interface Prospect {
+  id: string
+  full_name: string // Computed from first_name + last_name
+  first_name: string
+  last_name: string
+  email: string
+  phone: string
+  how_found_us: ProspectSource
+  company_name: string
+  business_sector: string
+  has_networking_experience: boolean
+  networking_experience?: string | null
+  status: ProspectStatus
+  contacted_at?: string | null
+  contacted_by?: string | null
+  converted_at?: string | null
+  notes?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ProspectListParams {
+  page?: number
+  limit?: number
+  status?: ProspectStatus | 'all'
+  search?: string
+}
+
+export interface ProspectListResponse {
+  data: Prospect[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
+}

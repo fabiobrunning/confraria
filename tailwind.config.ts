@@ -15,12 +15,24 @@ export default {
     },
     extend: {
       fontFamily: {
-        'sans': ['Inter', 'system-ui', 'sans-serif'],
-        'serif': ['Cormorant Garamond', 'Georgia', 'serif'],
+        'sans': ['Afacad Flux', 'Inter', 'system-ui', 'sans-serif'],
+        'serif': ['Aleo', 'Cormorant Garamond', 'Georgia', 'serif'],
+        'mono': ['Azeret Mono', 'ui-monospace', 'monospace'],
         'display': ['Archive', 'system-ui', 'sans-serif'],
         'inter': ['Inter', 'system-ui', 'sans-serif'],
         'archive': ['Archive', 'system-ui', 'sans-serif'],
         'cormorant': ['Cormorant Garamond', 'Georgia', 'serif'],
+        'afacad': ['Afacad Flux', 'system-ui', 'sans-serif'],
+        'aleo': ['Aleo', 'Georgia', 'serif'],
+        'azeret': ['Azeret Mono', 'ui-monospace', 'monospace'],
+      },
+      fontSize: {
+        'hero-mobile': ['2.5rem', { lineHeight: '0.95', letterSpacing: '-0.02em' }],
+        'hero-desktop': ['5rem', { lineHeight: '0.95', letterSpacing: '-0.02em' }],
+      },
+      transitionTimingFunction: {
+        'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
+        'bounce-subtle': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
       },
       colors: {
         border: "hsl(var(--border))",

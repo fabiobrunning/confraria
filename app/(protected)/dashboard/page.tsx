@@ -68,7 +68,7 @@ export default async function DashboardPage() {
       title: 'Empresas Cadastradas',
       value: stats.companies,
       icon: <Building2 className="h-5 w-5" />,
-      color: 'text-accent',
+      color: 'text-primary',
       href: '/companies',
     },
     {

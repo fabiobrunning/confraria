@@ -29,7 +29,7 @@ export default async function ProtectedLayout({
   const profile = profileData as { role: string } | null
 
   return (
-    <div className="min-h-screen flex w-full">
+    <div className="member-area dark min-h-screen flex w-full">
       <Sidebar role={profile?.role ?? null} />
       <main className="flex-1 lg:ml-64 mt-14 lg:mt-0">{children}</main>
     </div>

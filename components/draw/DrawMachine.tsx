@@ -57,40 +57,78 @@ export function DrawMachine({
   useEffect(() => {
     return () => {
       if (animationRef.current) {
-        clearTimeout(animationRef.current)
+        clearInterval(animationRef.current)
       }
     }
   }, [])
 
   const startDraw = useCallback(() => {
+    // Verificar se já está sorteando
     if (!canDraw || isSpinning) return
 
-    setIsSpinning(true)
-    let iterations = 0
-    const maxIterations = 25 + Math.floor(Math.random() * 15) // 25-40 iterations
+    // Obter números disponíveis (já temos em remainingNumbers)
+    const numerosDisponiveis = remainingNumbers
 
-    const animate = () => {
-      iterations++
-      const randomIndex = Math.floor(Math.random() * remainingNumbers.length)
-      setCurrentNumber(remainingNumbers[randomIndex])
-
-      if (iterations < maxIterations) {
-        // Speed decreases as we approach the end (easing)
-        const progress = iterations / maxIterations
-        const delay = 50 + progress * progress * 250 // 50ms to ~300ms
-        animationRef.current = setTimeout(animate, delay)
-      } else {
-        // Final selection
-        const finalIndex = Math.floor(Math.random() * remainingNumbers.length)
-        const selectedNumber = remainingNumbers[finalIndex]
-        setCurrentNumber(selectedNumber)
-        setDrawnNumbers((prev) => [...prev, selectedNumber])
-        setIsSpinning(false)
-        onNumberDrawn?.(selectedNumber)
-      }
+    // Verificar se ainda há números
+    if (numerosDisponiveis.length === 0) {
+      alert('Todos os números já foram sorteados!')
+      return
     }
 
-    animate()
+    // Iniciar sorteio
+    setIsSpinning(true)
+
+    // Selecionar número final ANTES da animação
+    const indiceAleatorio = Math.floor(Math.random() * numerosDisponiveis.length)
+    const numeroFinalSorteado = numerosDisponiveis[indiceAleatorio]
+
+    // Variáveis da animação
+    let contador = 0
+    const totalAnimacoes = 40 // ~2.4 segundos (40 x 60ms)
+
+    // Loop da animação
+    const intervaloAnimacao = setInterval(() => {
+
+      // Número aleatório para exibir durante animação
+      const numeroAleatorio = numerosDisponiveis[
+        Math.floor(Math.random() * numerosDisponiveis.length)
+      ]
+
+      // Atualizar display com número aleatório
+      setCurrentNumber(numeroAleatorio)
+
+      contador++
+
+      // Quando chegar perto do fim (últimas 5 iterações)
+      if (contador > totalAnimacoes - 5) {
+
+        // Parar o intervalo
+        clearInterval(intervaloAnimacao)
+
+        // Pequena pausa dramática (200ms)
+        setTimeout(() => {
+
+          // Mostrar número final
+          setCurrentNumber(numeroFinalSorteado)
+
+          // Após 400ms, confirmar o sorteio
+          setTimeout(() => {
+
+            // Adicionar aos sorteados
+            setDrawnNumbers((prev) => [...prev, numeroFinalSorteado])
+            setIsSpinning(false)
+            onNumberDrawn?.(numeroFinalSorteado)
+
+          }, 400)
+        }, 200)
+      }
+    }, 60) // 60ms = ~16 números por segundo
+
+    // Salva o interval ID para limpeza
+    if (animationRef.current) {
+      clearInterval(animationRef.current)
+    }
+    animationRef.current = intervaloAnimacao as any
   }, [canDraw, isSpinning, remainingNumbers, onNumberDrawn])
 
   const finishDraw = useCallback(() => {
@@ -112,6 +150,10 @@ export function DrawMachine({
   }, [canFinish, isSpinning, drawnNumbers, onDrawComplete])
 
   const reset = useCallback(() => {
+    // Clear any ongoing animation
+    if (animationRef.current) {
+      clearInterval(animationRef.current)
+    }
     setDrawnNumbers([])
     setCurrentNumber(null)
     setWinner(null)
@@ -201,7 +243,7 @@ export function DrawMachine({
                   }
                 `}
               >
-                <p className={`font-semibold text-lg truncate ${winner ? 'text-green-600' : ''}`}>
+                <p className={`font-semibold text-lg truncate ${winner ? 'text-green-600 dark:text-green-400' : ''}`}>
                   {getOwnerName(currentNumber) ?? 'Sem membro'}
                 </p>
               </motion.div>
@@ -226,7 +268,7 @@ export function DrawMachine({
                   }}
                   transition={{ duration: 0.5, repeat: 3 }}
                 >
-                  <Trophy className="h-20 w-20 text-yellow-400 mx-auto" />
+                  <Trophy className="h-20 w-20 text-primary mx-auto" />
                 </motion.div>
                 <motion.div
                   initial={{ y: 20, opacity: 0 }}
@@ -235,7 +277,7 @@ export function DrawMachine({
                   className="space-y-2"
                 >
                   <p className="text-3xl font-bold text-white">GANHADOR!</p>
-                  <p className="text-4xl font-bold text-yellow-400">
+                  <p className="text-4xl font-bold text-primary">
                     Cota #{winner}
                   </p>
                   <p className="text-6xl font-bold text-white mt-4">
@@ -267,7 +309,7 @@ export function DrawMachine({
                       top: '50%',
                     }}
                   >
-                    <Sparkles className="h-6 w-6 text-yellow-400" />
+                    <Sparkles className="h-6 w-6 text-primary" />
                   </motion.div>
                 ))}
               </div>
@@ -281,15 +323,15 @@ export function DrawMachine({
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center p-4 bg-green-500/20 border border-green-500/50 rounded-lg"
+              className="text-center p-4 bg-green-500/20 dark:bg-green-500/10 border border-green-500/50 dark:border-green-500/30 rounded-lg"
             >
               <div className="flex items-center justify-center gap-2">
-                <Trophy className="h-6 w-6 text-green-500" />
-                <p className="text-xl font-bold text-green-600">
+                <Trophy className="h-6 w-6 text-green-500 dark:text-green-400" />
+                <p className="text-xl font-bold text-green-600 dark:text-green-400">
                   GANHADOR: Cota #{winner}
                 </p>
               </div>
-              <p className="text-2xl font-bold text-green-700 mt-2">
+              <p className="text-2xl font-bold text-green-700 dark:text-green-300 mt-2">
                 {getOwnerName(winner) ?? 'Sem membro'}
               </p>
               <p className="text-sm text-muted-foreground mt-1">
@@ -409,7 +451,7 @@ export function DrawMachine({
             {drawnNumbers.length > 0 && ` (${availableNumbers.length} total)`}
           </p>
           {canFinish && !winner && (
-            <p className="text-green-600 font-medium">
+            <p className="text-green-600 dark:text-green-400 font-medium">
               Voce pode salvar o ganhador ou continuar sorteando
             </p>
           )}
