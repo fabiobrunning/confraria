@@ -26,6 +26,14 @@ export default {
         'aleo': ['Aleo', 'Georgia', 'serif'],
         'azeret': ['Azeret Mono', 'ui-monospace', 'monospace'],
       },
+      fontSize: {
+        'hero-mobile': ['2.5rem', { lineHeight: '0.95', letterSpacing: '-0.02em' }],
+        'hero-desktop': ['5rem', { lineHeight: '0.95', letterSpacing: '-0.02em' }],
+      },
+      transitionTimingFunction: {
+        'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
+        'bounce-subtle': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
