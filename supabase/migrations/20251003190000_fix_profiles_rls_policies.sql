@@ -19,12 +19,17 @@
 -- Drop all existing policies on profiles
 DROP POLICY IF EXISTS "Admins can update all profiles" ON public.profiles;
 DROP POLICY IF EXISTS "Admins can view all profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Admins can insert any profile" ON public.profiles;
+DROP POLICY IF EXISTS "Admins can delete profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Admins can insert profiles" ON public.profiles;
 DROP POLICY IF EXISTS "Profiles delete policy" ON public.profiles;
 DROP POLICY IF EXISTS "Profiles insert policy" ON public.profiles;
 DROP POLICY IF EXISTS "Profiles select policy" ON public.profiles;
 DROP POLICY IF EXISTS "Profiles update policy" ON public.profiles;
 DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
 DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Authenticated users can view all profiles" ON public.profiles;
 
 -- Create new simplified policies
 -- SELECT: All authenticated users can view all profiles

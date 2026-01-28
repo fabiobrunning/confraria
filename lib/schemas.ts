@@ -137,6 +137,61 @@ export const preRegisterSchema = z.object({
   }),
 });
 
+// Schema para transação de negócio
+export const businessTransactionSchema = z.object({
+  transaction_type: z.enum(['direct_business', 'referral', 'consortium'], {
+    errorMap: () => ({ message: 'Tipo de transação inválido' })
+  }),
+  member_from_id: z
+    .string()
+    .uuid('ID do membro de origem inválido'),
+  member_to_id: z
+    .string()
+    .uuid('ID do membro de destino inválido')
+    .optional()
+    .nullable(),
+  amount: z
+    .number()
+    .min(0.01, 'Valor deve ser maior que zero')
+    .max(9999999.99, 'Valor muito alto'),
+  description: z
+    .string()
+    .min(3, 'Descrição deve ter pelo menos 3 caracteres')
+    .max(500, 'Descrição deve ter no máximo 500 caracteres'),
+  transaction_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida. Use formato YYYY-MM-DD')
+    .optional(),
+  consortium_group_id: z
+    .string()
+    .uuid('ID do grupo de consórcio inválido')
+    .optional()
+    .nullable(),
+  notes: z
+    .string()
+    .max(1000, 'Notas devem ter no máximo 1000 caracteres')
+    .optional()
+    .nullable(),
+}).refine((data) => {
+  // Consortium transactions must have consortium_group_id
+  if (data.transaction_type === 'consortium' && !data.consortium_group_id) {
+    return false;
+  }
+  return true;
+}, {
+  message: 'Transações de consórcio devem ter um grupo de consórcio associado',
+  path: ['consortium_group_id'],
+}).refine((data) => {
+  // Direct business and referral must have member_to_id
+  if ((data.transaction_type === 'direct_business' || data.transaction_type === 'referral') && !data.member_to_id) {
+    return false;
+  }
+  return true;
+}, {
+  message: 'Transações diretas e indicações devem ter um membro de destino',
+  path: ['member_to_id'],
+});
+
 // Tipos TypeScript derivados dos schemas
 export type AuthFormData = z.infer<typeof authSchema>;
 export type MemberProfileFormData = z.infer<typeof memberProfileSchema>;
@@ -144,3 +199,4 @@ export type CompanyFormData = z.infer<typeof companySchema>;
 export type ConsortiumGroupFormData = z.infer<typeof consortiumGroupSchema>;
 export type PasswordChangeFormData = z.infer<typeof passwordChangeSchema>;
 export type PreRegisterFormData = z.infer<typeof preRegisterSchema>;
+export type BusinessTransactionFormData = z.infer<typeof businessTransactionSchema>;

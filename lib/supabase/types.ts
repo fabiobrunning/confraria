@@ -14,6 +14,70 @@ export type Database = {
   }
   public: {
     Tables: {
+      business_transactions: {
+        Row: {
+          id: string
+          transaction_type: Database["public"]["Enums"]["transaction_type"]
+          member_from_id: string
+          member_to_id: string | null
+          amount: number
+          description: string
+          transaction_date: string
+          consortium_group_id: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          transaction_type: Database["public"]["Enums"]["transaction_type"]
+          member_from_id: string
+          member_to_id?: string | null
+          amount: number
+          description: string
+          transaction_date?: string
+          consortium_group_id?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          transaction_type?: Database["public"]["Enums"]["transaction_type"]
+          member_from_id?: string
+          member_to_id?: string | null
+          amount?: number
+          description?: string
+          transaction_date?: string
+          consortium_group_id?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_transactions_member_from_id_fkey"
+            columns: ["member_from_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_transactions_member_to_id_fkey"
+            columns: ["member_to_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_transactions_consortium_group_id_fkey"
+            columns: ["consortium_group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           address_cep: string | null
@@ -401,6 +465,7 @@ export type Database = {
     }
     Enums: {
       quota_status: "active" | "contemplated"
+      transaction_type: "direct_business" | "referral" | "consortium"
       user_role: "admin" | "member"
       prospect_source: "instagram" | "linkedin" | "referral" | "google" | "event" | "other"
       prospect_status: "new" | "contacted" | "in_progress" | "converted" | "rejected"
@@ -532,6 +597,7 @@ export const Constants = {
   public: {
     Enums: {
       quota_status: ["active", "contemplated"],
+      transaction_type: ["direct_business", "referral", "consortium"],
       user_role: ["admin", "member"],
       prospect_source: ["instagram", "linkedin", "referral", "google", "event", "other"],
       prospect_status: ["new", "contacted", "in_progress", "converted", "rejected"],

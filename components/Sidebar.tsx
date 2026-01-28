@@ -12,6 +12,7 @@ import {
   UserPlus,
   UserCheck,
   Menu,
+  TrendingUp,
   User,
   Coins,
 } from 'lucide-react'
@@ -57,6 +58,7 @@ export default function Sidebar({ role }: SidebarProps) {
         ? [
             { path: '/admin/companies', icon: Building2, label: 'Empresas' },
             { path: '/groups', icon: Coins, label: 'Grupos e Cotas' },
+            { path: '/business-transactions', icon: TrendingUp, label: 'Transações de Negócios' },
             { path: '/admin/prospects', icon: UserCheck, label: 'Interessados' },
             { path: '/pre-register', icon: UserPlus, label: 'Pre-Cadastro' },
           ]
