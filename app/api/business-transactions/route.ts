@@ -27,14 +27,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user role
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single()
-
-    const profile = profileData as { role: string } | null
+    // Note: Admin check would go here if needed for GET
+    // Currently allowing all authenticated users to read
 
     // Parse query parameters
     const { searchParams } = new URL(request.url)
@@ -75,15 +69,7 @@ export async function GET(request: NextRequest) {
       query = query.lte('transaction_date', endDate)
     }
 
-    const { data: transactions, error, count } = await supabase
-      .from('business_transactions')
-      .select('*', { count: 'exact', head: true })
-
-    if (error) {
-      throw error
-    }
-
-    const { data, error: queryError } = await query
+    const { data, error: queryError, count } = await query
 
     if (queryError) {
       throw queryError
@@ -143,11 +129,9 @@ export async function POST(request: NextRequest) {
       .from('profiles')
       .select('role')
       .eq('id', session.user.id)
-      .single()
+      .single() as { data: { role: string } | null }
 
-    const profile = profileData as { role: string } | null
-
-    if (profile?.role !== 'admin') {
+    if (profileData?.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden - Admin only' }, { status: 403 })
     }
 
@@ -217,7 +201,7 @@ export async function POST(request: NextRequest) {
     // Insert transaction
     const { data: newTransaction, error: insertError } = await supabase
       .from('business_transactions')
-      .insert({
+      .insert([{
         transaction_type: transactionData.transaction_type,
         member_from_id: transactionData.member_from_id,
         member_to_id: transactionData.member_to_id,
@@ -226,14 +210,14 @@ export async function POST(request: NextRequest) {
         transaction_date: transactionData.transaction_date || new Date().toISOString().split('T')[0],
         consortium_group_id: transactionData.consortium_group_id,
         notes: transactionData.notes,
-      })
+      }] as any)
       .select(`
         *,
         member_from:profiles!business_transactions_member_from_id_fkey(id, full_name, phone),
         member_to:profiles!business_transactions_member_to_id_fkey(id, full_name, phone),
         consortium_group:groups(id, name)
       `)
-      .single()
+      .single() as { data: any; error: any }
 
     if (insertError) {
       throw insertError

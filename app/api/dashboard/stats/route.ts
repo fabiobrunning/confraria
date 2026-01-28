@@ -13,7 +13,7 @@ import { NextRequest, NextResponse } from 'next/server'
  *
  * Auth: Requires admin role
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const supabase = await createClient()
 
@@ -90,14 +90,7 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching recent transactions:', recentError)
     }
 
-    // 5. Get transaction count by type
-    const { data: countByType, error: countError } = await supabase
-      .from('business_transactions')
-      .select('transaction_type', { count: 'exact' })
-
-    if (countError) {
-      console.error('Error fetching count by type:', countError)
-    }
+    // Note: Count by type is already included in byTypeData from the function
 
     // 6. Get total transaction count
     const { count: totalCount, error: countTotalError } = await supabase

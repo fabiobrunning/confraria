@@ -40,7 +40,6 @@ export function DashboardStatsCards({ stats, isLoading }: DashboardStatsCardsPro
   const directBusinessPercent =
     by_type.find((t) => t.type === 'direct_business')?.percentage || 0
   const referralPercent = by_type.find((t) => t.type === 'referral')?.percentage || 0
-  const consortiumPercent = by_type.find((t) => t.type === 'consortium')?.percentage || 0
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

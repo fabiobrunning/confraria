@@ -15,7 +15,7 @@ import { NextRequest, NextResponse } from 'next/server'
  * Auth: Admin can view any member, members can only view their own
  */
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -53,7 +53,7 @@ export async function GET(
       .from('profiles')
       .select('id, full_name, phone, role, instagram')
       .eq('id', memberId)
-      .single()
+      .single() as { data: any; error: any }
 
     if (memberError || !member) {
       return NextResponse.json(
@@ -65,15 +65,15 @@ export async function GET(
     // 2. Get member statistics using PostgreSQL function
     const { data: statsData, error: statsError } = await supabase.rpc(
       'get_member_business_stats',
-      { member_uuid: memberId }
-    )
+      { member_uuid: memberId } as any
+    ) as { data: any[] | null; error: any }
 
     if (statsError) {
       console.error('Error fetching member stats:', statsError)
     }
 
     // statsData is an array with one row, extract it
-    const stats = statsData && statsData.length > 0 ? statsData[0] : null
+    const stats = statsData && Array.isArray(statsData) && statsData.length > 0 ? statsData[0] : null
 
     // 3. Get all transactions involving this member (given)
     const { data: transactionsGiven, error: givenError } = await supabase
@@ -86,7 +86,7 @@ export async function GET(
       `)
       .eq('member_from_id', memberId)
       .order('transaction_date', { ascending: false })
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false }) as { data: any[] | null; error: any }
 
     if (givenError) {
       console.error('Error fetching transactions given:', givenError)
@@ -103,7 +103,7 @@ export async function GET(
       `)
       .eq('member_to_id', memberId)
       .order('transaction_date', { ascending: false })
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false }) as { data: any[] | null; error: any }
 
     if (receivedError) {
       console.error('Error fetching transactions received:', receivedError)

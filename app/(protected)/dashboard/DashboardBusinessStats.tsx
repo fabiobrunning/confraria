@@ -48,7 +48,7 @@ export function DashboardBusinessStats() {
     )
   }
 
-  const { summary, by_type, recent_transactions, monthly_evolution } = stats
+  const { recent_transactions, monthly_evolution } = stats
 
   // Get last month's data for comparison
   const lastMonth = monthly_evolution[0]
