@@ -29,11 +29,11 @@ const transactionTypeLabels = {
   consortium: 'Consórcio',
 }
 
-const transactionTypeColors = {
-  direct_business: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-  referral: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  consortium: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-}
+const transactionTypeVariants = {
+  direct_business: 'default',
+  referral: 'success',
+  consortium: 'secondary',
+} as const
 
 export function BusinessTransactionsList({
   transactions,
@@ -46,7 +46,7 @@ export function BusinessTransactionsList({
       <Card className="p-8">
         <div className="flex items-center justify-center">
           <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600 mx-auto mb-4" />
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary mx-auto mb-4" />
             <p className="text-sm text-muted-foreground">Carregando transações...</p>
           </div>
         </div>
@@ -98,10 +98,7 @@ export function BusinessTransactionsList({
 
                 {/* Type */}
                 <TableCell>
-                  <Badge
-                    variant="secondary"
-                    className={transactionTypeColors[transaction.transaction_type]}
-                  >
+                  <Badge variant={transactionTypeVariants[transaction.transaction_type]}>
                     {transactionTypeLabels[transaction.transaction_type]}
                   </Badge>
                 </TableCell>
@@ -144,9 +141,9 @@ export function BusinessTransactionsList({
                   <span
                     className={
                       direction === 'given'
-                        ? 'text-red-600 dark:text-red-400'
+                        ? 'text-destructive'
                         : direction === 'received'
-                          ? 'text-green-600 dark:text-green-400'
+                          ? 'text-success'
                           : ''
                     }
                   >
@@ -175,13 +172,13 @@ export function BusinessTransactionsList({
                 {/* Direction */}
                 <TableCell>
                   {direction === 'given' && (
-                    <div className="flex items-center gap-1 text-red-600 dark:text-red-400">
+                    <div className="flex items-center gap-1 text-destructive">
                       <ArrowUpRight className="h-4 w-4" />
                       <span className="text-xs font-medium">Dado</span>
                     </div>
                   )}
                   {direction === 'received' && (
-                    <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                    <div className="flex items-center gap-1 text-success">
                       <ArrowDownRight className="h-4 w-4" />
                       <span className="text-xs font-medium">Recebido</span>
                     </div>
