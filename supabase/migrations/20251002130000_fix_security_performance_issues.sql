@@ -163,59 +163,62 @@ FOR SELECT
 TO authenticated
 USING (true);
 
--- INSERT: Users can create their own companies, admins can create any
-CREATE POLICY "companies_insert_policy"
-ON public.companies
-FOR INSERT
-TO authenticated
-WITH CHECK (
-  created_by = (select auth.uid())
-  OR
-  EXISTS (
-    SELECT 1 FROM public.profiles p
-    WHERE p.id = (select auth.uid())
-    AND p.role = 'admin'
-  )
-);
+-- COMMENTED OUT: These policies reference non-existent created_by column
+-- Fixed in migration 20260127151609_fix_companies_policies.sql
 
--- UPDATE: Users can update their own companies, admins can update any
-CREATE POLICY "companies_update_policy"
-ON public.companies
-FOR UPDATE
-TO authenticated
-USING (
-  created_by = (select auth.uid())
-  OR
-  EXISTS (
-    SELECT 1 FROM public.profiles p
-    WHERE p.id = (select auth.uid())
-    AND p.role = 'admin'
-  )
-)
-WITH CHECK (
-  created_by = (select auth.uid())
-  OR
-  EXISTS (
-    SELECT 1 FROM public.profiles p
-    WHERE p.id = (select auth.uid())
-    AND p.role = 'admin'
-  )
-);
+-- -- INSERT: Users can create their own companies, admins can create any
+-- CREATE POLICY "companies_insert_policy"
+-- ON public.companies
+-- FOR INSERT
+-- TO authenticated
+-- WITH CHECK (
+--   created_by = (select auth.uid())
+--   OR
+--   EXISTS (
+--     SELECT 1 FROM public.profiles p
+--     WHERE p.id = (select auth.uid())
+--     AND p.role = 'admin'
+--   )
+-- );
 
--- DELETE: Users can delete their own companies, admins can delete any
-CREATE POLICY "companies_delete_policy"
-ON public.companies
-FOR DELETE
-TO authenticated
-USING (
-  created_by = (select auth.uid())
-  OR
-  EXISTS (
-    SELECT 1 FROM public.profiles p
-    WHERE p.id = (select auth.uid())
-    AND p.role = 'admin'
-  )
-);
+-- -- UPDATE: Users can update their own companies, admins can update any
+-- CREATE POLICY "companies_update_policy"
+-- ON public.companies
+-- FOR UPDATE
+-- TO authenticated
+-- USING (
+--   created_by = (select auth.uid())
+--   OR
+--   EXISTS (
+--     SELECT 1 FROM public.profiles p
+--     WHERE p.id = (select auth.uid())
+--     AND p.role = 'admin'
+--   )
+-- )
+-- WITH CHECK (
+--   created_by = (select auth.uid())
+--   OR
+--   EXISTS (
+--     SELECT 1 FROM public.profiles p
+--     WHERE p.id = (select auth.uid())
+--     AND p.role = 'admin'
+--   )
+-- );
+
+-- -- DELETE: Users can delete their own companies, admins can delete any
+-- CREATE POLICY "companies_delete_policy"
+-- ON public.companies
+-- FOR DELETE
+-- TO authenticated
+-- USING (
+--   created_by = (select auth.uid())
+--   OR
+--   EXISTS (
+--     SELECT 1 FROM public.profiles p
+--     WHERE p.id = (select auth.uid())
+--     AND p.role = 'admin'
+--   )
+-- );
 
 -- =====================================================
 -- STEP 6: Create Optimized RLS Policies for MEMBER_COMPANIES

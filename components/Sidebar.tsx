@@ -13,6 +13,7 @@ import {
   LogOut,
   UserPlus,
   Menu,
+  TrendingUp,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -55,7 +56,10 @@ export default function Sidebar({ role }: SidebarProps) {
   const adminItems = useMemo(
     () =>
       role === 'admin'
-        ? [{ path: '/pre-register', icon: UserPlus, label: 'Pre-Cadastro' }]
+        ? [
+            { path: '/business-transactions', icon: TrendingUp, label: 'Transações de Negócios' },
+            { path: '/pre-register', icon: UserPlus, label: 'Pre-Cadastro' },
+          ]
         : [],
     [role]
   )

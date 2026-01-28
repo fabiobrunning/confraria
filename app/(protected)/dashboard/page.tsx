@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, Building2, Layers, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
+import { DashboardBusinessStats } from './DashboardBusinessStats'
 
 interface StatCardProps {
   title: string
@@ -37,6 +38,20 @@ function StatCard({ title, value, icon, color, href }: StatCardProps) {
 
 export default async function DashboardPage() {
   const supabase = await createClient()
+
+  // Get user profile to check role
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  const { data: profileData } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', session?.user.id || '')
+    .single()
+
+  const profile = profileData as { role: string } | null
+  const isAdmin = profile?.role === 'admin'
 
   // Fetch stats in parallel
   const [membersRes, companiesRes, groupsRes, quotasRes] = await Promise.all([
@@ -123,6 +138,9 @@ export default async function DashboardPage() {
           </p>
         </CardContent>
       </Card>
+
+      {/* Business Transactions Stats (Admin only) */}
+      {isAdmin && <DashboardBusinessStats />}
     </div>
   )
 }
