@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { Prospect, ProspectStatus } from '@/lib/supabase/types'
 import { Download, Search, Users, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { PageContainer, PageHeader } from '@/components/layout'
 
 const statusOptions: { value: ProspectStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'Todos os Status' },
@@ -172,32 +173,27 @@ export default function ProspectsPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
-            <Users className="w-8 h-8 text-accent" />
-            Interessados
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Gerencie os prospects que demonstraram interesse na Confraria
-          </p>
-        </div>
-        <Button
-          onClick={handleExportCSV}
-          disabled={exporting || loading}
-          variant="outline"
-          className="gap-2"
-        >
-          {exporting ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Download className="w-4 h-4" />
-          )}
-          Exportar CSV
-        </Button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Interessados"
+        description="Gerencie os prospects que demonstraram interesse na Confraria"
+        icon={Users}
+        action={
+          <Button
+            onClick={handleExportCSV}
+            disabled={exporting || loading}
+            variant="outline"
+            className="gap-2"
+          >
+            {exporting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4" />
+            )}
+            Exportar CSV
+          </Button>
+        }
+      />
 
       {/* Filtros */}
       <Card>
@@ -291,6 +287,6 @@ export default function ProspectsPage() {
         onOpenChange={setModalOpen}
         onSave={updateProspect}
       />
-    </div>
+    </PageContainer>
   )
 }

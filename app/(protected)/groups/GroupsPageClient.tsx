@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Dices } from 'lucide-react'
+import { PageContainer, PageHeader, EmptyState } from '@/components/layout'
 
 interface Group {
   id: string
@@ -92,23 +93,21 @@ function GroupCard({
 
 export default function GroupsPageClient({ groups, isAdmin }: GroupsPageClientProps) {
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-      <div className="flex flex-col gap-3">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Grupos de Consorcio</h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
-            Gerencie os grupos de consorcio
-          </p>
-        </div>
-        {isAdmin && (
-          <Link href="/groups/new" className="w-full sm:w-auto sm:self-start">
-            <Button className="w-full sm:w-auto">
-              <Plus className="mr-2 h-4 w-4" />
-              Novo Grupo
-            </Button>
-          </Link>
-        )}
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Grupos de Consórcio"
+        description="Gerencie os grupos de consórcio"
+        action={
+          isAdmin && (
+            <Link href="/groups/new">
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Novo Grupo
+              </Button>
+            </Link>
+          )
+        }
+      />
 
       {groups.length > 0 ? (
         <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
@@ -117,20 +116,20 @@ export default function GroupsPageClient({ groups, isAdmin }: GroupsPageClientPr
           ))}
         </div>
       ) : (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">Nenhum grupo cadastrado</p>
-            {isAdmin && (
+        <EmptyState
+          message="Nenhum grupo cadastrado"
+          action={
+            isAdmin && (
               <Link href="/groups/new">
-                <Button className="mt-4">
+                <Button>
                   <Plus className="mr-2 h-4 w-4" />
                   Criar Primeiro Grupo
                 </Button>
               </Link>
-            )}
-          </CardContent>
-        </Card>
+            )
+          }
+        />
       )}
-    </div>
+    </PageContainer>
   )
 }

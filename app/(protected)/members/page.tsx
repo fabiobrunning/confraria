@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { PageContainer, PageHeader, EmptyState } from '@/components/layout'
 import {
   Select,
   SelectContent,
@@ -174,21 +175,21 @@ export default function MembersPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Membros</h1>
-          <p className="text-muted-foreground">Gerencie os membros do sistema</p>
-        </div>
-        {isAdmin && (
-          <Link href="/pre-register">
-            <Button>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Novo Membro
-            </Button>
-          </Link>
-        )}
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Membros"
+        description="Gerencie os membros do sistema"
+        action={
+          isAdmin && (
+            <Link href="/pre-register">
+              <Button>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Novo Membro
+              </Button>
+            </Link>
+          )
+        }
+      />
 
       <Card>
         <CardHeader>
@@ -200,17 +201,19 @@ export default function MembersPage() {
         </CardHeader>
         <CardContent>
           {members.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground mb-4">Nenhum membro cadastrado</p>
-              {isAdmin && (
-                <Link href="/pre-register">
-                  <Button>
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Cadastrar Primeiro Membro
-                  </Button>
-                </Link>
-              )}
-            </div>
+            <EmptyState
+              message="Nenhum membro cadastrado"
+              action={
+                isAdmin && (
+                  <Link href="/pre-register">
+                    <Button>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Cadastrar Primeiro Membro
+                    </Button>
+                  </Link>
+                )
+              }
+            />
           ) : (
             <div className="space-y-3">
               {members.map((member) => (
@@ -225,7 +228,7 @@ export default function MembersPage() {
                         {member.role === 'admin' ? 'Admin' : 'Membro'}
                       </Badge>
                       {member.pre_registered && (
-                        <Badge variant="outline" className="bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700">
+                        <Badge variant="warning">
                           Pré-Cadastro
                         </Badge>
                       )}
@@ -469,6 +472,6 @@ export default function MembersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageContainer>
   )
 }

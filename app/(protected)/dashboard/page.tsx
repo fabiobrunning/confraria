@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, Building2, Layers, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 import { DashboardBusinessStats } from './DashboardBusinessStats'
+import { PageContainer, PageHeader } from '@/components/layout'
 
 interface StatCardProps {
   title: string
@@ -103,15 +104,11 @@ export default async function DashboardPage() {
   ]
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-          Dashboard
-        </h1>
-        <p className="text-sm sm:text-base text-muted-foreground">
-          Visao geral do sistema de consorcios
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Dashboard"
+        description="Visão geral do sistema de consórcios"
+      />
 
       <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat) => (
@@ -141,6 +138,6 @@ export default async function DashboardPage() {
 
       {/* Business Transactions Stats (Admin only) */}
       {isAdmin && <DashboardBusinessStats />}
-    </div>
+    </PageContainer>
   )
 }

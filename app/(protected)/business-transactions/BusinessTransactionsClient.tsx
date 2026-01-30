@@ -18,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { PlusCircle, X } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { PageHeader } from '@/components/layout'
 
 interface BusinessTransactionsClientProps {
   members: Array<{ id: string; full_name: string; phone: string }>
@@ -54,30 +55,27 @@ export default function BusinessTransactionsClient({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Transações de Negócios</h1>
-          <p className="text-muted-foreground">
-            Gerencie negócios diretos, indicações e transações de consórcio
-          </p>
-        </div>
-        {isAdmin && (
-          <Button onClick={() => setShowForm(!showForm)}>
-            {showForm ? (
-              <>
-                <X className="mr-2 h-4 w-4" />
-                Cancelar
-              </>
-            ) : (
-              <>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Nova Transação
-              </>
-            )}
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title="Transações de Negócios"
+        description="Gerencie negócios diretos, indicações e transações de consórcio"
+        action={
+          isAdmin && (
+            <Button onClick={() => setShowForm(!showForm)}>
+              {showForm ? (
+                <>
+                  <X className="mr-2 h-4 w-4" />
+                  Cancelar
+                </>
+              ) : (
+                <>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Nova Transação
+                </>
+              )}
+            </Button>
+          )
+        }
+      />
 
       {/* Dashboard Stats (Admin only) */}
       {isAdmin && (

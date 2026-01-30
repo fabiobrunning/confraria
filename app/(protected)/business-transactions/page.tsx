@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import BusinessTransactionsClient from './BusinessTransactionsClient'
+import { PageContainer } from '@/components/layout'
 
 export const metadata = {
   title: 'Transações de Negócios | Confraria Pedra Branca',
@@ -43,13 +44,13 @@ export default async function BusinessTransactionsPage() {
     .order('name', { ascending: true })
 
   return (
-    <div className="p-8">
+    <PageContainer>
       <BusinessTransactionsClient
         members={members || []}
         groups={groups || []}
         currentUserId={session.user.id}
         isAdmin={isAdmin}
       />
-    </div>
+    </PageContainer>
   )
 }

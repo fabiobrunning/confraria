@@ -8,31 +8,26 @@ interface ProspectStatusBadgeProps {
   className?: string
 }
 
-const statusConfig: Record<ProspectStatus, { label: string; className: string; icon: string }> = {
+const statusConfig: Record<ProspectStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'success' | 'warning' }> = {
   new: {
     label: 'Novo',
-    className: 'bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30',
-    icon: ''
+    variant: 'success'
   },
   contacted: {
     label: 'Contatado',
-    className: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/30',
-    icon: ''
+    variant: 'warning'
   },
   in_progress: {
     label: 'Em Andamento',
-    className: 'bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30',
-    icon: ''
+    variant: 'default'
   },
   converted: {
     label: 'Convertido',
-    className: 'bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500/30',
-    icon: ''
+    variant: 'success'
   },
   rejected: {
     label: 'Rejeitado',
-    className: 'bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30',
-    icon: ''
+    variant: 'destructive'
   },
 }
 
@@ -41,10 +36,10 @@ export function ProspectStatusBadge({ status, className = '' }: ProspectStatusBa
 
   return (
     <Badge
-      variant="outline"
-      className={`${config.className} ${className}`}
+      variant={config.variant}
+      className={className}
     >
-      {config.icon} {config.label}
+      {config.label}
     </Badge>
   )
 }
