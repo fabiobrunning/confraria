@@ -318,7 +318,7 @@ export default function HomePage() {
               {/* Membros */}
               <div className="group">
                 <div
-                  className="text-white font-bold font-cormorant mb-1 text-8xl sm:text-9xl md:text-[10rem] leading-none transition-all duration-300 group-hover:text-accent"
+                  className="text-white font-bold font-display mb-1 text-8xl sm:text-9xl md:text-[10rem] leading-none transition-all duration-300 group-hover:text-accent"
                   aria-label={`${membros} membros ativos`}
                 >
                   {membros}
@@ -331,7 +331,7 @@ export default function HomePage() {
               {/* Empresas */}
               <div className="group">
                 <div
-                  className="text-white font-bold font-cormorant mb-1 text-8xl sm:text-9xl md:text-[10rem] leading-none transition-all duration-300 group-hover:text-accent"
+                  className="text-white font-bold font-display mb-1 text-8xl sm:text-9xl md:text-[10rem] leading-none transition-all duration-300 group-hover:text-accent"
                   aria-label={`${empresas} empresas conectadas`}
                 >
                   {empresas}
@@ -344,7 +344,7 @@ export default function HomePage() {
               {/* Valor */}
               <div className="group">
                 <div
-                  className="text-accent font-bold font-cormorant mb-1 text-8xl sm:text-9xl md:text-[10rem] leading-none transition-all duration-300 group-hover:scale-105"
+                  className="text-accent font-bold font-display mb-1 text-8xl sm:text-9xl md:text-[10rem] leading-none transition-all duration-300 group-hover:scale-105"
                   aria-label={`Mais de ${valor} milhões em valor movimentado`}
                 >
                   +{valor}M

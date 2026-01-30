@@ -16,7 +16,8 @@ export default {
     extend: {
       fontFamily: {
         'sans': ['Inter', 'system-ui', 'sans-serif'],
-        'display': ['Cormorant Garamond', 'Georgia', 'serif'],
+        'display': ['Archive', 'system-ui', 'sans-serif'],
+        'serif': ['Cormorant Garamond', 'Georgia', 'serif'],
         'mono': ['ui-monospace', 'monospace'],
       },
       fontSize: {
