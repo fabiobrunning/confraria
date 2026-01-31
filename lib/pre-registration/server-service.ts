@@ -6,6 +6,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { generateTemporaryPassword } from './generate-password';
+import * as bcrypt from 'bcrypt';
 
 // Types will be auto-generated once migration is applied to Supabase
 type PreRegistrationAttempt = any;
@@ -388,7 +389,6 @@ export async function incrementFailedAttempts(
  */
 async function hashPassword(password: string): Promise<string> {
   try {
-    const bcrypt = await import('bcrypt');
     const saltRounds = 12;
     const hashed = await bcrypt.hash(password, saltRounds);
     return hashed;
@@ -407,7 +407,6 @@ export async function verifyTemporaryPassword(
   hashedPassword: string
 ): Promise<boolean> {
   try {
-    const bcrypt = await import('bcrypt');
     const isMatch = await bcrypt.compare(plainPassword, hashedPassword);
     return isMatch;
   } catch (error) {
