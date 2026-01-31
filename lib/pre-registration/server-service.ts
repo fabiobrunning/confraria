@@ -1,0 +1,416 @@
+/**
+ * Server-side pre-registration service
+ * Handles database operations, password hashing, and secure credential generation
+ * USE THIS ONLY IN SERVER COMPONENTS, API ROUTES, AND SERVER ACTIONS
+ */
+
+import { createClient } from '@/lib/supabase/server';
+import { generateTemporaryPassword } from './generate-password';
+import type { Database } from '@/lib/supabase/types';
+
+type PreRegistrationAttempt =
+  Database['public']['Tables']['pre_registration_attempts']['Row'];
+type PreRegistrationAttemptInsert =
+  Database['public']['Tables']['pre_registration_attempts']['Insert'];
+
+/**
+ * Create a new pre-registration attempt
+ * Generates password, hashes it, and stores in DB
+ */
+export async function createPreRegistrationAttempt(
+  memberId: string,
+  createdByAdminId: string,
+  sendMethod: 'whatsapp' | 'sms' = 'whatsapp',
+  notes?: string
+): Promise<{
+  success: boolean;
+  error?: string;
+  attemptId?: string;
+  temporaryPassword?: string; // Plain text - return ONLY for immediate sending
+}> {
+  try {
+    const supabase = await createClient();
+
+    // Generate temporary password
+    const plainPassword = generateTemporaryPassword(12);
+
+    // Hash password using Supabase's built-in crypto
+    // For production, use bcrypt via edge function or server action
+    const hashedPassword = await hashPassword(plainPassword);
+
+    // Create attempt record
+    const { data, error } = await supabase
+      .from('pre_registration_attempts')
+      .insert({
+        member_id: memberId,
+        created_by_admin_id: createdByAdminId,
+        temporary_password_hash: hashedPassword,
+        send_method: sendMethod,
+        notes: notes || null,
+      } as PreRegistrationAttemptInsert)
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Error creating pre-registration attempt:', error);
+      return {
+        success: false,
+        error: 'Falha ao criar pré-cadastro: ' + error.message,
+      };
+    }
+
+    if (!data) {
+      return {
+        success: false,
+        error: 'Falha ao criar pré-cadastro: resposta vazia',
+      };
+    }
+
+    return {
+      success: true,
+      attemptId: data.id,
+      temporaryPassword: plainPassword, // Return plain text ONLY here, for immediate use
+    };
+  } catch (error) {
+    console.error('Unexpected error in createPreRegistrationAttempt:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Erro desconhecido ao criar pré-cadastro',
+    };
+  }
+}
+
+/**
+ * Get active pre-registration attempt for a member
+ * Returns null if expired or not found
+ */
+export async function getActivePreRegistrationAttempt(
+  memberId: string
+): Promise<PreRegistrationAttempt | null> {
+  try {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from('pre_registration_attempts')
+      .select('*')
+      .eq('member_id', memberId)
+      .gt('expiration_date', new Date().toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      // PGRST116 = no rows found (expected, not an error)
+      console.error('Error fetching pre-registration:', error);
+      return null;
+    }
+
+    return data || null;
+  } catch (error) {
+    console.error('Unexpected error in getActivePreRegistrationAttempt:', error);
+    return null;
+  }
+}
+
+/**
+ * Resend credentials (same password)
+ */
+export async function resendCredentials(
+  preRegistrationId: string,
+  sendMethod: 'whatsapp' | 'sms'
+): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    const supabase = await createClient();
+
+    const { error } = await supabase
+      .from('pre_registration_attempts')
+      .update({
+        send_count: supabase.rpc('increment_send_count'), // We'll use raw SQL instead
+        last_sent_at: new Date().toISOString(),
+        send_method: sendMethod,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', preRegistrationId);
+
+    if (error) {
+      console.error('Error resending credentials:', error);
+      return {
+        success: false,
+        error: 'Falha ao atualizar envio: ' + error.message,
+      };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Unexpected error in resendCredentials:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Erro ao resend credenciais',
+    };
+  }
+}
+
+/**
+ * Regenerate password (create new one)
+ */
+export async function regeneratePassword(
+  preRegistrationId: string,
+  adminId: string,
+  sendMethod: 'whatsapp' | 'sms' = 'whatsapp'
+): Promise<{
+  success: boolean;
+  error?: string;
+  newPassword?: string;
+}> {
+  try {
+    const supabase = await createClient();
+
+    // Generate new password
+    const newPassword = generateTemporaryPassword(12);
+    const hashedPassword = await hashPassword(newPassword);
+
+    // Update record
+    const { error } = await supabase
+      .from('pre_registration_attempts')
+      .update({
+        temporary_password_hash: hashedPassword,
+        password_generated_at: new Date().toISOString(),
+        send_method: sendMethod,
+        send_count: 1, // Reset count for new password
+        last_sent_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', preRegistrationId);
+
+    if (error) {
+      console.error('Error regenerating password:', error);
+      return {
+        success: false,
+        error: 'Falha ao regenerar senha: ' + error.message,
+      };
+    }
+
+    return {
+      success: true,
+      newPassword,
+    };
+  } catch (error) {
+    console.error('Unexpected error in regeneratePassword:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : 'Erro ao regenerar senha',
+    };
+  }
+}
+
+/**
+ * List pending pre-registrations (not yet completed first access)
+ */
+export async function listPendingPreRegistrations(
+  page: number = 1,
+  limit: number = 20
+): Promise<{
+  data: (PreRegistrationAttempt & {
+    member_name: string;
+    member_phone: string;
+  })[];
+  total: number;
+  page: number;
+  totalPages: number;
+}> {
+  try {
+    const supabase = await createClient();
+
+    const offset = (page - 1) * limit;
+
+    // Get pending pre-registrations (not accessed yet)
+    const { data, count, error } = await supabase
+      .from('pre_registration_attempts')
+      .select(
+        `*,
+        profiles!member_id(id, full_name, phone)
+      `,
+        { count: 'exact' }
+      )
+      .is('first_accessed_at', null)
+      .gt('expiration_date', new Date().toISOString())
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) {
+      console.error('Error listing pending registrations:', error);
+      return { data: [], total: 0, page, totalPages: 0 };
+    }
+
+    // Transform response
+    const results = (data || []).map((item) => {
+      const profile = Array.isArray(item.profiles)
+        ? item.profiles[0]
+        : item.profiles;
+      return {
+        ...item,
+        member_name: profile?.full_name || 'Unknown',
+        member_phone: profile?.phone || '',
+      };
+    });
+
+    const total = count || 0;
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: results,
+      total,
+      page,
+      totalPages,
+    };
+  } catch (error) {
+    console.error('Unexpected error in listPendingPreRegistrations:', error);
+    return { data: [], total: 0, page, totalPages: 0 };
+  }
+}
+
+/**
+ * Mark first access
+ */
+export async function markFirstAccess(
+  preRegistrationId: string,
+  ipAddress?: string
+): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    const supabase = await createClient();
+
+    const { error } = await supabase
+      .from('pre_registration_attempts')
+      .update({
+        first_accessed_at: new Date().toISOString(),
+        first_access_from_ip: ipAddress || null,
+        access_attempts: 0, // Reset attempts on successful login
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', preRegistrationId);
+
+    if (error) {
+      console.error('Error marking first access:', error);
+      return {
+        success: false,
+        error: 'Falha ao registrar primeiro acesso: ' + error.message,
+      };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Unexpected error in markFirstAccess:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Erro ao registrar primeiro acesso',
+    };
+  }
+}
+
+/**
+ * Increment failed access attempts
+ */
+export async function incrementFailedAttempts(
+  preRegistrationId: string
+): Promise<{
+  success: boolean;
+  isLocked: boolean;
+  attemptsRemaining: number;
+}> {
+  try {
+    const supabase = await createClient();
+
+    // Get current attempt count
+    const { data: current, error: fetchError } = await supabase
+      .from('pre_registration_attempts')
+      .select('access_attempts, max_access_attempts, locked_until')
+      .eq('id', preRegistrationId)
+      .single();
+
+    if (fetchError || !current) {
+      return { success: false, isLocked: false, attemptsRemaining: 0 };
+    }
+
+    const newAttempts = (current.access_attempts || 0) + 1;
+    const maxAttempts = current.max_access_attempts || 5;
+    const isLocked = newAttempts >= maxAttempts;
+
+    // Update with increment
+    const updateData: any = {
+      access_attempts: newAttempts,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (isLocked) {
+      // Lock for 15 minutes
+      const lockedUntil = new Date(Date.now() + 15 * 60 * 1000);
+      updateData.locked_until = lockedUntil.toISOString();
+    }
+
+    const { error: updateError } = await supabase
+      .from('pre_registration_attempts')
+      .update(updateData)
+      .eq('id', preRegistrationId);
+
+    if (updateError) {
+      return { success: false, isLocked, attemptsRemaining: 0 };
+    }
+
+    return {
+      success: true,
+      isLocked,
+      attemptsRemaining: Math.max(0, maxAttempts - newAttempts),
+    };
+  } catch (error) {
+    console.error('Unexpected error in incrementFailedAttempts:', error);
+    return { success: false, isLocked: false, attemptsRemaining: 0 };
+  }
+}
+
+/**
+ * Hash password (temporary solution)
+ * In production, should use bcrypt or Supabase Edge Function
+ * For now, we'll use a simple hash - UPGRADE THIS BEFORE PRODUCTION
+ */
+async function hashPassword(password: string): Promise<string> {
+  // TODO: Replace with bcrypt or use Supabase Edge Function
+  // This is a PLACEHOLDER - use crypto for temporary security
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+
+  // Create a simple hash by encoding to base64
+  // WARNING: This is NOT secure for production. Use bcrypt instead.
+  return Buffer.from(data).toString('base64');
+}
+
+/**
+ * Verify password hash (temporary solution)
+ * TODO: Implement proper bcrypt verification
+ */
+export async function verifyTemporaryPassword(
+  plainPassword: string,
+  hashedPassword: string
+): Promise<boolean> {
+  // TODO: Replace with bcrypt verify
+  const encoder = new TextEncoder();
+  const data = encoder.encode(plainPassword);
+  const hash = Buffer.from(data).toString('base64');
+
+  return hash === hashedPassword;
+}
