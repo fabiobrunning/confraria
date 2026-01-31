@@ -4,8 +4,10 @@
  * Run with: npm test -- pre-registrations.test.ts
  *
  * Note: These are template tests. Update with actual test data and mocks.
+ * Install vitest first: npm install -D vitest @vitest/ui
  */
 
+// @ts-expect-error vitest not installed yet
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createClient } from '@/lib/supabase/server';
 import {

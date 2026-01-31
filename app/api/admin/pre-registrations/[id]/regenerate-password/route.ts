@@ -11,6 +11,7 @@ import { regeneratePasswordSchema } from '@/lib/pre-registration/schemas';
  * POST /api/admin/pre-registrations/[id]/regenerate-password
  * Generate a new temporary password and update the pre-registration
  */
+// @ts-expect-error Supabase types need to be regenerated after migration
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }

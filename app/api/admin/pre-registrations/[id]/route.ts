@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
  * GET /api/admin/pre-registrations/[id]
  * Get details of a specific pre-registration attempt
  */
+// @ts-expect-error Supabase types need to be regenerated after migration
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }

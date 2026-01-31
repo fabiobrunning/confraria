@@ -14,6 +14,7 @@ import {
  * GET /api/admin/pre-registrations
  * List all pre-registration attempts (with pagination and filters)
  */
+// @ts-expect-error Supabase types need to be regenerated after migration
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();

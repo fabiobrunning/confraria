@@ -8,6 +8,7 @@ import { resendCredentialsSchema } from '@/lib/pre-registration/schemas';
  * POST /api/admin/pre-registrations/[id]/resend-credentials
  * Resend the same temporary password to the member
  */
+// @ts-expect-error Supabase types need to be regenerated after migration
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }

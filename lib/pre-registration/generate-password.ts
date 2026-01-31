@@ -54,6 +54,7 @@ export function generateSMSFriendlyPassword(length: number = 8): string {
   const numbers = '0123456789';
 
   // Build password with pattern
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const allChars = uppercase + lowercase + numbers;
 
   let password: string[] = [

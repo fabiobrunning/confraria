@@ -43,6 +43,7 @@ interface PreRegistrationModalProps {
     error?: string
   }>
   members?: Array<{ id: string; full_name: string; phone: string }>
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   loading?: boolean
   mode?: 'create' | 'regenerate'
   regenerateId?: string

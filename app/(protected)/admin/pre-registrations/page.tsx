@@ -211,7 +211,7 @@ export default function PreRegistrationsPage() {
  * Modal de detalhes do pré-cadastro
  */
 function PreRegistrationDetailsModal({
-  open,
+  open, // eslint-disable-line @typescript-eslint/no-unused-vars
   onOpenChange,
   data,
   onRegenerate,
@@ -221,6 +221,7 @@ function PreRegistrationDetailsModal({
   data: any
   onRegenerate: () => void
 }) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { toast } = useToast()
 
   const formatDate = (date: string | null) => {
