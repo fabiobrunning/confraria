@@ -6,12 +6,10 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { generateTemporaryPassword } from './generate-password';
-import type { Database } from '@/lib/supabase/types';
 
-type PreRegistrationAttempt =
-  Database['public']['Tables']['pre_registration_attempts']['Row'];
-type PreRegistrationAttemptInsert =
-  Database['public']['Tables']['pre_registration_attempts']['Insert'];
+// Types will be auto-generated once migration is applied to Supabase
+type PreRegistrationAttempt = any;
+type PreRegistrationAttemptInsert = any;
 
 /**
  * Create a new pre-registration attempt
@@ -384,33 +382,36 @@ export async function incrementFailedAttempts(
 }
 
 /**
- * Hash password (temporary solution)
- * In production, should use bcrypt or Supabase Edge Function
- * For now, we'll use a simple hash - UPGRADE THIS BEFORE PRODUCTION
+ * Hash password using bcrypt
+ * Secure hashing for production use
+ * Cost factor: 12 (balances security and performance)
  */
 async function hashPassword(password: string): Promise<string> {
-  // TODO: Replace with bcrypt or use Supabase Edge Function
-  // This is a PLACEHOLDER - use crypto for temporary security
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-
-  // Create a simple hash by encoding to base64
-  // WARNING: This is NOT secure for production. Use bcrypt instead.
-  return Buffer.from(data).toString('base64');
+  try {
+    const bcrypt = await import('bcrypt');
+    const saltRounds = 12;
+    const hashed = await bcrypt.hash(password, saltRounds);
+    return hashed;
+  } catch (error) {
+    console.error('Error hashing password:', error);
+    throw new Error('Falha ao processar senha');
+  }
 }
 
 /**
- * Verify password hash (temporary solution)
- * TODO: Implement proper bcrypt verification
+ * Verify password hash using bcrypt
+ * Compares plain text password with bcrypt hash
  */
 export async function verifyTemporaryPassword(
   plainPassword: string,
   hashedPassword: string
 ): Promise<boolean> {
-  // TODO: Replace with bcrypt verify
-  const encoder = new TextEncoder();
-  const data = encoder.encode(plainPassword);
-  const hash = Buffer.from(data).toString('base64');
-
-  return hash === hashedPassword;
+  try {
+    const bcrypt = await import('bcrypt');
+    const isMatch = await bcrypt.compare(plainPassword, hashedPassword);
+    return isMatch;
+  } catch (error) {
+    console.error('Error verifying password:', error);
+    return false;
+  }
 }
