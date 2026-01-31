@@ -12,74 +12,36 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
-      business_transactions: {
-        Row: {
-          id: string
-          transaction_type: Database["public"]["Enums"]["transaction_type"]
-          member_from_id: string
-          member_to_id: string | null
-          amount: number
-          description: string
-          transaction_date: string
-          consortium_group_id: string | null
-          notes: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          transaction_type: Database["public"]["Enums"]["transaction_type"]
-          member_from_id: string
-          member_to_id?: string | null
-          amount: number
-          description: string
-          transaction_date?: string
-          consortium_group_id?: string | null
-          notes?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          transaction_type?: Database["public"]["Enums"]["transaction_type"]
-          member_from_id?: string
-          member_to_id?: string | null
-          amount?: number
-          description?: string
-          transaction_date?: string
-          consortium_group_id?: string | null
-          notes?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_transactions_member_from_id_fkey"
-            columns: ["member_from_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "business_transactions_member_to_id_fkey"
-            columns: ["member_to_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "business_transactions_consortium_group_id_fkey"
-            columns: ["consortium_group_id"]
-            isOneToOne: false
-            referencedRelation: "groups"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       companies: {
         Row: {
+          address: string | null
           address_cep: string | null
           address_city: string | null
           address_complement: string | null
@@ -87,16 +49,21 @@ export type Database = {
           address_number: string | null
           address_state: string | null
           address_street: string | null
+          city: string | null
           cnpj: string | null
           created_at: string
           description: string | null
+          email: string | null
           id: string
           instagram: string | null
           name: string
           phone: string | null
+          postal_code: string | null
+          state: string | null
           updated_at: string
         }
         Insert: {
+          address?: string | null
           address_cep?: string | null
           address_city?: string | null
           address_complement?: string | null
@@ -104,16 +71,21 @@ export type Database = {
           address_number?: string | null
           address_state?: string | null
           address_street?: string | null
+          city?: string | null
           cnpj?: string | null
           created_at?: string
           description?: string | null
+          email?: string | null
           id?: string
           instagram?: string | null
           name: string
           phone?: string | null
+          postal_code?: string | null
+          state?: string | null
           updated_at?: string
         }
         Update: {
+          address?: string | null
           address_cep?: string | null
           address_city?: string | null
           address_complement?: string | null
@@ -121,13 +93,17 @@ export type Database = {
           address_number?: string | null
           address_state?: string | null
           address_street?: string | null
+          city?: string | null
           cnpj?: string | null
           created_at?: string
           description?: string | null
+          email?: string | null
           id?: string
           instagram?: string | null
           name?: string
           phone?: string | null
+          postal_code?: string | null
+          state?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -162,24 +138,148 @@ export type Database = {
         }
         Relationships: []
       }
+      draws: {
+        Row: {
+          created_at: string | null
+          deleted_at: string | null
+          draw_date: string | null
+          drawn_numbers: Json
+          group_id: string
+          id: string
+          updated_at: string | null
+          winner_position: number
+          winning_number: number
+          winning_quota_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          deleted_at?: string | null
+          draw_date?: string | null
+          drawn_numbers?: Json
+          group_id: string
+          id?: string
+          updated_at?: string | null
+          winner_position: number
+          winning_number: number
+          winning_quota_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          deleted_at?: string | null
+          draw_date?: string | null
+          drawn_numbers?: Json
+          group_id?: string
+          id?: string
+          updated_at?: string | null
+          winner_position?: number
+          winning_number?: number
+          winning_quota_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "draws_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "draws_winning_quota_id_fkey"
+            columns: ["winning_quota_id"]
+            isOneToOne: false
+            referencedRelation: "quotas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      groups: {
+        Row: {
+          adjustment_type: Database["public"]["Enums"]["adjustment_type"] | null
+          adjustment_value: number | null
+          admin_id: string | null
+          asset_value: number
+          company_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          monthly_value: number
+          name: string
+          total_quotas: number
+          updated_at: string
+        }
+        Insert: {
+          adjustment_type?:
+            | Database["public"]["Enums"]["adjustment_type"]
+            | null
+          adjustment_value?: number | null
+          admin_id?: string | null
+          asset_value?: number
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          monthly_value?: number
+          name: string
+          total_quotas?: number
+          updated_at?: string
+        }
+        Update: {
+          adjustment_type?:
+            | Database["public"]["Enums"]["adjustment_type"]
+            | null
+          adjustment_value?: number | null
+          admin_id?: string | null
+          asset_value?: number
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          monthly_value?: number
+          name?: string
+          total_quotas?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "groups_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "groups_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       member_companies: {
         Row: {
           company_id: string
-          created_at: string
+          created_at: string | null
           id: string
           member_id: string
+          updated_at: string | null
         }
         Insert: {
           company_id: string
-          created_at?: string
+          created_at?: string | null
           id?: string
           member_id: string
+          updated_at?: string | null
         }
         Update: {
           company_id?: string
-          created_at?: string
+          created_at?: string | null
           id?: string
           member_id?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -192,6 +292,76 @@ export type Database = {
           {
             foreignKeyName: "member_companies_member_id_fkey"
             columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      members: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          email: string | null
+          full_name: string
+          group_id: string
+          id: string
+          joined_at: string
+          phone: string
+          pre_registered: boolean
+          profile_id: string | null
+          registration_number: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          email?: string | null
+          full_name: string
+          group_id: string
+          id?: string
+          joined_at?: string
+          phone: string
+          pre_registered?: boolean
+          profile_id?: string | null
+          registration_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          group_id?: string
+          id?: string
+          joined_at?: string
+          phone?: string
+          pre_registered?: boolean
+          profile_id?: string | null
+          registration_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "members_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "members_profile_id_fkey"
+            columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -213,7 +383,7 @@ export type Database = {
           instagram: string | null
           phone: string
           pre_registered: boolean
-          role: Database["public"]["Enums"]["user_role"]
+          role: string
           updated_at: string
         }
         Insert: {
@@ -225,12 +395,12 @@ export type Database = {
           address_state?: string | null
           address_street?: string | null
           created_at?: string
-          full_name: string
+          full_name?: string
           id: string
           instagram?: string | null
           phone: string
           pre_registered?: boolean
-          role?: Database["public"]["Enums"]["user_role"]
+          role?: string
           updated_at?: string
         }
         Update: {
@@ -247,38 +417,95 @@ export type Database = {
           instagram?: string | null
           phone?: string
           pre_registered?: boolean
-          role?: Database["public"]["Enums"]["user_role"]
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      prospects: {
+        Row: {
+          business_sector: string
+          company_name: string
+          contacted_at: string | null
+          contacted_by: string | null
+          converted_at: string | null
+          created_at: string
+          email: string
+          full_name: string
+          has_networking_experience: boolean
+          how_found_us: string
+          id: string
+          networking_experience: string | null
+          notes: string | null
+          phone: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          business_sector: string
+          company_name: string
+          contacted_at?: string | null
+          contacted_by?: string | null
+          converted_at?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          has_networking_experience?: boolean
+          how_found_us: string
+          id?: string
+          networking_experience?: string | null
+          notes?: string | null
+          phone: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          business_sector?: string
+          company_name?: string
+          contacted_at?: string | null
+          contacted_by?: string | null
+          converted_at?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          has_networking_experience?: boolean
+          how_found_us?: string
+          id?: string
+          networking_experience?: string | null
+          notes?: string | null
+          phone?: string
+          status?: string
           updated_at?: string
         }
         Relationships: []
       }
       quotas: {
         Row: {
-          created_at: string
+          created_at: string | null
           group_id: string
           id: string
-          member_id: string
+          member_id: string | null
           quota_number: number
-          status: Database["public"]["Enums"]["quota_status"]
-          updated_at: string
+          status: string
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           group_id: string
           id?: string
-          member_id: string
+          member_id?: string | null
           quota_number: number
-          status?: Database["public"]["Enums"]["quota_status"]
-          updated_at?: string
+          status?: string
+          updated_at?: string | null
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           group_id?: string
           id?: string
-          member_id?: string
+          member_id?: string | null
           quota_number?: number
-          status?: Database["public"]["Enums"]["quota_status"]
-          updated_at?: string
+          status?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -297,178 +524,19 @@ export type Database = {
           },
         ]
       }
-      draws: {
-        Row: {
-          id: string
-          group_id: string
-          winning_quota_id: string | null
-          winning_number: number
-          drawn_numbers: number[]
-          winner_position: number
-          draw_date: string
-          created_at: string
-          updated_at: string
-          deleted_at: string | null
-        }
-        Insert: {
-          id?: string
-          group_id: string
-          winning_quota_id?: string | null
-          winning_number: number
-          drawn_numbers: number[]
-          winner_position: number
-          draw_date?: string
-          created_at?: string
-          updated_at?: string
-          deleted_at?: string | null
-        }
-        Update: {
-          id?: string
-          group_id?: string
-          winning_quota_id?: string | null
-          winning_number?: number
-          drawn_numbers?: number[]
-          winner_position?: number
-          draw_date?: string
-          created_at?: string
-          updated_at?: string
-          deleted_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "draws_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "groups"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "draws_winning_quota_id_fkey"
-            columns: ["winning_quota_id"]
-            isOneToOne: false
-            referencedRelation: "quotas"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      groups: {
-        Row: {
-          id: string
-          name: string
-          description: string | null
-          asset_value: number
-          total_quotas: number
-          monthly_value: number
-          adjustment_type: 'monthly' | 'annual' | 'none' | null
-          adjustment_value: number | null
-          is_active: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          description?: string | null
-          asset_value: number
-          total_quotas: number
-          monthly_value: number
-          adjustment_type?: 'monthly' | 'annual' | 'none' | null
-          adjustment_value?: number | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          description?: string | null
-          asset_value?: number
-          total_quotas?: number
-          monthly_value?: number
-          adjustment_type?: 'monthly' | 'annual' | 'none' | null
-          adjustment_value?: number | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      prospects: {
-        Row: {
-          id: string
-          first_name: string
-          last_name: string
-          phone: string
-          email: string
-          company_name: string
-          business_sector: string
-          how_found_us: Database["public"]["Enums"]["prospect_source"]
-          has_networking_experience: boolean
-          networking_experience: string | null
-          status: Database["public"]["Enums"]["prospect_status"]
-          notes: string | null
-          contacted_at: string | null
-          contacted_by: string | null
-          converted_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          first_name: string
-          last_name: string
-          phone: string
-          email: string
-          company_name: string
-          business_sector: string
-          how_found_us: Database["public"]["Enums"]["prospect_source"]
-          has_networking_experience?: boolean
-          networking_experience?: string | null
-          status?: Database["public"]["Enums"]["prospect_status"]
-          notes?: string | null
-          contacted_at?: string | null
-          contacted_by?: string | null
-          converted_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          first_name?: string
-          last_name?: string
-          phone?: string
-          email?: string
-          company_name?: string
-          business_sector?: string
-          how_found_us?: Database["public"]["Enums"]["prospect_source"]
-          has_networking_experience?: boolean
-          networking_experience?: string | null
-          status?: Database["public"]["Enums"]["prospect_status"]
-          notes?: string | null
-          contacted_at?: string | null
-          contacted_by?: string | null
-          converted_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      is_admin:
+        | { Args: never; Returns: boolean }
+        | { Args: { user_id: string }; Returns: boolean }
     }
     Enums: {
+      adjustment_type: "monthly" | "annual" | "none"
       quota_status: "active" | "contemplated"
-      transaction_type: "direct_business" | "referral" | "consortium"
       user_role: "admin" | "member"
-      prospect_source: "instagram" | "linkedin" | "referral" | "google" | "event" | "other"
-      prospect_status: "new" | "contacted" | "in_progress" | "converted" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -594,55 +662,14 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
+      adjustment_type: ["monthly", "annual", "none"],
       quota_status: ["active", "contemplated"],
-      transaction_type: ["direct_business", "referral", "consortium"],
       user_role: ["admin", "member"],
-      prospect_source: ["instagram", "linkedin", "referral", "google", "event", "other"],
-      prospect_status: ["new", "contacted", "in_progress", "converted", "rejected"],
     },
   },
 } as const
-
-// Prospect types for easier usage
-export type ProspectSource = Database["public"]["Enums"]["prospect_source"]
-export type ProspectStatus = Database["public"]["Enums"]["prospect_status"]
-
-export interface Prospect {
-  id: string
-  full_name: string // Computed from first_name + last_name
-  first_name: string
-  last_name: string
-  email: string
-  phone: string
-  how_found_us: ProspectSource
-  company_name: string
-  business_sector: string
-  has_networking_experience: boolean
-  networking_experience?: string | null
-  status: ProspectStatus
-  contacted_at?: string | null
-  contacted_by?: string | null
-  converted_at?: string | null
-  notes?: string | null
-  created_at: string
-  updated_at: string
-}
-
-export interface ProspectListParams {
-  page?: number
-  limit?: number
-  status?: ProspectStatus | 'all'
-  search?: string
-}
-
-export interface ProspectListResponse {
-  data: Prospect[]
-  pagination: {
-    page: number
-    limit: number
-    total: number
-    totalPages: number
-  }
-}
