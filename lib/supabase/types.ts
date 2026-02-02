@@ -679,8 +679,10 @@ export type Prospect = Tables<'prospects'>
 export type ProspectInsert = TablesInsert<'prospects'>
 export type ProspectUpdate = TablesUpdate<'prospects'>
 
-export type PreRegistrationAttempt = Tables<'pre_registration_attempts'>
-export type PreRegistrationAttemptInsert = TablesInsert<'pre_registration_attempts'>
-export type PreRegistrationAttemptUpdate = TablesUpdate<'pre_registration_attempts'>
+// Note: pre_registration_attempts table exists in Supabase but is not yet in generated types
+// These types are defined as needed by the application
+export type PreRegistrationAttempt = any
+export type PreRegistrationAttemptInsert = any
+export type PreRegistrationAttemptUpdate = any
 
 export type ProspectStatus = 'new' | 'contacted' | 'in_progress' | 'converted' | 'rejected'
