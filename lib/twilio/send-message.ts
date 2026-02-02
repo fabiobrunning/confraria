@@ -67,7 +67,7 @@ export async function sendWhatsAppMessage(
       body: options.message,
       from: fromNumber,
       to: toWhatsApp,
-      mediaUrl: options.mediaUrl, // Opcional
+      mediaUrl: options.mediaUrl ? [options.mediaUrl] : undefined, // Opcional - Twilio requires array
     })
 
     console.log(`[WhatsApp] Mensagem enviada com sucesso: ${message.sid}`)
