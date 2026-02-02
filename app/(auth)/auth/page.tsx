@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast'
 import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { authSchema, type AuthFormData } from '@/lib/schemas'
 import { maskPhone } from '@/lib/utils/phone'
+import { ForgotPasswordModal } from '@/components/auth/ForgotPasswordModal'
 
 export default function AuthPage() {
   const [formData, setFormData] = useState<AuthFormData>({
@@ -30,6 +31,7 @@ export default function AuthPage() {
   >({})
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
   const supabase = createClient()
@@ -194,9 +196,24 @@ export default function AuthPage() {
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Entrar
             </Button>
+
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-sm text-accent hover:underline font-medium"
+              >
+                Esqueci a senha
+              </button>
+            </div>
           </form>
         </CardContent>
       </Card>
+
+      <ForgotPasswordModal
+        open={showForgotPassword}
+        onOpenChange={setShowForgotPassword}
+      />
     </div>
   )
 }
