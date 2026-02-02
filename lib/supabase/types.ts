@@ -673,3 +673,14 @@ export const Constants = {
     },
   },
 } as const
+
+// Convenience types for common tables
+export type Prospect = Tables<'prospects'>
+export type ProspectInsert = TablesInsert<'prospects'>
+export type ProspectUpdate = TablesUpdate<'prospects'>
+
+export type PreRegistrationAttempt = Tables<'pre_registration_attempts'>
+export type PreRegistrationAttemptInsert = TablesInsert<'pre_registration_attempts'>
+export type PreRegistrationAttemptUpdate = TablesUpdate<'pre_registration_attempts'>
+
+export type ProspectStatus = 'new' | 'contacted' | 'in_progress' | 'converted' | 'rejected'

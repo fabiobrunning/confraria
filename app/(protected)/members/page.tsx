@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useAdmin } from '@/hooks/use-admin'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PageContainer, PageHeader, EmptyState } from '@/components/layout'
+import { SearchBar } from '@/components/ui/search-bar'
+import { TemporaryPasswordGenerator } from '@/components/members/temporary-password-generator'
 import {
   Select,
   SelectContent,
@@ -34,7 +36,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
-import { Loader2, Edit, Trash2, Users, UserPlus, Phone, Instagram, MapPin, AlertTriangle } from 'lucide-react'
+import { Loader2, Edit, Trash2, Users, UserPlus, Phone, Instagram, MapPin, AlertTriangle, Key } from 'lucide-react'
 import { maskPhone } from '@/lib/utils/phone'
 import type { Tables } from '@/lib/supabase/types'
 
@@ -44,8 +46,10 @@ export default function MembersPage() {
   const { isAdmin } = useAdmin()
   const [members, setMembers] = useState<Profile[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false)
   const [selectedMember, setSelectedMember] = useState<Profile | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [editFormData, setEditFormData] = useState<Partial<Profile>>({})
@@ -166,6 +170,25 @@ export default function MembersPage() {
     }
   }
 
+  const handlePasswordClick = (member: Profile) => {
+    setSelectedMember(member)
+    setPasswordDialogOpen(true)
+  }
+
+  // Filter members based on search query
+  const filteredMembers = useMemo(() => {
+    if (!searchQuery.trim()) return members
+
+    const query = searchQuery.toLowerCase()
+    return members.filter(
+      (member) =>
+        member.full_name?.toLowerCase().includes(query) ||
+        member.phone?.toLowerCase().includes(query) ||
+        member.instagram?.toLowerCase().includes(query) ||
+        member.address_city?.toLowerCase().includes(query)
+    )
+  }, [members, searchQuery])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -197,9 +220,21 @@ export default function MembersPage() {
             <Users className="h-5 w-5" />
             Todos os Membros
           </CardTitle>
-          <CardDescription>{members.length} membro(s) cadastrado(s)</CardDescription>
+          <CardDescription>
+            {filteredMembers.length} de {members.length} membro(s)
+            {searchQuery && ' (filtrado)'}
+          </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* Search Bar */}
+          {members.length > 0 && (
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Buscar por nome, telefone, instagram ou cidade..."
+            />
+          )}
+
           {members.length === 0 ? (
             <EmptyState
               message="Nenhum membro cadastrado"
@@ -214,9 +249,11 @@ export default function MembersPage() {
                 )
               }
             />
+          ) : filteredMembers.length === 0 ? (
+            <EmptyState message="Nenhum membro encontrado com os filtros aplicados" />
           ) : (
             <div className="space-y-3">
-              {members.map((member) => (
+              {filteredMembers.map((member) => (
                 <div
                   key={member.id}
                   className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg gap-4"
@@ -253,7 +290,18 @@ export default function MembersPage() {
                     </div>
                   </div>
                   {isAdmin && (
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
+                      {member.pre_registered && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePasswordClick(member)}
+                          className="bg-yellow-500/10 border-yellow-500/50 hover:bg-yellow-500/20"
+                        >
+                          <Key className="h-4 w-4 mr-2" />
+                          Gerar Senha
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -472,6 +520,17 @@ export default function MembersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Temporary Password Generator Dialog */}
+      {selectedMember && (
+        <TemporaryPasswordGenerator
+          memberId={selectedMember.id}
+          memberName={selectedMember.full_name || ''}
+          memberEmail={selectedMember.email}
+          open={passwordDialogOpen}
+          onOpenChange={setPasswordDialogOpen}
+        />
+      )}
     </PageContainer>
   )
 }

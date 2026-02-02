@@ -1,11 +1,13 @@
 'use client'
 
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Dices } from 'lucide-react'
 import { PageContainer, PageHeader, EmptyState } from '@/components/layout'
+import { SearchBar } from '@/components/ui/search-bar'
 
 interface Group {
   id: string
@@ -92,6 +94,20 @@ function GroupCard({
 }
 
 export default function GroupsPageClient({ groups, isAdmin }: GroupsPageClientProps) {
+  const [searchQuery, setSearchQuery] = useState('')
+
+  // Filter groups based on search query
+  const filteredGroups = useMemo(() => {
+    if (!searchQuery.trim()) return groups
+
+    const query = searchQuery.toLowerCase()
+    return groups.filter(
+      (group) =>
+        group.name?.toLowerCase().includes(query) ||
+        group.description?.toLowerCase().includes(query)
+    )
+  }, [groups, searchQuery])
+
   return (
     <PageContainer>
       <PageHeader
@@ -109,13 +125,15 @@ export default function GroupsPageClient({ groups, isAdmin }: GroupsPageClientPr
         }
       />
 
-      {groups.length > 0 ? (
-        <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {groups.map((group) => (
-            <GroupCard key={group.id} group={group} isAdmin={isAdmin} />
-          ))}
-        </div>
-      ) : (
+      {groups.length > 0 && (
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Buscar grupos por nome ou descrição..."
+        />
+      )}
+
+      {groups.length === 0 ? (
         <EmptyState
           message="Nenhum grupo cadastrado"
           action={
@@ -129,6 +147,14 @@ export default function GroupsPageClient({ groups, isAdmin }: GroupsPageClientPr
             )
           }
         />
+      ) : filteredGroups.length === 0 ? (
+        <EmptyState message="Nenhum grupo encontrado com os filtros aplicados" />
+      ) : (
+        <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          {filteredGroups.map((group) => (
+            <GroupCard key={group.id} group={group} isAdmin={isAdmin} />
+          ))}
+        </div>
       )}
     </PageContainer>
   )

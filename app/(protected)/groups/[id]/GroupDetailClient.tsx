@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -25,6 +25,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useToast } from '@/hooks/use-toast'
+import { SearchBar } from '@/components/ui/search-bar'
 import { ArrowLeft, Dices, Save, Loader2, TrendingUp, Plus } from 'lucide-react'
 
 interface Quota {
@@ -70,6 +71,7 @@ export default function GroupDetailClient({
   const [creatingQuotas, setCreatingQuotas] = useState(false)
   const [quotas, setQuotas] = useState(initialQuotas)
   const [savingQuota, setSavingQuota] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
   const [formData, setFormData] = useState({
     name: group.name,
     description: group.description ?? '',
@@ -81,6 +83,19 @@ export default function GroupDetailClient({
   const router = useRouter()
   const { toast } = useToast()
   const supabase = createClient()
+
+  // Filter quotas based on search query
+  const filteredQuotas = useMemo(() => {
+    if (!searchQuery.trim()) return quotas
+
+    const query = searchQuery.toLowerCase()
+    return quotas.filter(
+      (quota) =>
+        quota.quota_number.toString().includes(query) ||
+        quota.member?.full_name?.toLowerCase().includes(query) ||
+        quota.status.toLowerCase().includes(query)
+    )
+  }, [quotas, searchQuery])
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -469,7 +484,14 @@ export default function GroupDetailClient({
         <CardHeader>
           <CardTitle>Cotas do Grupo</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {quotas.length > 0 && (
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Buscar por número, membro ou status..."
+            />
+          )}
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -480,7 +502,7 @@ export default function GroupDetailClient({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {quotas.map((quota) => (
+                {filteredQuotas.map((quota) => (
                   <TableRow key={quota.id}>
                     <TableCell>
                       <Badge variant="outline">#{quota.quota_number}</Badge>
@@ -521,6 +543,16 @@ export default function GroupDetailClient({
                     </TableCell>
                   </TableRow>
                 ))}
+                {filteredQuotas.length === 0 && quotas.length > 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={3}
+                      className="text-center py-8"
+                    >
+                      <p className="text-muted-foreground">Nenhuma cota encontrada com os filtros aplicados</p>
+                    </TableCell>
+                  </TableRow>
+                )}
                 {quotas.length === 0 && (
                   <TableRow>
                     <TableCell

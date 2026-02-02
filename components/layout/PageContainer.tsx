@@ -10,7 +10,8 @@ interface PageContainerProps {
  * PageContainer - Atomic Design System Component
  *
  * Padrão de container para todas as páginas da aplicação.
- * Garante padding e spacing consistentes em mobile e desktop.
+ * Garante padding, spacing e centralização consistentes em mobile e desktop.
+ * Conteúdo centralizado com max-width de 6xl para melhor legibilidade.
  *
  * @example
  * <PageContainer>
@@ -20,7 +21,7 @@ interface PageContainerProps {
  */
 export function PageContainer({ children, className }: PageContainerProps) {
   return (
-    <div className={cn('p-4 sm:p-6 space-y-6', className)}>
+    <div className={cn('p-4 sm:p-6 space-y-6 max-w-6xl mx-auto', className)}>
       {children}
     </div>
   )

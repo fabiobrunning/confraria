@@ -31,7 +31,9 @@ export default async function ProtectedLayout({
   return (
     <div className="member-area dark min-h-screen flex w-full">
       <Sidebar role={profile?.role ?? null} />
-      <main className="flex-1 lg:ml-64 mt-14 lg:mt-0">{children}</main>
+      <main className="flex-1 lg:ml-64 mt-12 lg:mt-0 transition-all duration-300 [.sidebar-collapsed_&]:lg:ml-20">
+        {children}
+      </main>
     </div>
   )
 }
