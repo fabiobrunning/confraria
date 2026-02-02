@@ -16,7 +16,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { authSchema, type AuthFormData } from '@/lib/schemas'
 import { maskPhone } from '@/lib/utils/phone'
 
@@ -29,6 +29,7 @@ export default function AuthPage() {
     Partial<AuthFormData>
   >({})
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
   const supabase = createClient()
@@ -134,7 +135,7 @@ export default function AuthPage() {
                   }))
                 }
                 disabled={loading}
-                className={`font-sans ${
+                className={`font-sans bg-white text-gray-900 placeholder:text-gray-500 ${
                   validationErrors.phone ? 'border-destructive' : ''
                 }`}
                 maxLength={15}
@@ -152,19 +153,33 @@ export default function AuthPage() {
               >
                 Senha
               </Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, password: e.target.value }))
-                }
-                disabled={loading}
-                className={`font-sans ${
-                  validationErrors.password ? 'border-destructive' : ''
-                }`}
-              />
+              <div className="relative flex items-center">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, password: e.target.value }))
+                  }
+                  disabled={loading}
+                  className={`font-sans pr-10 bg-white text-gray-900 placeholder:text-gray-500 ${
+                    validationErrors.password ? 'border-destructive' : ''
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={loading}
+                  className="absolute right-3 text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
               {validationErrors.password && (
                 <p className="text-sm text-destructive font-sans">
                   {validationErrors.password}

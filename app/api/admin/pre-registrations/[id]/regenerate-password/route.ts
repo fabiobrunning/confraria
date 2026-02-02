@@ -7,6 +7,7 @@ import {
   formatPhoneForWhatsApp,
 } from '@/lib/pre-registration/message-templates';
 import { regeneratePasswordSchema } from '@/lib/pre-registration/schemas';
+import * as bcrypt from 'bcrypt';
 
 /**
  * POST /api/admin/pre-registrations/[id]/regenerate-password
@@ -95,6 +96,27 @@ export async function POST(
 
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 500 });
+    }
+
+    // Update password in Supabase Auth for the member
+    // Hash the new password for auth update
+    const saltRounds = 12;
+    const hashedForAuth = await bcrypt.hash(result.newPassword!, saltRounds);
+
+    const { error: authUpdateError } = await supabase.auth.admin.updateUserById(
+      attempt.member_id,
+      { password: hashedForAuth }
+    );
+
+    if (authUpdateError) {
+      console.error('Error updating auth password:', authUpdateError);
+      return NextResponse.json(
+        {
+          error: 'Erro ao atualizar senha no sistema de autenticação: ' + authUpdateError.message,
+          details: 'A senha foi armazenada no banco mas falhou ao sincronizar com o sistema de autenticação'
+        },
+        { status: 500 }
+      );
     }
 
     // Get member info for message

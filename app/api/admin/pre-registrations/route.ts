@@ -1,5 +1,4 @@
 // @ts-nocheck
-// @ts-nocheck
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import {
@@ -11,6 +10,7 @@ import {
   getMessageTemplate,
   formatPhoneForWhatsApp,
 } from '@/lib/pre-registration/message-templates';
+import * as bcrypt from 'bcrypt';
 
 /**
  * GET /api/admin/pre-registrations
@@ -132,6 +132,27 @@ export async function POST(request: NextRequest) {
 
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 500 });
+    }
+
+    // Update password in Supabase Auth for the member
+    // Hash the temporary password for auth
+    const saltRounds = 12;
+    const hashedForAuth = await bcrypt.hash(result.temporaryPassword!, saltRounds);
+
+    const { error: authUpdateError } = await supabase.auth.admin.updateUserById(
+      member_id,
+      { password: hashedForAuth }
+    );
+
+    if (authUpdateError) {
+      console.error('Error syncing password to auth:', authUpdateError);
+      return NextResponse.json(
+        {
+          error: 'Erro ao sincronizar senha com o sistema de autenticação: ' + authUpdateError.message,
+          details: 'A senha foi armazenada no banco mas falhou ao sincronizar com o sistema de autenticação'
+        },
+        { status: 500 }
+      );
     }
 
     // Generate message for display (don't send yet - that's manual for security)
