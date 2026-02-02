@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/table'
 import { ProspectStatusBadge } from './ProspectStatusBadge'
 import { WhatsAppLink } from './WhatsAppLink'
-import type { Prospect } from '@/lib/supabase/types'
+import type { Prospect, ProspectStatus } from '@/lib/supabase/types'
 import { Building2, Calendar } from 'lucide-react'
 
 interface ProspectsTableProps {
@@ -101,7 +101,7 @@ export function ProspectsTable({ prospects, onRowClick, loading = false }: Prosp
                 <WhatsAppLink phone={prospect.phone} variant="text" />
               </TableCell>
               <TableCell>
-                <ProspectStatusBadge status={prospect.status} />
+                <ProspectStatusBadge status={prospect.status as ProspectStatus} />
               </TableCell>
               <TableCell className="hidden lg:table-cell">
                 <div className="flex items-center gap-2 text-muted-foreground text-sm">

@@ -53,7 +53,6 @@ export function PreRegistrationModal({
   onOpenChange,
   onSubmit,
   members = [],
-  loading = false,
   mode = 'create',
   regenerateId,
 }: PreRegistrationModalProps) {

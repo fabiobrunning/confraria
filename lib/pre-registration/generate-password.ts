@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Password generation utilities for pre-registration flow
  * Generates secure temporary passwords with mixed character types

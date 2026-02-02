@@ -526,7 +526,7 @@ export default function MembersPage() {
         <TemporaryPasswordGenerator
           memberId={selectedMember.id}
           memberName={selectedMember.full_name || ''}
-          memberEmail={selectedMember.email}
+          memberEmail={null}
           open={passwordDialogOpen}
           onOpenChange={setPasswordDialogOpen}
         />

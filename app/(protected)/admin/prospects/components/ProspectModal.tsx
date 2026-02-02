@@ -64,7 +64,7 @@ export function ProspectModal({
   // Reset state quando o prospect muda
   useEffect(() => {
     if (prospect) {
-      setStatus(prospect.status)
+      setStatus(prospect.status as ProspectStatus)
       setNotes(prospect.notes || '')
     }
   }, [prospect])
@@ -135,7 +135,7 @@ export function ProspectModal({
           {/* Status atual */}
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Status atual:</span>
-            <ProspectStatusBadge status={prospect.status} />
+            <ProspectStatusBadge status={prospect.status as ProspectStatus} />
           </div>
 
           {/* Informacoes de contato */}
@@ -193,7 +193,7 @@ export function ProspectModal({
           <div className="flex flex-wrap gap-2">
             <WhatsAppLink
               phone={prospect.phone}
-              message={`Ola ${prospect.first_name}, tudo bem? Sou da Confraria Pedra Branca e vi que voce demonstrou interesse em conhecer nosso grupo.`}
+              message={`Ola ${prospect.full_name.split(' ')[0]}, tudo bem? Sou da Confraria Pedra Branca e vi que voce demonstrou interesse em conhecer nosso grupo.`}
             />
             <Button
               variant="outline"
