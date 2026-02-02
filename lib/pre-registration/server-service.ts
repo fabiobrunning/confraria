@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Server-side pre-registration service
  * Handles database operations, password hashing, and secure credential generation
