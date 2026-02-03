@@ -20,6 +20,7 @@ import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { authSchema, type AuthFormData } from '@/lib/schemas'
 import { maskPhone } from '@/lib/utils/phone'
 import { ForgotPasswordModal } from '@/components/auth/ForgotPasswordModal'
+import { registerFirstLogin, trackFailedLogin } from '@/app/actions/auth'
 
 export default function AuthPage() {
   const [formData, setFormData] = useState<AuthFormData>({
@@ -77,12 +78,23 @@ export default function AuthPage() {
       })
 
       if (error) {
+        // Track failed login attempt
+        await trackFailedLogin(cleanPhone)
+
         if (error.message.includes('Invalid login credentials')) {
           throw new Error('Telefone ou senha incorretos.')
         } else {
           throw new Error(error.message)
         }
       }
+
+      // Register first login (mark pre-registration as accessed)
+      const ipAddress = await fetch('https://api.ipify.org?format=json')
+        .then((res) => res.json())
+        .then((data) => data.ip)
+        .catch(() => undefined)
+
+      await registerFirstLogin(ipAddress)
 
       router.push('/dashboard')
       router.refresh()

@@ -1,16 +1,18 @@
-// @ts-nocheck
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { generateTemporaryPassword } from '@/lib/pre-registration/generate-password'
+import * as bcrypt from 'bcrypt'
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
+    const adminSupabase = createAdminClient()
 
     // Check if user is authenticated and is admin
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
       return NextResponse.json(
-        { error: 'Nao autorizado' },
+        { error: 'Não autorizado' },
         { status: 401 }
       )
     }
@@ -34,18 +36,21 @@ export async function POST(request: NextRequest) {
 
     if (!userId) {
       return NextResponse.json(
-        { error: 'ID do usuario e obrigatorio' },
+        { error: 'ID do usuário é obrigatório' },
         { status: 400 }
       )
     }
 
-    // Gerar senha temporaria
-    const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4).toUpperCase()
+    // Generate secure temporary password using crypto-safe method
+    const tempPassword = generateTemporaryPassword(12)
 
-    // Atualizar senha do usuario usando admin API
-    // Nota: Isso requer service_role key no servidor
-    const { error } = await supabase.auth.admin.updateUserById(userId, {
-      password: tempPassword
+    // Hash the password for auth update
+    const saltRounds = 12
+    const hashedPassword = await bcrypt.hash(tempPassword, saltRounds)
+
+    // Update user password using admin client with SERVICE_ROLE_KEY
+    const { error } = await adminSupabase.auth.admin.updateUserById(userId, {
+      password: hashedPassword
     })
 
     if (error) {
@@ -58,8 +63,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      tempPassword,
-      message: 'Senha temporaria gerada com sucesso'
+      message: 'Senha temporária gerada com sucesso. Compartilhe com o usuário de forma segura.'
     })
 
   } catch (error) {

@@ -117,6 +117,7 @@ export async function getActivePreRegistrationAttempt(
 
 /**
  * Resend credentials (same password)
+ * Increments send_count and updates last_sent_at
  */
 export async function resendCredentials(
   preRegistrationId: string,
@@ -128,10 +129,27 @@ export async function resendCredentials(
   try {
     const supabase = await createClient();
 
+    // First, fetch current send_count to increment it
+    const { data: current, error: fetchError } = await supabase
+      .from('pre_registration_attempts')
+      .select('send_count')
+      .eq('id', preRegistrationId)
+      .single();
+
+    if (fetchError || !current) {
+      return {
+        success: false,
+        error: 'Pré-registro não encontrado',
+      };
+    }
+
+    const newSendCount = (current.send_count || 0) + 1;
+
+    // Now update with incremented count
     const { error } = await supabase
       .from('pre_registration_attempts')
       .update({
-        send_count: supabase.rpc('increment_send_count'), // We'll use raw SQL instead
+        send_count: newSendCount,
         last_sent_at: new Date().toISOString(),
         send_method: sendMethod,
         updated_at: new Date().toISOString(),

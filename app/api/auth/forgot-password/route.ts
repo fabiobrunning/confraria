@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { generateTemporaryPassword } from '@/lib/pre-registration/generate-password'
 import * as bcrypt from 'bcrypt'
@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createClient()
+    const adminSupabase = createAdminClient()
 
     // Find profile by phone
     const { data: profile, error: profileError } = await supabase
@@ -41,11 +42,11 @@ export async function POST(request: NextRequest) {
     const { data: preReg, error: preRegError } = await supabase
       .from('pre_registration_attempts')
       .select('id, expiration_date')
-      .eq('member_id', profile.id)
+      .eq('member_id', (profile as any).id)
       .gt('expiration_date', new Date().toISOString())
       .order('created_at', { ascending: false })
       .limit(1)
-      .single()
+      .maybeSingle()
 
     if (preRegError || !preReg) {
       return NextResponse.json(
@@ -63,9 +64,9 @@ export async function POST(request: NextRequest) {
     const saltRounds = 12
     const hashedForAuth = await bcrypt.hash(newPassword, saltRounds)
 
-    // Update password in Supabase Auth
-    const { error: authUpdateError } = await supabase.auth.admin.updateUserById(
-      profile.id,
+    // Update password in Supabase Auth using admin client
+    const { error: authUpdateError } = await adminSupabase.auth.admin.updateUserById(
+      (profile as any).id,
       { password: hashedForAuth }
     )
 
@@ -88,46 +89,49 @@ export async function POST(request: NextRequest) {
         last_sent_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
-      .eq('id', preReg.id)
+      .eq('id', (preReg as any).id)
 
     // Call n8n webhook to send WhatsApp message
-    const webhookUrl = 'https://n8n-n8n.xm9jj7.easypanel.host/webhook-test/cadastro'
+    const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL
+    if (!webhookUrl) {
+      console.warn('N8N_WEBHOOK_URL not configured, skipping webhook')
+    } else {
+      try {
+        const webhookResponse = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            origin: process.env.NEXT_PUBLIC_APP_URL || 'https://confrariapedrabranca.com.br',
+          },
+          body: JSON.stringify({
+            fullName: (profile as any).full_name,
+            phone: (profile as any).phone.replace(/\D/g, ''),
+            password: newPassword,
+            role: 'member',
+            createdAt: new Date().toISOString(),
+          }),
+        })
 
-    try {
-      const webhookResponse = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          origin: process.env.NEXT_PUBLIC_APP_URL || 'https://confrariapedrabranca.com.br',
-        },
-        body: JSON.stringify({
-          fullName: profile.full_name,
-          phone: profile.phone.replace(/\D/g, ''),
-          password: newPassword,
-          role: 'member',
-          createdAt: new Date().toISOString(),
-        }),
-      })
-
-      if (!webhookResponse.ok) {
-        console.error(
-          'Webhook error:',
-          webhookResponse.status,
-          await webhookResponse.text()
-        )
-        // Continue anyway - password was still updated in auth
+        if (!webhookResponse.ok) {
+          console.error(
+            'Webhook error:',
+            webhookResponse.status,
+            await webhookResponse.text()
+          )
+          // Continue anyway - password was still updated in auth
+        }
+      } catch (webhookError) {
+        console.error('Error calling webhook:', webhookError)
+        // Continue anyway - password was updated in auth
       }
-    } catch (webhookError) {
-      console.error('Error calling webhook:', webhookError)
-      // Continue anyway - password was updated in auth
     }
 
     return NextResponse.json(
       {
         success: true,
         message: 'Nova senha temporária foi enviada para seu WhatsApp',
-        phone: profile.phone,
-        name: profile.full_name,
+        phone: (profile as any).phone,
+        name: (profile as any).full_name,
       },
       { status: 200 }
     )

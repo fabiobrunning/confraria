@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { regeneratePassword } from '@/lib/pre-registration/server-service';
 import {
@@ -19,6 +18,7 @@ export async function POST(
 ) {
   try {
     const supabase = await createClient();
+    const adminSupabase = createAdminClient();
 
     // Verify authentication
     const {
@@ -98,12 +98,11 @@ export async function POST(
       return NextResponse.json({ error: result.error }, { status: 500 });
     }
 
-    // Update password in Supabase Auth for the member
-    // Hash the new password for auth update
+    // Update password in Supabase Auth for the member using admin client
     const saltRounds = 12;
     const hashedForAuth = await bcrypt.hash(result.newPassword!, saltRounds);
 
-    const { error: authUpdateError } = await supabase.auth.admin.updateUserById(
+    const { error: authUpdateError } = await adminSupabase.auth.admin.updateUserById(
       attempt.member_id,
       { password: hashedForAuth }
     );
@@ -156,13 +155,12 @@ export async function POST(
           phone: (member as any).phone,
         },
         credentials: {
-          newTemporaryPassword: result.newPassword,
           username: (member as any).phone,
           expiresIn: '30 dias',
         },
         message,
         whatsappLink,
-        notes: 'Nova senha gerada com sucesso. Envie ao membro via WhatsApp ou SMS.',
+        notes: 'Nova senha gerada com sucesso. Copie a mensagem acima e envie ao membro via WhatsApp ou SMS.',
       },
       { status: 200 }
     );
