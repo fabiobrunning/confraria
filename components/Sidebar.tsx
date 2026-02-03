@@ -159,9 +159,10 @@ export default function Sidebar({ role }: SidebarProps) {
           'hidden lg:flex flex-col bg-sidebar border-r border-sidebar-border fixed h-screen transition-all duration-300',
           effectiveCollapsed ? 'w-20' : 'w-64'
         )}
+        data-sidebar-collapsed={effectiveCollapsed}
       >
-        {/* Header with Logo and Toggle */}
-        <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
+        {/* Header with Logo and Toggle - Maintain min height to prevent shift */}
+        <div className="h-24 min-h-24 p-4 border-b border-sidebar-border flex items-center justify-between">
           {!effectiveCollapsed && (
             <img
               src="/Confraria branca.png"
@@ -184,8 +185,8 @@ export default function Sidebar({ role }: SidebarProps) {
           </Button>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-3 flex flex-col overflow-hidden">
+        {/* Navigation - Allow scrolling for long menus */}
+        <nav className="flex-1 p-3 flex flex-col overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-track-sidebar scrollbar-thumb-sidebar-accent">
           <NavContent collapsed={effectiveCollapsed} />
         </nav>
       </aside>
@@ -203,14 +204,14 @@ export default function Sidebar({ role }: SidebarProps) {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-[280px] p-0 bg-sidebar">
-            <div className="p-4 border-b border-sidebar-border flex justify-center">
+            <div className="p-4 border-b border-sidebar-border flex justify-center min-h-24">
               <img
                 src="/Confraria branca.png"
                 alt="Confraria Pedra Branca"
                 className="h-20 w-auto object-contain"
               />
             </div>
-            <nav className="flex-1 p-3 flex flex-col h-[calc(100vh-8rem)]">
+            <nav className="flex-1 p-3 flex flex-col overflow-y-auto scrollbar-thin scrollbar-track-sidebar scrollbar-thumb-sidebar-accent">
               <NavContent collapsed={false} />
             </nav>
           </SheetContent>

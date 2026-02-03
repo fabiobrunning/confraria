@@ -372,3 +372,32 @@ All colors MUST be HSL.
     scroll-behavior: auto !important;
   }
 }
+
+/* Sidebar state responsive layout */
+@media (min-width: 1024px) {
+  [data-sidebar-state="collapsed"] .main-content {
+    margin-left: 80px !important; /* w-20 */
+  }
+
+  [data-sidebar-state="expanded"] .main-content {
+    margin-left: 256px !important; /* w-64 */
+  }
+}
+
+/* Scrollbar styling for sidebar navigation */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: hsl(var(--sidebar-background));
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: hsl(var(--sidebar-accent));
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--sidebar-accent) / 0.8);
+}
