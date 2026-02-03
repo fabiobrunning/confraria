@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useCallback } from 'react'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -164,10 +165,13 @@ export default function Sidebar({ role }: SidebarProps) {
         {/* Header with Logo and Toggle - Maintain min height to prevent shift */}
         <div className="h-24 min-h-24 p-4 border-b border-sidebar-border flex items-center justify-between">
           {!effectiveCollapsed && (
-            <img
-              src="/Confraria branca.png"
+            <Image
+              src="/logo-confraria.svg"
               alt="Confraria Pedra Branca"
+              width={80}
+              height={80}
               className="h-20 w-auto object-contain"
+              priority
             />
           )}
           <Button
@@ -205,10 +209,13 @@ export default function Sidebar({ role }: SidebarProps) {
           </SheetTrigger>
           <SheetContent side="left" className="w-[280px] p-0 bg-sidebar">
             <div className="p-4 border-b border-sidebar-border flex justify-center min-h-24">
-              <img
-                src="/Confraria branca.png"
+              <Image
+                src="/logo-confraria.svg"
                 alt="Confraria Pedra Branca"
+                width={80}
+                height={80}
                 className="h-20 w-auto object-contain"
+                priority
               />
             </div>
             <nav className="flex-1 p-3 flex flex-col overflow-y-auto scrollbar-thin scrollbar-track-sidebar scrollbar-thumb-sidebar-accent">

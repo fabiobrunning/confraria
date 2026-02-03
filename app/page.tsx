@@ -240,7 +240,7 @@ export default function HomePage() {
             <div className="flex-shrink-0">
               <Link href="/" aria-label="Confraria Pedra Branca - Pagina inicial">
                 <Image
-                  src="/Confraria branca.png"
+                  src="/logo-confraria.svg"
                   alt="Confraria Pedra Branca"
                   width={180}
                   height={48}

@@ -3,6 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -115,10 +116,13 @@ export default function AuthPage() {
       <Card className="w-full max-w-md shadow-2xl border-accent/20 bg-white">
         <CardHeader className="space-y-4 text-center pt-8">
           <div className="flex justify-center mb-2">
-            <img
-              src="/Confraria branca.png"
+            <Image
+              src="/confraria-pedra-branca.svg"
               alt="Confraria Pedra Branca"
+              width={80}
+              height={80}
               className="h-20 w-auto"
+              priority
             />
           </div>
           <CardTitle className="text-3xl font-display tracking-wide text-black">
