@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
       .eq('id', (preReg as any).id)
 
     // Call n8n webhook to send WhatsApp message
-    const webhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL
+    const webhookUrl = process.env.N8N_WEBHOOK_URL
     if (!webhookUrl) {
       console.warn('N8N_WEBHOOK_URL not configured, skipping webhook')
     } else {
