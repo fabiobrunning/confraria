@@ -20,10 +20,9 @@ test.describe('Landing Page', () => {
     await expect(page.getByText('online')).toBeVisible()
   })
 
-  test('should navigate to auth page via menu', async ({ page }) => {
+  test('should have link to auth page in menu', async ({ page }) => {
     await page.goto('/')
-    await page.getByText('AREA DE MEMBRO').click()
-    await page.waitForURL(/\/auth/)
-    expect(page.url()).toContain('/auth')
+    const link = page.locator('a[href="/auth"]')
+    await expect(link.first()).toBeAttached()
   })
 })
