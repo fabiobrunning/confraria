@@ -1,10 +1,7 @@
-// @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
-import type { Database, ProspectSource } from '@/lib/supabase/types';
-
-type ProspectInsert = Database['public']['Tables']['prospects']['Insert'];
+import type { ProspectInsert } from '@/lib/supabase/types';
 
 // Validacao com Zod
 const prospectSchema = z.object({
@@ -44,23 +41,21 @@ export async function POST(request: NextRequest) {
     // Criar cliente Supabase
     const supabase = await createClient();
 
-    // Preparar dados para inserir
     const insertData: ProspectInsert = {
-      first_name: data.first_name,
-      last_name: data.last_name,
+      full_name: `${data.first_name} ${data.last_name}`.trim(),
       phone: data.phone,
       email: data.email,
       company_name: data.company_name,
       business_sector: data.business_sector,
-      how_found_us: data.how_found_us as ProspectSource,
+      how_found_us: data.how_found_us,
       has_networking_experience: data.has_networking_experience,
       networking_experience: data.networking_experience || null,
       status: 'new',
     };
 
-    // Inserir no banco de dados usando type assertion
-    const { data: prospect, error } = await (supabase
-      .from('prospects') as ReturnType<typeof supabase.from>)
+    // Type assertion needed: generated types resolve insert as 'never' for prospects
+    const { data: prospect, error } = await supabase
+      .from('prospects')
       .insert(insertData as never)
       .select('id')
       .single();
