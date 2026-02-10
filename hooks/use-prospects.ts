@@ -1,142 +1,73 @@
-// @ts-nocheck
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
-import type { Prospect, ProspectStatus, ProspectListResponse } from '@/lib/supabase/types'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import type { Prospect, ProspectStatus } from '@/lib/supabase/types'
+
+interface ProspectListResponse {
+  success: boolean
+  data: Prospect[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
+}
 
 interface UseProspectsParams {
-  initialPage?: number
-  initialLimit?: number
-  initialStatus?: ProspectStatus | 'all'
-  initialSearch?: string
+  search?: string
+  status?: ProspectStatus | 'all'
+  page?: number
+  limit?: number
 }
 
-interface UseProspectsReturn {
-  prospects: Prospect[]
-  pagination: ProspectListResponse['pagination'] | null
-  loading: boolean
-  error: string | null
-  // Filtros
-  status: ProspectStatus | 'all'
-  search: string
-  page: number
-  limit: number
-  // Acoes
-  setStatus: (status: ProspectStatus | 'all') => void
-  setSearch: (search: string) => void
-  setPage: (page: number) => void
-  setLimit: (limit: number) => void
-  refresh: () => Promise<void>
-  updateProspect: (id: string, data: { status?: ProspectStatus; notes?: string }) => Promise<Prospect | null>
-}
+export function useProspects(params: UseProspectsParams = {}) {
+  const { search = '', status = 'all', page = 1, limit = 10 } = params
 
-export function useProspects({
-  initialPage = 1,
-  initialLimit = 10,
-  initialStatus = 'all',
-  initialSearch = ''
-}: UseProspectsParams = {}): UseProspectsReturn {
-  const [prospects, setProspects] = useState<Prospect[]>([])
-  const [pagination, setPagination] = useState<ProspectListResponse['pagination'] | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const [status, setStatus] = useState<ProspectStatus | 'all'>(initialStatus)
-  const [search, setSearch] = useState(initialSearch)
-  const [page, setPage] = useState(initialPage)
-  const [limit, setLimit] = useState(initialLimit)
-
-  const fetchProspects = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-
-    try {
-      const params = new URLSearchParams({
+  return useQuery<ProspectListResponse, Error>({
+    queryKey: ['prospects', { search, status, page, limit }],
+    queryFn: async () => {
+      const urlParams = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
       })
+      if (status && status !== 'all') urlParams.set('status', status)
+      if (search) urlParams.set('search', search)
 
-      if (status && status !== 'all') {
-        params.set('status', status)
-      }
-
-      if (search) {
-        params.set('search', search)
-      }
-
-      const response = await fetch(`/api/admin/prospects?${params.toString()}`)
+      const response = await fetch(`/api/admin/prospects?${urlParams.toString()}`)
       const data = await response.json()
 
       if (!response.ok || !data.success) {
         throw new Error(data.error || 'Erro ao carregar prospects')
       }
+      return data
+    },
+    staleTime: 60 * 1000,
+  })
+}
 
-      setProspects(data.data)
-      setPagination(data.pagination)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro desconhecido')
-      setProspects([])
-      setPagination(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [page, limit, status, search])
+export function useUpdateProspect() {
+  const queryClient = useQueryClient()
 
-  const updateProspect = useCallback(async (
-    id: string,
-    updateData: { status?: ProspectStatus; notes?: string }
-  ): Promise<Prospect | null> => {
-    try {
+  return useMutation<
+    { success: boolean; data: Prospect },
+    Error,
+    { id: string; data: { status?: ProspectStatus; notes?: string } }
+  >({
+    mutationFn: async ({ id, data }) => {
       const response = await fetch(`/api/admin/prospects/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updateData),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
       })
-
-      const data = await response.json()
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Erro ao atualizar prospect')
+      const result = await response.json()
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Erro ao atualizar prospect')
       }
-
-      // Atualizar o prospect na lista local
-      setProspects(prev =>
-        prev.map(p => p.id === id ? data.data : p)
-      )
-
-      return data.data
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro desconhecido')
-      return null
-    }
-  }, [])
-
-  // Fetch quando os filtros mudam
-  useEffect(() => {
-    fetchProspects()
-  }, [fetchProspects])
-
-  // Reset page quando status ou search muda
-  useEffect(() => {
-    setPage(1)
-  }, [status, search])
-
-  return {
-    prospects,
-    pagination,
-    loading,
-    error,
-    status,
-    search,
-    page,
-    limit,
-    setStatus,
-    setSearch,
-    setPage,
-    setLimit,
-    refresh: fetchProspects,
-    updateProspect,
-  }
+      return result
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['prospects'] })
+    },
+  })
 }

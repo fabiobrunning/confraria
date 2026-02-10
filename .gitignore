@@ -28,3 +28,6 @@ out/
 *.sw?
 .env
 tsconfig.tsbuildinfo
+
+# Local Netlify folder
+.netlify

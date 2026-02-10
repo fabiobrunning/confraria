@@ -25,6 +25,9 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useMembers, Member } from '@/hooks/use-members'
 import { useToast } from '@/hooks/use-toast'
 
+// Re-export Member for components that import it from here
+export type { Member }
+
 interface MembersListProps {
   isAdmin: boolean
   currentUserId: string | null
@@ -305,9 +308,19 @@ function ErrorState({ error, onRetry }: { error: string; onRetry: () => void }) 
 }
 
 export function MembersList({ isAdmin, currentUserId }: MembersListProps) {
-  const { members, loading, error, search, setSearch, setPreRegistered, pagination, refetch } = useMembers()
-  const [debouncedSearch, setDebouncedSearch] = useState(search)
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [activeTab, setActiveTab] = useState<string>('all')
+  const [preRegistered, setPreRegistered] = useState<boolean | undefined>(undefined)
+
+  const { data: membersData, isLoading: loading, error: queryError, refetch } = useMembers({
+    search: debouncedSearch,
+    preRegistered,
+  })
+
+  const members = membersData?.data ?? []
+  const pagination = membersData?.pagination ?? { page: 1, limit: 50, total: 0, totalPages: 0 }
+  const error = queryError?.message ?? null
 
   const handleTabChange = (value: string) => {
     setActiveTab(value)
@@ -322,10 +335,10 @@ export function MembersList({ isAdmin, currentUserId }: MembersListProps) {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setSearch(debouncedSearch)
+      setDebouncedSearch(search)
     }, 300)
     return () => clearTimeout(timer)
-  }, [debouncedSearch, setSearch])
+  }, [search])
 
   // Ordena para mostrar o usuário atual primeiro
   const displayMembers = useMemo(() => {
@@ -345,8 +358,8 @@ export function MembersList({ isAdmin, currentUserId }: MembersListProps) {
           <Input
             type="text"
             placeholder="Buscar por nome..."
-            value={debouncedSearch}
-            onChange={(e) => setDebouncedSearch(e.target.value)}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
           />
         </div>
@@ -363,8 +376,8 @@ export function MembersList({ isAdmin, currentUserId }: MembersListProps) {
           <Input
             type="text"
             placeholder="Buscar por nome..."
-            value={debouncedSearch}
-            onChange={(e) => setDebouncedSearch(e.target.value)}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
           />
         </div>

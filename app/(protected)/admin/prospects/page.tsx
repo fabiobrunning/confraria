@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useCallback } from 'react'
-import { useProspects } from '@/hooks/use-prospects'
+import { useProspects, useUpdateProspect } from '@/hooks/use-prospects'
 import { useAdmin } from '@/hooks/use-admin'
 import { ProspectsTable } from './components/ProspectsTable'
 import { ProspectModal } from './components/ProspectModal'
@@ -35,19 +35,25 @@ export default function ProspectsPage() {
   const { toast } = useToast()
   const { isAdmin, loading: adminLoading } = useAdmin(true, true)
 
-  const {
-    prospects,
-    pagination,
-    loading,
-    error,
-    status,
-    search,
-    page,
-    setStatus,
-    setSearch,
-    setPage,
-    updateProspect,
-  } = useProspects()
+  const [status, setStatus] = useState<ProspectStatus | 'all'>('all')
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+
+  const { data: prospectsData, isLoading: loading, error: queryError } = useProspects({ status, search, page })
+  const updateProspectMutation = useUpdateProspect()
+
+  const prospects = prospectsData?.data ?? []
+  const pagination = prospectsData?.pagination ?? null
+  const error = queryError?.message ?? null
+
+  const updateProspect = async (id: string, data: { status?: ProspectStatus; notes?: string }) => {
+    try {
+      const result = await updateProspectMutation.mutateAsync({ id, data })
+      return result.data
+    } catch {
+      return null
+    }
+  }
 
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null)
   const [modalOpen, setModalOpen] = useState(false)

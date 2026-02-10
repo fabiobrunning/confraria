@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
 export interface Company {
   id: string
@@ -50,130 +50,69 @@ export interface MembersResponse {
   }
 }
 
-export function useMembers(initialSearch = '', preRegisteredFilter?: boolean) {
-  const [members, setMembers] = useState<Member[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState(initialSearch)
-  const [preRegistered, setPreRegistered] = useState<boolean | undefined>(preRegisteredFilter)
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 50,
-    total: 0,
-    totalPages: 0
-  })
+interface UseMembersParams {
+  search?: string
+  preRegistered?: boolean
+  page?: number
+  limit?: number
+}
 
-  const fetchMembers = useCallback(async (searchTerm = search, page = 1, preReg = preRegistered) => {
-    setLoading(true)
-    setError(null)
+export function useMembers(params: UseMembersParams = {}) {
+  const { search = '', preRegistered, page = 1, limit = 50 } = params
 
-    try {
-      const params = new URLSearchParams()
-      if (searchTerm) params.set('search', searchTerm)
-      params.set('page', page.toString())
-      params.set('limit', '50')
-      if (preReg !== undefined) params.set('pre_registered', preReg.toString())
+  return useQuery<MembersResponse, Error>({
+    queryKey: ['members', { search, preRegistered, page, limit }],
+    queryFn: async () => {
+      const urlParams = new URLSearchParams()
+      if (search) urlParams.set('search', search)
+      urlParams.set('page', page.toString())
+      urlParams.set('limit', limit.toString())
+      if (preRegistered !== undefined) urlParams.set('pre_registered', preRegistered.toString())
 
-      const response = await fetch(`/api/members?${params.toString()}`)
-
+      const response = await fetch(`/api/members?${urlParams.toString()}`)
       if (!response.ok) {
         throw new Error('Falha ao carregar membros')
       }
-
-      const data: MembersResponse = await response.json()
-      setMembers(data.data)
-      setPagination(data.pagination)
-    } catch (err) {
-      console.error('Error fetching members:', err)
-      setError(err instanceof Error ? err.message : 'Erro ao carregar membros')
-    } finally {
-      setLoading(false)
-    }
-  }, [search, preRegistered])
-
-  useEffect(() => {
-    fetchMembers(search, 1, preRegistered)
-  }, [search, preRegistered, fetchMembers])
-
-  const refetch = useCallback(() => {
-    fetchMembers(search, pagination.page, preRegistered)
-  }, [fetchMembers, search, pagination.page, preRegistered])
-
-  return {
-    members,
-    loading,
-    error,
-    search,
-    setSearch,
-    preRegistered,
-    setPreRegistered,
-    pagination,
-    refetch
-  }
+      return response.json()
+    },
+    staleTime: 60 * 1000,
+  })
 }
 
 export function useMember(id: string) {
-  const [member, setMember] = useState<Member | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchMember = useCallback(async () => {
-    if (!id) return
-
-    setLoading(true)
-    setError(null)
-
-    try {
+  return useQuery<{ data: Member }, Error>({
+    queryKey: ['member', id],
+    queryFn: async () => {
       const response = await fetch(`/api/members/${id}`)
-
       if (!response.ok) {
-        throw new Error('Membro nao encontrado')
+        throw new Error('Membro não encontrado')
       }
+      return response.json()
+    },
+    enabled: !!id,
+    staleTime: 60 * 1000,
+  })
+}
 
-      const data = await response.json()
-      setMember(data.data)
-    } catch (err) {
-      console.error('Error fetching member:', err)
-      setError(err instanceof Error ? err.message : 'Erro ao carregar membro')
-    } finally {
-      setLoading(false)
-    }
-  }, [id])
+export function useUpdateMember(id: string) {
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    fetchMember()
-  }, [fetchMember])
-
-  const updateMember = async (updateData: Partial<Member>) => {
-    try {
+  return useMutation<{ data: Member }, Error, Partial<Member>>({
+    mutationFn: async (updateData) => {
       const response = await fetch(`/api/members/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updateData)
+        body: JSON.stringify(updateData),
       })
-
       if (!response.ok) {
         const data = await response.json()
         throw new Error(data.error || 'Erro ao atualizar membro')
       }
-
-      const data = await response.json()
-      setMember(prev => prev ? { ...prev, ...data.data } : data.data)
-      return { success: true, data: data.data }
-    } catch (err) {
-      console.error('Error updating member:', err)
-      return {
-        success: false,
-        error: err instanceof Error ? err.message : 'Erro ao atualizar membro'
-      }
-    }
-  }
-
-  return {
-    member,
-    loading,
-    error,
-    refetch: fetchMember,
-    updateMember
-  }
+      return response.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['member', id] })
+      queryClient.invalidateQueries({ queryKey: ['members'] })
+    },
+  })
 }

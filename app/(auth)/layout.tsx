@@ -1,3 +1,5 @@
+import { ErrorBoundary } from '@/components/ErrorBoundary'
+
 // Prevent static generation for auth routes
 export const dynamic = 'force-dynamic'
 
@@ -6,5 +8,5 @@ export default function AuthLayout({
 }: {
   children: React.ReactNode
 }) {
-  return children
+  return <ErrorBoundary>{children}</ErrorBoundary>
 }

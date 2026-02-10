@@ -8,7 +8,12 @@ import { PreRegistrationModal } from '@/components/pre-registrations/PreRegistra
 import { PreRegistrationsTable } from '@/components/pre-registrations/PreRegistrationsTable'
 import { Input } from '@/components/ui/input'
 import { Plus, Search } from 'lucide-react'
-import { usePreRegistrations } from '@/hooks/usePreRegistrations'
+import {
+  usePreRegistrations,
+  useCreatePreRegistration,
+  useResendCredentials,
+  useRegeneratePassword,
+} from '@/hooks/usePreRegistrations'
 import { useToast } from '@/hooks/use-toast'
 
 interface Member {
@@ -19,16 +24,19 @@ interface Member {
 
 export default function PreRegistrationsPage() {
   const { toast } = useToast()
-  const {
-    preRegistrations,
-    loading,
-    pagination,
-    fetchPreRegistrations,
-    createPreRegistration,
-    resendCredentials,
-    regeneratePassword,
-    getPreRegistrationDetails,
-  } = usePreRegistrations()
+  const [currentPage, setCurrentPage] = useState(1)
+  const { data: preRegsData, isLoading: loading } = usePreRegistrations({ page: currentPage })
+  const createMutation = useCreatePreRegistration()
+  const resendMutation = useResendCredentials()
+  const regenerateMutation = useRegeneratePassword()
+
+  const preRegistrations = preRegsData?.data ?? []
+  const pagination = {
+    page: preRegsData?.page ?? 1,
+    limit: preRegsData?.limit ?? 20,
+    total: preRegsData?.total ?? 0,
+    totalPages: preRegsData?.totalPages ?? 0,
+  }
 
   const [members, setMembers] = useState<Member[]>([])
   const [membersLoading, setMembersLoading] = useState(true)
@@ -36,7 +44,6 @@ export default function PreRegistrationsPage() {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false)
   const [selectedPreReg, setSelectedPreReg] = useState<any>(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
 
   // Busca membros disponíveis
   useEffect(() => {
@@ -62,11 +69,6 @@ export default function PreRegistrationsPage() {
     fetchMembers()
   }, [toast])
 
-  // Busca pré-registros ao montar e quando página muda
-  useEffect(() => {
-    fetchPreRegistrations(currentPage, 20)
-  }, [currentPage, fetchPreRegistrations])
-
   // Filtra resultados
   const filteredPreRegistrations = preRegistrations.filter((preReg) =>
     preReg.member_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -79,9 +81,9 @@ export default function PreRegistrationsPage() {
     notes?: string
   }) => {
     try {
-      const result = await createPreRegistration(data)
+      const result = await createMutation.mutateAsync(data)
       setModalOpen(false)
-      await fetchPreRegistrations(1, 20) // Volta para primeira página
+      setCurrentPage(1)
       return result
     } catch (error) {
       return { success: false, error: error instanceof Error ? error.message : 'Erro' }
@@ -90,11 +92,7 @@ export default function PreRegistrationsPage() {
 
   const handleResendCredentials = async (preRegistrationId: string) => {
     try {
-      await resendCredentials(preRegistrationId, 'whatsapp')
-      toast({
-        title: 'Sucesso!',
-        description: 'Credenciais reenviadas com sucesso!',
-      })
+      await resendMutation.mutateAsync({ preRegistrationId, sendMethod: 'whatsapp' })
     } catch (error) {
       console.error('Erro ao reenviar:', error)
     }
@@ -102,7 +100,7 @@ export default function PreRegistrationsPage() {
 
   const handleRegeneratePassword = async (preRegistrationId: string) => {
     try {
-      const result = await regeneratePassword(preRegistrationId, 'whatsapp')
+      const result = await regenerateMutation.mutateAsync({ preRegistrationId, sendMethod: 'whatsapp' })
       setSelectedPreReg(null)
       return result
     } catch (error) {
@@ -112,7 +110,9 @@ export default function PreRegistrationsPage() {
 
   const handleViewDetails = async (preRegistrationId: string) => {
     try {
-      const details = await getPreRegistrationDetails(preRegistrationId)
+      const response = await fetch(`/api/admin/pre-registrations/${preRegistrationId}`)
+      if (!response.ok) throw new Error('Falha ao buscar detalhes')
+      const details = await response.json()
       setSelectedPreReg(details.data)
       setDetailsModalOpen(true)
     } catch (error) {

@@ -1,12 +1,35 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
 
-  // Check for Supabase auth cookie (simplified check for Edge compatibility)
-  const hasAuthCookie = request.cookies.getAll().some(
-    (cookie) => cookie.name.includes('auth-token') || cookie.name.includes('sb-')
+  // Create Supabase client for middleware (Edge-compatible)
+  let supabaseResponse = NextResponse.next({ request })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          )
+          supabaseResponse = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
   )
+
+  // Validate JWT by calling getUser() — this verifies the token with Supabase Auth
+  const { data: { user } } = await supabase.auth.getUser()
 
   // Protected routes - require auth
   const protectedRoutes = [
@@ -16,22 +39,25 @@ export async function middleware(request: NextRequest) {
     '/groups',
     '/profile',
     '/pre-register',
+    '/admin',
+    '/business-transactions',
   ]
   const isProtectedRoute = protectedRoutes.some(
     (route) => path === route || path.startsWith(`${route}/`)
   )
 
   // Redirect unauthenticated users from protected routes
-  if (isProtectedRoute && !hasAuthCookie) {
-    return NextResponse.redirect(new URL('/auth', request.url))
+  if (isProtectedRoute && !user) {
+    const redirectUrl = new URL('/auth', request.url)
+    return NextResponse.redirect(redirectUrl)
   }
 
   // Redirect authenticated users from auth page
-  if (path === '/auth' && hasAuthCookie) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+  if (path === '/auth' && user) {
+    return NextResponse.redirect(new URL('/members', request.url))
   }
 
-  return NextResponse.next()
+  return supabaseResponse
 }
 
 export const config = {
