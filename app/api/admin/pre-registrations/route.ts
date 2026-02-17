@@ -1,16 +1,17 @@
-// @ts-nocheck
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   createPreRegistrationAttempt,
   listPendingPreRegistrations,
 } from '@/lib/pre-registration/server-service';
 import { createPreRegistrationSchema } from '@/lib/pre-registration/schemas';
+import { generateTemporaryPassword } from '@/lib/pre-registration/generate-password';
 import {
   getMessageTemplate,
   formatPhoneForWhatsApp,
 } from '@/lib/pre-registration/message-templates';
-import * as bcrypt from 'bcrypt';
+import { rateLimit } from '@/lib/rate-limit';
+import { apiError } from '@/lib/api-response';
 
 /**
  * GET /api/admin/pre-registrations
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
       .eq('id', session.user.id)
       .single();
 
-    if ((profile as any)?.role !== 'admin') {
+    if ((profile as { role: string } | null)?.role !== 'admin') {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
@@ -52,16 +53,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Error fetching pre-registrations:', error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : 'Erro ao buscar pré-cadastros',
-      },
-      { status: 500 }
-    );
+    return apiError(500, 'Erro ao buscar pré-cadastros', error);
   }
 }
 
@@ -70,6 +62,13 @@ export async function GET(request: NextRequest) {
  * Create new pre-registration attempt
  */
 export async function POST(request: NextRequest) {
+  // Rate limit: 10 requests per hour
+  const rateLimitResponse = rateLimit(request, 'pre-register', {
+    maxRequests: 10,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const supabase = await createClient();
 
@@ -91,7 +90,7 @@ export async function POST(request: NextRequest) {
       .eq('id', session.user.id)
       .single();
 
-    if ((profile as any)?.role !== 'admin') {
+    if ((profile as { role: string } | null)?.role !== 'admin') {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
@@ -109,11 +108,13 @@ export async function POST(request: NextRequest) {
     const { member_id, send_method, notes } = validation.data;
 
     // Verify member exists
-    const { data: member, error: memberError } = await supabase
+    const { data: memberData, error: memberError } = await supabase
       .from('profiles')
       .select('id, full_name, phone')
       .eq('id', member_id)
       .single();
+
+    const member = memberData as { id: string; full_name: string; phone: string } | null;
 
     if (memberError || !member) {
       return NextResponse.json(
@@ -122,44 +123,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create pre-registration attempt
+    // Generate password and sync to Auth FIRST (avoid race condition)
+    // If Auth fails, no orphan record is left in the DB
+    const temporaryPassword = generateTemporaryPassword(12);
+    const adminSupabase = createAdminClient();
+
+    const { error: authUpdateError } = await adminSupabase.auth.admin.updateUserById(
+      member_id,
+      { password: temporaryPassword }
+    );
+
+    if (authUpdateError) {
+      console.error('Error syncing password to auth:', authUpdateError);
+      return apiError(500, 'Erro ao sincronizar senha com o sistema de autenticação');
+    }
+
+    // Auth synced — now create pre-registration record with the same password
     const result = await createPreRegistrationAttempt(
       member_id,
       session.user.id,
       send_method,
-      notes
+      notes,
+      temporaryPassword
     );
 
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 500 });
     }
 
-    // Update password in Supabase Auth for the member
-    // Hash the temporary password for auth
-    const saltRounds = 12;
-    const hashedForAuth = await bcrypt.hash(result.temporaryPassword!, saltRounds);
-
-    const { error: authUpdateError } = await supabase.auth.admin.updateUserById(
-      member_id,
-      { password: hashedForAuth }
-    );
-
-    if (authUpdateError) {
-      console.error('Error syncing password to auth:', authUpdateError);
-      return NextResponse.json(
-        {
-          error: 'Erro ao sincronizar senha com o sistema de autenticação: ' + authUpdateError.message,
-          details: 'A senha foi armazenada no banco mas falhou ao sincronizar com o sistema de autenticação'
-        },
-        { status: 500 }
-      );
-    }
-
     // Generate message for display (don't send yet - that's manual for security)
     const message = getMessageTemplate('whatsapp', 'initial', {
       recipientName: member.full_name,
       phone: member.phone,
-      password: result.temporaryPassword!,
+      password: temporaryPassword,
       expiresIn: '30 dias',
       appUrl: process.env.NEXT_PUBLIC_APP_URL || 'https://confraria.app',
     });
@@ -180,7 +176,7 @@ export async function POST(request: NextRequest) {
           phone: member.phone,
         },
         credentials: {
-          temporaryPassword: result.temporaryPassword,
+          temporaryPassword,
           username: member.phone,
           expiresIn: '30 dias',
         },
@@ -191,15 +187,6 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error creating pre-registration:', error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : 'Erro ao criar pré-cadastro',
-      },
-      { status: 500 }
-    );
+    return apiError(500, 'Erro ao criar pré-cadastro', error);
   }
 }

@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { apiError } from '@/lib/api-response'
+import { logActivity } from '@/lib/activity-log'
 
 // GET - List all members
 export async function GET(_request: NextRequest) {
@@ -115,16 +117,21 @@ export async function POST(request: NextRequest) {
       throw profileError
     }
 
+    // Log activity
+    await logActivity({
+      userId: session.user.id,
+      action: 'member.create',
+      entityType: 'profile',
+      entityId: authData.user.id,
+      metadata: { full_name, phone, role },
+    })
+
     return NextResponse.json({
       profile,
       tempPassword,
       message: 'Member created successfully',
     })
   } catch (error) {
-    console.error('Error creating member:', error)
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
-      { status: 500 }
-    )
+    return apiError(500, 'Erro ao criar membro', error)
   }
 }

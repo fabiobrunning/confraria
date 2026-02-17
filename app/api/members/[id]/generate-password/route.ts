@@ -1,7 +1,7 @@
-// @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import bcrypt from 'bcrypt'
+import { logActivity } from '@/lib/activity-log'
+
 
 /**
  * POST /api/members/[id]/generate-password
@@ -11,9 +11,10 @@ import bcrypt from 'bcrypt'
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
 
     // Check authentication
@@ -45,11 +46,13 @@ export async function POST(
     }
 
     // Get member details
-    const { data: member, error: memberError } = await supabase
+    const { data: memberData, error: memberError } = await supabase
       .from('profiles')
       .select('id, email, full_name, pre_registered')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
+
+    const member = memberData as { id: string; email: string; full_name: string; pre_registered: boolean } | null;
 
     if (memberError || !member) {
       return NextResponse.json({ error: 'Membro não encontrado' }, { status: 404 })
@@ -62,13 +65,11 @@ export async function POST(
       )
     }
 
-    // Hash password with bcrypt (10 rounds)
-    const hashedPassword = await bcrypt.hash(password, 10)
-
     // Update member's password in Supabase Auth
+    // NOTE: Supabase Auth hashes internally — send plaintext here
     const { error: updateError } = await supabase.auth.admin.updateUserById(
-      params.id,
-      { password: hashedPassword }
+      id,
+      { password }
     )
 
     if (updateError) {
@@ -94,6 +95,15 @@ export async function POST(
       //   password: password,
       // })
     }
+
+    // Log activity
+    await logActivity({
+      userId: session.user.id,
+      action: 'member.generate_password',
+      entityType: 'profile',
+      entityId: id,
+      metadata: { member_name: member.full_name },
+    })
 
     return NextResponse.json({
       success: true,

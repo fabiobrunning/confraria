@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Password generation utilities for pre-registration flow
  * Generates secure temporary passwords with mixed character types
@@ -55,8 +54,6 @@ export function generateSMSFriendlyPassword(length: number = 8): string {
   const numbers = '0123456789';
 
   // Build password with pattern
-  const allChars = uppercase + lowercase + numbers;
-
   let password: string[] = [
     uppercase[Math.floor(Math.random() * uppercase.length)],
     numbers[Math.floor(Math.random() * numbers.length)],

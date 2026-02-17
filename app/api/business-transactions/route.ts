@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { businessTransactionSchema } from '@/lib/schemas'
 import { NextRequest, NextResponse } from 'next/server'
+import { apiError } from '@/lib/api-response'
 
 /**
  * GET /api/business-transactions
@@ -84,14 +85,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Error fetching business transactions:', error)
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    )
+    return apiError(500, 'Erro ao buscar transações', error)
   }
 }
 
@@ -232,13 +226,6 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error) {
-    console.error('Error creating business transaction:', error)
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    )
+    return apiError(500, 'Erro ao criar transação', error)
   }
 }

@@ -1,11 +1,8 @@
-// @ts-nocheck
-// @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 import type { ProspectStatus, Database } from '@/lib/supabase/types';
 
-type ProspectRow = Database['public']['Tables']['prospects']['Row'];
 type ProspectUpdate = Database['public']['Tables']['prospects']['Update'];
 
 // Verificar se usuario eh admin
@@ -69,17 +66,9 @@ export async function GET(
       );
     }
 
-    const prospectData = prospect as unknown as ProspectRow;
-
-    // Adicionar full_name
-    const prospectWithFullName = {
-      ...prospectData,
-      full_name: `${prospectData.first_name} ${prospectData.last_name}`
-    };
-
     return NextResponse.json({
       success: true,
-      data: prospectWithFullName
+      data: prospect
     });
 
   } catch (error) {
@@ -180,17 +169,9 @@ export async function PUT(
       );
     }
 
-    const updatedData = updatedProspect as unknown as ProspectRow;
-
-    // Adicionar full_name
-    const prospectWithFullName = {
-      ...updatedData,
-      full_name: `${updatedData.first_name} ${updatedData.last_name}`
-    };
-
     return NextResponse.json({
       success: true,
-      data: prospectWithFullName,
+      data: updatedProspect,
       message: 'Prospect atualizado com sucesso'
     });
 

@@ -1,5 +1,22 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+import { logActivity } from '@/lib/activity-log'
+
+// Whitelist of fields that can be updated on a member profile
+const updateMemberSchema = z.object({
+  full_name: z.string().min(1).optional(),
+  phone: z.string().min(1).optional(),
+  instagram: z.string().optional().nullable(),
+  address_street: z.string().optional().nullable(),
+  address_number: z.string().optional().nullable(),
+  address_complement: z.string().optional().nullable(),
+  address_neighborhood: z.string().optional().nullable(),
+  address_city: z.string().optional().nullable(),
+  address_state: z.string().optional().nullable(),
+  address_cep: z.string().optional().nullable(),
+  pre_registered: z.boolean().optional(),
+}).strict()
 
 // PUT - Update member
 export async function PUT(
@@ -33,10 +50,19 @@ export async function PUT(
 
     const body = await request.json()
 
-    // Update profile
+    // Validate and whitelist fields to prevent mass assignment
+    const validation = updateMemberSchema.safeParse(body)
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Dados inválidos', details: validation.error.errors },
+        { status: 400 }
+      )
+    }
+
+    // Update profile with only whitelisted fields
     const { data: profile, error } = await (supabase
       .from('profiles') as any)
-      .update(body)
+      .update(validation.data)
       .eq('id', id)
       .select()
       .single()
@@ -101,23 +127,23 @@ export async function DELETE(
       )
     }
 
-    // Delete profile
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .delete()
+    // Soft delete: set deleted_at instead of hard delete
+    const { error: profileError } = await (supabase
+      .from('profiles') as any)
+      .update({ deleted_at: new Date().toISOString() })
       .eq('id', id)
 
     if (profileError) {
       throw profileError
     }
 
-    // Delete auth user
-    const { error: authError } = await supabase.auth.admin.deleteUser(id)
-
-    if (authError) {
-      console.error('Error deleting auth user:', authError)
-      // Continue even if auth deletion fails (profile is already deleted)
-    }
+    // Log activity
+    await logActivity({
+      userId: session.user.id,
+      action: 'member.delete',
+      entityType: 'profile',
+      entityId: id,
+    })
 
     return NextResponse.json({
       message: 'Member deleted successfully',

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Server-side pre-registration service
  * Handles database operations, password hashing, and secure credential generation
@@ -9,9 +8,8 @@ import { createClient } from '@/lib/supabase/server';
 import { generateTemporaryPassword } from './generate-password';
 import * as bcrypt from 'bcrypt';
 
-// Types will be auto-generated once migration is applied to Supabase
-type PreRegistrationAttempt = any;
-type PreRegistrationAttemptInsert = any;
+// pre_registration_attempts table is not in generated types yet
+type PreRegistrationAttempt = Record<string, unknown>;
 
 /**
  * Create a new pre-registration attempt
@@ -21,7 +19,8 @@ export async function createPreRegistrationAttempt(
   memberId: string,
   createdByAdminId: string,
   sendMethod: 'whatsapp' | 'sms' = 'whatsapp',
-  notes?: string
+  notes?: string,
+  preGeneratedPassword?: string
 ): Promise<{
   success: boolean;
   error?: string;
@@ -31,15 +30,15 @@ export async function createPreRegistrationAttempt(
   try {
     const supabase = await createClient();
 
-    // Generate temporary password
-    const plainPassword = generateTemporaryPassword(12);
+    // Use pre-generated password (when Auth was synced first) or generate new one
+    const plainPassword = preGeneratedPassword || generateTemporaryPassword(12);
 
-    // Hash password using Supabase's built-in crypto
-    // For production, use bcrypt via edge function or server action
+    // Hash password with bcrypt (salt: 12)
     const hashedPassword = await hashPassword(plainPassword);
 
     // Create attempt record
-    const { data, error } = await supabase
+    // pre_registration_attempts is not in generated types
+    const { data, error } = await (supabase as any)
       .from('pre_registration_attempts')
       .insert({
         member_id: memberId,
@@ -47,7 +46,7 @@ export async function createPreRegistrationAttempt(
         temporary_password_hash: hashedPassword,
         send_method: sendMethod,
         notes: notes || null,
-      } as PreRegistrationAttemptInsert)
+      })
       .select('id')
       .single();
 
@@ -93,7 +92,7 @@ export async function getActivePreRegistrationAttempt(
   try {
     const supabase = await createClient();
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('pre_registration_attempts')
       .select('*')
       .eq('member_id', memberId)
@@ -116,21 +115,24 @@ export async function getActivePreRegistrationAttempt(
 }
 
 /**
- * Resend credentials (same password)
- * Increments send_count and updates last_sent_at
+ * Resend credentials with a new password
+ * Regenerates password, updates hash, increments send_count
+ * Returns the new plain password for immediate delivery
  */
 export async function resendCredentials(
   preRegistrationId: string,
-  sendMethod: 'whatsapp' | 'sms'
+  sendMethod: 'whatsapp' | 'sms',
+  preGeneratedPassword?: string
 ): Promise<{
   success: boolean;
   error?: string;
+  newPassword?: string;
 }> {
   try {
     const supabase = await createClient();
 
     // First, fetch current send_count to increment it
-    const { data: current, error: fetchError } = await supabase
+    const { data: current, error: fetchError } = await (supabase as any)
       .from('pre_registration_attempts')
       .select('send_count')
       .eq('id', preRegistrationId)
@@ -143,12 +145,17 @@ export async function resendCredentials(
       };
     }
 
+    // Use pre-generated password (when Auth was synced first) or generate new one
+    const newPassword = preGeneratedPassword || generateTemporaryPassword(12);
+    const hashedPassword = await hashPassword(newPassword);
     const newSendCount = (current.send_count || 0) + 1;
 
-    // Now update with incremented count
-    const { error } = await supabase
+    // Update with new password hash and incremented count
+    const { error } = await (supabase as any)
       .from('pre_registration_attempts')
       .update({
+        temporary_password_hash: hashedPassword,
+        password_generated_at: new Date().toISOString(),
         send_count: newSendCount,
         last_sent_at: new Date().toISOString(),
         send_method: sendMethod,
@@ -164,7 +171,7 @@ export async function resendCredentials(
       };
     }
 
-    return { success: true };
+    return { success: true, newPassword };
   } catch (error) {
     console.error('Unexpected error in resendCredentials:', error);
     return {
@@ -172,7 +179,7 @@ export async function resendCredentials(
       error:
         error instanceof Error
           ? error.message
-          : 'Erro ao resend credenciais',
+          : 'Erro ao reenviar credenciais',
     };
   }
 }
@@ -182,8 +189,9 @@ export async function resendCredentials(
  */
 export async function regeneratePassword(
   preRegistrationId: string,
-  adminId: string,
-  sendMethod: 'whatsapp' | 'sms' = 'whatsapp'
+  _adminId: string,
+  sendMethod: 'whatsapp' | 'sms' = 'whatsapp',
+  preGeneratedPassword?: string
 ): Promise<{
   success: boolean;
   error?: string;
@@ -192,12 +200,12 @@ export async function regeneratePassword(
   try {
     const supabase = await createClient();
 
-    // Generate new password
-    const newPassword = generateTemporaryPassword(12);
+    // Use pre-generated password (when Auth was synced first) or generate new one
+    const newPassword = preGeneratedPassword || generateTemporaryPassword(12);
     const hashedPassword = await hashPassword(newPassword);
 
     // Update record
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('pre_registration_attempts')
       .update({
         temporary_password_hash: hashedPassword,
@@ -252,7 +260,7 @@ export async function listPendingPreRegistrations(
     const offset = (page - 1) * limit;
 
     // Get pending pre-registrations (not accessed yet)
-    const { data, count, error } = await supabase
+    const { data, count, error } = await (supabase as any)
       .from('pre_registration_attempts')
       .select(
         `*,
@@ -271,7 +279,7 @@ export async function listPendingPreRegistrations(
     }
 
     // Transform response
-    const results = (data || []).map((item) => {
+    const results = (data || []).map((item: Record<string, any>) => {
       const profile = Array.isArray(item.profiles)
         ? item.profiles[0]
         : item.profiles;
@@ -310,7 +318,7 @@ export async function markFirstAccess(
   try {
     const supabase = await createClient();
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('pre_registration_attempts')
       .update({
         first_accessed_at: new Date().toISOString(),
@@ -355,7 +363,7 @@ export async function incrementFailedAttempts(
     const supabase = await createClient();
 
     // Get current attempt count
-    const { data: current, error: fetchError } = await supabase
+    const { data: current, error: fetchError } = await (supabase as any)
       .from('pre_registration_attempts')
       .select('access_attempts, max_access_attempts, locked_until')
       .eq('id', preRegistrationId)
@@ -381,7 +389,7 @@ export async function incrementFailedAttempts(
       updateData.locked_until = lockedUntil.toISOString();
     }
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
       .from('pre_registration_attempts')
       .update(updateData)
       .eq('id', preRegistrationId);
@@ -406,7 +414,7 @@ export async function incrementFailedAttempts(
  * Secure hashing for production use
  * Cost factor: 12 (balances security and performance)
  */
-async function hashPassword(password: string): Promise<string> {
+export async function hashPassword(password: string): Promise<string> {
   try {
     const saltRounds = 12;
     const hashed = await bcrypt.hash(password, saltRounds);

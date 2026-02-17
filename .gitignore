@@ -35,3 +35,7 @@ playwright-report/
 
 # Local Netlify folder
 .netlify
+.aios-core
+.aios/
+squads/
+skills/

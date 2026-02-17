@@ -1,8 +1,9 @@
-// @ts-nocheck
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { generateTemporaryPassword } from '@/lib/pre-registration/generate-password'
 import * as bcrypt from 'bcrypt'
+import { rateLimit } from '@/lib/rate-limit'
+import { apiError } from '@/lib/api-response'
 
 /**
  * POST /api/auth/forgot-password
@@ -11,6 +12,13 @@ import * as bcrypt from 'bcrypt'
  * Syncs with Supabase Auth and triggers n8n webhook to send WhatsApp message
  */
 export async function POST(request: NextRequest) {
+  // Rate limit: 3 requests per hour
+  const rateLimitResponse = rateLimit(request, 'forgot-password', {
+    maxRequests: 3,
+    windowMs: 60 * 60 * 1000,
+  })
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { phone } = await request.json()
 
@@ -25,11 +33,13 @@ export async function POST(request: NextRequest) {
     const adminSupabase = createAdminClient()
 
     // Find profile by phone
-    const { data: profile, error: profileError } = await supabase
+    const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .select('id, full_name, phone')
       .eq('phone', phone.replace(/\D/g, ''))
       .single()
+
+    const profile = profileData as { id: string; full_name: string; phone: string } | null;
 
     if (profileError || !profile) {
       return NextResponse.json(
@@ -39,14 +49,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if member has an active pre-registration
-    const { data: preReg, error: preRegError } = await supabase
+    // pre_registration_attempts not in generated types
+    const { data: preReg, error: preRegError } = await (supabase as any)
       .from('pre_registration_attempts')
       .select('id, expiration_date')
-      .eq('member_id', (profile as any).id)
+      .eq('member_id', profile.id)
       .gt('expiration_date', new Date().toISOString())
       .order('created_at', { ascending: false })
       .limit(1)
-      .maybeSingle()
+      .maybeSingle() as { data: { id: string; expiration_date: string } | null; error: any }
 
     if (preRegError || !preReg) {
       return NextResponse.json(
@@ -60,14 +71,11 @@ export async function POST(request: NextRequest) {
     // Generate new temporary password
     const newPassword = generateTemporaryPassword(12)
 
-    // Hash for auth
-    const saltRounds = 12
-    const hashedForAuth = await bcrypt.hash(newPassword, saltRounds)
-
     // Update password in Supabase Auth using admin client
+    // NOTE: Supabase Auth hashes internally — send plaintext here
     const { error: authUpdateError } = await adminSupabase.auth.admin.updateUserById(
-      (profile as any).id,
-      { password: hashedForAuth }
+      profile.id,
+      { password: newPassword }
     )
 
     if (authUpdateError) {
@@ -79,8 +87,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Also update hash in pre_registration_attempts table for consistency
-    const hashedForDb = await bcrypt.hash(newPassword, saltRounds)
-    await supabase
+    const hashedForDb = await bcrypt.hash(newPassword, 12)
+    await (supabase as any)
       .from('pre_registration_attempts')
       .update({
         temporary_password_hash: hashedForDb,
@@ -89,7 +97,7 @@ export async function POST(request: NextRequest) {
         last_sent_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
-      .eq('id', (preReg as any).id)
+      .eq('id', preReg.id)
 
     // Call n8n webhook to send WhatsApp message
     const webhookUrl = process.env.N8N_WEBHOOK_URL
@@ -104,8 +112,8 @@ export async function POST(request: NextRequest) {
             origin: process.env.NEXT_PUBLIC_APP_URL || 'https://confrariapedrabranca.com.br',
           },
           body: JSON.stringify({
-            fullName: (profile as any).full_name,
-            phone: (profile as any).phone.replace(/\D/g, ''),
+            fullName: profile.full_name,
+            phone: profile.phone.replace(/\D/g, ''),
             password: newPassword,
             role: 'member',
             createdAt: new Date().toISOString(),
@@ -130,19 +138,12 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: 'Nova senha temporária foi enviada para seu WhatsApp',
-        phone: (profile as any).phone,
-        name: (profile as any).full_name,
+        phone: profile.phone,
+        name: profile.full_name,
       },
       { status: 200 }
     )
   } catch (error) {
-    console.error('Error in forgot-password:', error)
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : 'Erro ao processar solicitação',
-      },
-      { status: 500 }
-    )
+    return apiError(500, 'Erro ao processar solicitação', error)
   }
 }

@@ -1,13 +1,23 @@
 'use client';
 
 import { useState } from 'react';
-import { Phone, Instagram, Building2, MapPin, Edit2, Save, Loader2 } from 'lucide-react';
+import { Phone, Instagram, Building2, MapPin, Edit2, Save, Loader2, Trash2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,6 +30,7 @@ interface CompanyDetailModalProps {
   onClose: () => void;
   isAdmin: boolean;
   onUpdate: (id: string, data: Partial<CompanyFormData>) => Promise<void>;
+  onDelete?: (id: string) => Promise<void>;
 }
 
 export function CompanyDetailModal({
@@ -28,9 +39,12 @@ export function CompanyDetailModal({
   onClose,
   isAdmin,
   onUpdate,
+  onDelete,
 }: CompanyDetailModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState<CompanyFormData>({
     name: '',
     description: '',
@@ -85,6 +99,20 @@ export function CompanyDetailModal({
     onClose();
   };
 
+  const handleDelete = async () => {
+    if (!company || !onDelete) return;
+    setIsDeleting(true);
+    try {
+      await onDelete(company.id);
+      setDeleteDialogOpen(false);
+      handleClose();
+    } catch (error) {
+      console.error('Erro ao deletar:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (!company) return null;
 
   const formatPhone = (phone: string | null) => {
@@ -118,6 +146,7 @@ export function CompanyDetailModal({
   const fullAddress = formatAddress();
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="bg-gray-900 border-gray-800 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -131,15 +160,28 @@ export function CompanyDetailModal({
               </DialogTitle>
             </div>
             {isAdmin && !isEditing && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleStartEdit}
-                className="border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
-              >
-                <Edit2 className="w-4 h-4 mr-1" />
-                Editar
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleStartEdit}
+                  className="border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
+                >
+                  <Edit2 className="w-4 h-4 mr-1" />
+                  Editar
+                </Button>
+                {onDelete && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDeleteDialogOpen(true)}
+                    className="border-red-500/30 text-red-400 hover:bg-red-500/20"
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Excluir
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         </DialogHeader>
@@ -442,5 +484,35 @@ export function CompanyDetailModal({
         )}
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialogContent className="bg-gray-900 border-gray-800">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Excluir empresa</AlertDialogTitle>
+          <AlertDialogDescription>
+            Tem certeza que deseja excluir a empresa <strong>{company?.name}</strong>?
+            Esta acao nao pode ser desfeita e todos os vinculos com membros serao removidos.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            {isDeleting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Excluindo...
+              </>
+            ) : (
+              'Sim, excluir'
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

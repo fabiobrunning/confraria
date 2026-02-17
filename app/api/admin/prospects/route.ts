@@ -1,10 +1,6 @@
-// @ts-nocheck
-// @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import type { ProspectStatus, ProspectListResponse, Database } from '@/lib/supabase/types';
-
-type ProspectRow = Database['public']['Tables']['prospects']['Row'];
+import type { ProspectStatus } from '@/lib/supabase/types';
 
 // Verificar se usuario eh admin
 async function isAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
@@ -52,9 +48,12 @@ export async function GET(request: NextRequest) {
       query = query.eq('status', status);
     }
 
-    // Aplicar filtro de busca
+    // Aplicar filtro de busca (sanitize PostgREST special chars)
     if (search) {
-      query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%,company_name.ilike.%${search}%,email.ilike.%${search}%`);
+      const sanitized = search.replace(/[%_().,\\]/g, '');
+      if (sanitized) {
+        query = query.or(`first_name.ilike.%${sanitized}%,last_name.ilike.%${sanitized}%,company_name.ilike.%${sanitized}%,email.ilike.%${sanitized}%`);
+      }
     }
 
     // Ordenar e paginar
@@ -72,16 +71,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Mapear prospects para incluir full_name
-    const prospects = ((prospectsRaw || []) as ProspectRow[]).map(p => ({
-      ...p,
-      full_name: `${p.first_name} ${p.last_name}`
-    }));
-
+    const prospects = prospectsRaw || [];
     const total = count || 0;
     const totalPages = Math.ceil(total / limit);
 
-    const response: ProspectListResponse = {
+    return NextResponse.json({
+      success: true,
       data: prospects,
       pagination: {
         page,
@@ -89,11 +84,6 @@ export async function GET(request: NextRequest) {
         total,
         totalPages
       }
-    };
-
-    return NextResponse.json({
-      success: true,
-      ...response
     });
 
   } catch (error) {

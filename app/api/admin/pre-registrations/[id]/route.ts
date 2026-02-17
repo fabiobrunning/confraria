@@ -1,14 +1,13 @@
-// @ts-nocheck
-// @ts-nocheck
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { apiError } from '@/lib/api-response';
 
 /**
  * GET /api/admin/pre-registrations/[id]
  * Get details of a specific pre-registration attempt
  */
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -32,12 +31,12 @@ export async function GET(
       .eq('id', session.user.id)
       .single();
 
-    if ((profile as any)?.role !== 'admin') {
+    if ((profile as { role: string } | null)?.role !== 'admin') {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
     // Fetch pre-registration attempt with member details
-    const { data: attempt, error } = await supabase
+    const { data: attempt, error } = await (supabase as any)
       .from('pre_registration_attempts')
       .select(
         `
@@ -109,16 +108,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error fetching pre-registration details:', error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : 'Erro ao buscar detalhes do pré-registro',
-      },
-      { status: 500 }
-    );
+    return apiError(500, 'Erro ao buscar detalhes do pré-registro', error);
   }
 }
 
@@ -151,7 +141,7 @@ export async function PUT(
       .eq('id', session.user.id)
       .single();
 
-    if ((profile as any)?.role !== 'admin') {
+    if ((profile as { role: string } | null)?.role !== 'admin') {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
@@ -160,7 +150,7 @@ export async function PUT(
     const { notes } = body;
 
     // Update only notes (other fields shouldn't be updatable)
-    const { data: updated, error } = await supabase
+    const { data: updated, error } = await (supabase as any)
       .from('pre_registration_attempts')
       .update({
         notes: notes || null,
@@ -182,15 +172,6 @@ export async function PUT(
       data: updated,
     });
   } catch (error) {
-    console.error('Error updating pre-registration:', error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : 'Erro ao atualizar pré-registro',
-      },
-      { status: 500 }
-    );
+    return apiError(500, 'Erro ao atualizar pré-registro', error);
   }
 }

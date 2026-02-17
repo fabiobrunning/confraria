@@ -1,10 +1,13 @@
-// @ts-nocheck
-// @ts-nocheck
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { resendCredentials } from '@/lib/pre-registration/server-service';
-import { getMessageTemplate } from '@/lib/pre-registration/message-templates';
+import { generateTemporaryPassword } from '@/lib/pre-registration/generate-password';
+import {
+  getMessageTemplate,
+  formatPhoneForWhatsApp,
+} from '@/lib/pre-registration/message-templates';
 import { resendCredentialsSchema } from '@/lib/pre-registration/schemas';
+import { apiError } from '@/lib/api-response';
 
 /**
  * POST /api/admin/pre-registrations/[id]/resend-credentials
@@ -35,7 +38,7 @@ export async function POST(
       .eq('id', session.user.id)
       .single();
 
-    if ((profile as any)?.role !== 'admin') {
+    if ((profile as { role: string } | null)?.role !== 'admin') {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
@@ -54,7 +57,7 @@ export async function POST(
     const preRegistrationId = params.id;
 
     // Fetch pre-registration attempt
-    const { data: attempt, error: fetchError } = await supabase
+    const { data: attempt, error: fetchError } = await (supabase as any)
       .from('pre_registration_attempts')
       .select(
         `
@@ -95,17 +98,10 @@ export async function POST(
       );
     }
 
-    // Update attempt (increment send count, update timestamp)
-    const result = await resendCredentials(preRegistrationId, send_method);
-
-    if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 500 });
-    }
-
     // Get member info for message
-    const member = Array.isArray(attempt.profiles)
+    const member = (Array.isArray(attempt.profiles)
       ? attempt.profiles[0]
-      : attempt.profiles;
+      : attempt.profiles) as { id: string; full_name: string; phone: string } | null;
 
     if (!member) {
       return NextResponse.json(
@@ -114,39 +110,63 @@ export async function POST(
       );
     }
 
-    // Note: We don't return the actual password (it's hashed)
-    // But we can show the message template for reference
-    const message = getMessageTemplate('whatsapp', 'reminder', {
-      recipientName: (member as any).full_name,
-      phone: (member as any).phone,
-      password: '****' + (member as any).phone.slice(-4), // Masked for security
+    // Generate new password and sync to Auth FIRST (avoid race condition)
+    const newPassword = generateTemporaryPassword(12);
+    const adminSupabase = createAdminClient();
+
+    const { error: authUpdateError } = await adminSupabase.auth.admin.updateUserById(
+      attempt.member_id,
+      { password: newPassword }
+    );
+
+    if (authUpdateError) {
+      console.error('Error syncing password to auth:', authUpdateError);
+      return apiError(500, 'Erro ao sincronizar senha com o sistema de autenticação');
+    }
+
+    // Auth synced — now update DB record
+    const result = await resendCredentials(preRegistrationId, send_method, newPassword);
+
+    if (!result.success) {
+      return NextResponse.json({ error: result.error }, { status: 500 });
+    }
+
+    // Generate message for display
+    const message = getMessageTemplate(send_method, 'reminder', {
+      recipientName: member.full_name,
+      phone: member.phone,
+      password: newPassword,
       expiresIn: '30 dias',
       appUrl: process.env.NEXT_PUBLIC_APP_URL || 'https://confraria.app',
     });
 
+    // Create WhatsApp link for manual sending
+    const whatsappLink =
+      send_method === 'whatsapp'
+        ? `https://wa.me/${formatPhoneForWhatsApp(member.phone)}?text=${encodeURIComponent(message)}`
+        : null;
+
     return NextResponse.json(
       {
         success: true,
-        message:
-          'Credenciais reenviadas com sucesso. Atualize send_count e last_sent_at no banco.',
+        preRegistrationId,
         member: {
-          id: (member as any).id,
-          name: (member as any).full_name,
-          phone: (member as any).phone,
+          id: member.id,
+          name: member.full_name,
+          phone: member.phone,
         },
-        notes:
-          'A senha não é exibida por segurança. Verifique o banco de dados para o hash.',
+        credentials: {
+          temporaryPassword: newPassword,
+          username: member.phone,
+          expiresIn: '30 dias',
+        },
+        message,
+        whatsappLink,
+        notes: 'Nova senha gerada e reenviada. Copie a mensagem acima e envie ao membro.',
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error resending credentials:', error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : 'Erro ao reenviar credenciais',
-      },
-      { status: 500 }
-    );
+    return apiError(500, 'Erro ao reenviar credenciais', error);
   }
 }
