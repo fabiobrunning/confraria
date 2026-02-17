@@ -2,12 +2,16 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { markFirstAccess, incrementFailedAttempts } from '@/lib/pre-registration/server-service'
+import { headers } from 'next/headers'
 
 /**
  * Mark member's first login after pre-registration
  * Called from client after successful Supabase auth
+ * IP is resolved server-side via x-forwarded-for header
  */
-export async function registerFirstLogin(ipAddress?: string) {
+export async function registerFirstLogin() {
+  const headersList = await headers()
+  const ipAddress = headersList.get('x-forwarded-for')?.split(',')[0]?.trim() || undefined
   try {
     const supabase = await createClient()
 

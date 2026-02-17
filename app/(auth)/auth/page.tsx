@@ -91,11 +91,8 @@ export default function AuthPage() {
 
       // Register first login (mark pre-registration as accessed)
       // Fire-and-forget: don't block login if this fails
-      fetch('https://api.ipify.org?format=json')
-        .then((res) => res.json())
-        .then((data) => data.ip)
-        .catch(() => undefined)
-        .then((ip) => registerFirstLogin(ip).catch(() => {}))
+      // IP is resolved server-side via x-forwarded-for
+      registerFirstLogin().catch(() => {})
 
       router.push('/dashboard')
       router.refresh()

@@ -1,7 +1,7 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { generateTemporaryPassword } from '@/lib/pre-registration/generate-password'
-import * as bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import { rateLimit } from '@/lib/rate-limit'
 import { apiError } from '@/lib/api-response'
 
@@ -41,10 +41,11 @@ export async function POST(request: NextRequest) {
 
     const profile = profileData as { id: string; full_name: string; phone: string } | null;
 
+    // Generic message to prevent user enumeration
     if (profileError || !profile) {
       return NextResponse.json(
-        { error: 'Membro não encontrado com este telefone' },
-        { status: 404 }
+        { success: true, message: 'Se o telefone estiver cadastrado, uma nova senha será enviada por WhatsApp.' },
+        { status: 200 }
       )
     }
 
@@ -59,12 +60,11 @@ export async function POST(request: NextRequest) {
       .limit(1)
       .maybeSingle() as { data: { id: string; expiration_date: string } | null; error: any }
 
+    // Generic message to prevent user enumeration
     if (preRegError || !preReg) {
       return NextResponse.json(
-        {
-          error: 'Este membro não tem um pré-cadastro ativo. Entre em contato com o administrador.',
-        },
-        { status: 404 }
+        { success: true, message: 'Se o telefone estiver cadastrado, uma nova senha será enviada por WhatsApp.' },
+        { status: 200 }
       )
     }
 
@@ -86,18 +86,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Also update hash in pre_registration_attempts table for consistency
+    // Update hash in pre_registration_attempts table + reset lockout
     const hashedForDb = await bcrypt.hash(newPassword, 12)
-    await (supabase as any)
+    const { error: dbUpdateError } = await (supabase as any)
       .from('pre_registration_attempts')
       .update({
         temporary_password_hash: hashedForDb,
         password_generated_at: new Date().toISOString(),
         send_count: 1,
         last_sent_at: new Date().toISOString(),
+        access_attempts: 0,
+        locked_until: null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', preReg.id)
+
+    if (dbUpdateError) {
+      console.error('Error updating pre_registration_attempts:', dbUpdateError)
+      // Auth was already updated, log but continue
+    }
 
     // Call n8n webhook to send WhatsApp message
     const webhookUrl = process.env.N8N_WEBHOOK_URL

@@ -19,11 +19,9 @@ export async function GET(_request: NextRequest) {
     const supabase = await createClient()
 
     // Verify authentication
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    const { data: { user } } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -31,7 +29,7 @@ export async function GET(_request: NextRequest) {
     const { data: profileData } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single()
 
     const profile = profileData as { role: string } | null

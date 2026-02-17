@@ -39,13 +39,13 @@ test.describe('API Routes - Forgot Password', () => {
     expect(response.ok()).toBe(false)
   })
 
-  test('POST /api/auth/forgot-password with invalid phone should fail', async ({ request }) => {
+  test('POST /api/auth/forgot-password with invalid phone should return generic success (anti-enumeration)', async ({ request }) => {
     const response = await request.post('/api/auth/forgot-password', {
       data: { phone: '00000000000' },
     })
-    // 400/404 when Supabase is available, 500 when DB is offline
-    expect(response.status()).toBeGreaterThanOrEqual(400)
-    expect(response.ok()).toBe(false)
+    // Returns 200 with generic message to prevent user enumeration
+    // May return 500 if DB is offline
+    expect([200, 500]).toContain(response.status())
   })
 })
 

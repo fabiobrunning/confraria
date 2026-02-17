@@ -24,11 +24,9 @@ export async function GET(
     const memberId = params.id
 
     // Verify authentication
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    const { data: { user } } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -36,13 +34,13 @@ export async function GET(
     const { data: profileData } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single()
 
     const profile = profileData as { role: string } | null
 
     // Authorization: Admin can view any member, members can only view themselves
-    if (profile?.role !== 'admin' && session.user.id !== memberId) {
+    if (profile?.role !== 'admin' && user.id !== memberId) {
       return NextResponse.json(
         { error: 'Forbidden - You can only view your own report' },
         { status: 403 }

@@ -21,10 +21,8 @@ export async function POST(
     const supabase = await createClient();
 
     // Verify authentication
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       return NextResponse.json(
         { error: 'Não autorizado' },
         { status: 401 }
@@ -35,7 +33,7 @@ export async function POST(
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single();
 
     if ((profile as { role: string } | null)?.role !== 'admin') {

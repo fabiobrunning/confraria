@@ -7,18 +7,18 @@ type ProspectUpdate = Database['public']['Tables']['prospects']['Update'];
 
 // Verificar se usuario eh admin
 async function isAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return { isAdmin: false, userId: null };
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { isAdmin: false, userId: null };
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single();
 
   return {
     isAdmin: (profile as { role: string } | null)?.role === 'admin',
-    userId: session.user.id
+    userId: user.id
   };
 }
 

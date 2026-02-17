@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import type { Database } from './types'
+import type { User } from '@supabase/supabase-js'
 
 export async function createClient() {
   const cookieStore = await cookies()
@@ -39,6 +40,18 @@ export async function createClient() {
  *
  * ⚠️ SECURITY: Never expose this client to the browser
  */
+/**
+ * Get authenticated user with server-side JWT validation via getUser()
+ * Unlike getSession(), this validates the JWT with Supabase Auth server
+ * Returns the user or null if not authenticated
+ */
+export async function getAuthenticatedUser(): Promise<User | null> {
+  const supabase = await createClient()
+  const { data: { user }, error } = await supabase.auth.getUser()
+  if (error || !user) return null
+  return user
+}
+
 export function createAdminClient() {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured')

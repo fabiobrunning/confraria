@@ -3,14 +3,16 @@
 
   ## Reason
   The `consortium_groups` table is a duplicate of `groups` with fewer fields.
-  - `groups` has: name, description, asset_value, monthly_value, total_quotas, admin_id, company_id, adjustment_type, adjustment_value, is_active
-  - `consortium_groups` has: description, asset_value, monthly_value, total_quotas (subset)
-
-  All application code uses the `groups` table. The `consortium_groups` table
-  has zero references in any API route, hook, or component.
+  All application code uses the `groups` table.
 
   ## Action
   Mark as deprecated. Data preserved for safety. Can be dropped in a future migration.
 */
 
-COMMENT ON TABLE public.consortium_groups IS 'DEPRECATED: Use public.groups instead. This table is a legacy duplicate and will be removed in a future migration.';
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'consortium_groups') THEN
+    COMMENT ON TABLE public.consortium_groups IS 'DEPRECATED: Use public.groups instead. This table is a legacy duplicate and will be removed in a future migration.';
+  END IF;
+END;
+$$;

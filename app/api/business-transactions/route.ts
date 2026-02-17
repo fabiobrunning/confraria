@@ -20,11 +20,9 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient()
 
     // Verify authentication
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    const { data: { user } } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -110,11 +108,9 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
 
     // Verify authentication
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    const { data: { user } } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -122,7 +118,7 @@ export async function POST(request: NextRequest) {
     const { data: profileData } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single() as { data: { role: string } | null }
 
     if (profileData?.role !== 'admin') {

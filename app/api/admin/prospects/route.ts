@@ -4,13 +4,13 @@ import type { ProspectStatus } from '@/lib/supabase/types';
 
 // Verificar se usuario eh admin
 async function isAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return false;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single();
 
   return (profile as { role: string } | null)?.role === 'admin';

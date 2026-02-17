@@ -28,10 +28,8 @@ export async function PUT(
     const supabase = await createClient()
 
     // Verify authentication
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-    if (!session) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -39,7 +37,7 @@ export async function PUT(
     const { data: profileData } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single()
 
     const adminProfile = profileData as { role: string } | null
@@ -94,10 +92,8 @@ export async function DELETE(
     const supabase = await createClient()
 
     // Verify authentication
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-    if (!session) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -105,7 +101,7 @@ export async function DELETE(
     const { data: profileData } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single()
 
     const adminProfile = profileData as { role: string } | null
@@ -139,7 +135,7 @@ export async function DELETE(
 
     // Log activity
     await logActivity({
-      userId: session.user.id,
+      userId: user.id,
       action: 'member.delete',
       entityType: 'profile',
       entityId: id,

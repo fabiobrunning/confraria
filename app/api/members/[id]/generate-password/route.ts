@@ -18,11 +18,9 @@ export async function POST(
     const supabase = await createClient()
 
     // Check authentication
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    const { data: { user } } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (!user) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
     }
 
@@ -30,7 +28,7 @@ export async function POST(
     const { data: profileData } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single()
 
     const profile = profileData as { role: string } | null
@@ -84,21 +82,12 @@ export async function POST(
     if (sendEmail && member.email) {
       // TODO: Implement email sending via Supabase or external service
       // For now, we'll log it
-      console.log(`Email would be sent to ${member.email} with password: ${password}`)
-
-      // In a real implementation, you would:
-      // 1. Use Supabase's built-in email templates
-      // 2. Or integrate with SendGrid/Mailgun/etc
-      // await sendPasswordEmail({
-      //   to: member.email,
-      //   name: member.full_name,
-      //   password: password,
-      // })
+      // TODO: Implement email sending via Supabase or external service
     }
 
     // Log activity
     await logActivity({
-      userId: session.user.id,
+      userId: user.id,
       action: 'member.generate_password',
       entityType: 'profile',
       entityId: id,

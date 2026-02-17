@@ -1,7 +1,8 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { apiError } from '@/lib/api-response'
 import { logActivity } from '@/lib/activity-log'
+import { generateTemporaryPassword } from '@/lib/pre-registration/generate-password'
 
 // GET - List all members
 export async function GET(_request: NextRequest) {
@@ -9,10 +10,8 @@ export async function GET(_request: NextRequest) {
     const supabase = await createClient()
 
     // Verify authentication
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-    if (!session) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -42,10 +41,8 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
 
     // Verify authentication
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-    if (!session) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -53,7 +50,7 @@ export async function POST(request: NextRequest) {
     const { data: profileData } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single()
 
     const adminProfile = profileData as { role: string } | null
@@ -72,15 +69,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate temporary password (6 digits)
-    const tempPassword = Math.floor(100000 + Math.random() * 900000).toString()
+    // Generate secure temporary password
+    const tempPassword = generateTemporaryPassword(12)
 
     // Clean phone number (remove formatting)
     const cleanPhone = phone.replace(/\D/g, '')
     const email = `${cleanPhone}@confraria.local`
 
-    // Create auth user
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    // Create auth user using admin client (requires SERVICE_ROLE_KEY)
+    const adminSupabase = createAdminClient()
+    const { data: authData, error: authError } = await adminSupabase.auth.admin.createUser({
       email,
       password: tempPassword,
       email_confirm: true,
@@ -113,13 +111,13 @@ export async function POST(request: NextRequest) {
 
     if (profileError) {
       // Rollback: delete auth user if profile creation fails
-      await supabase.auth.admin.deleteUser(authData.user.id)
+      await adminSupabase.auth.admin.deleteUser(authData.user.id)
       throw profileError
     }
 
     // Log activity
     await logActivity({
-      userId: session.user.id,
+      userId: user.id,
       action: 'member.create',
       entityType: 'profile',
       entityId: authData.user.id,
@@ -128,7 +126,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       profile,
-      tempPassword,
       message: 'Member created successfully',
     })
   } catch (error) {

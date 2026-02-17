@@ -6,7 +6,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { generateTemporaryPassword } from './generate-password';
-import * as bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 // pre_registration_attempts table is not in generated types yet
 type PreRegistrationAttempt = Record<string, unknown>;
