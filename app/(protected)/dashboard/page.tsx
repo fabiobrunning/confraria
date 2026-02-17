@@ -40,36 +40,43 @@ function StatCard({ title, value, icon, color, href }: StatCardProps) {
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  // Get user profile to check role
+  // Get user - use getUser() for JWT validation (more secure than getSession)
   const {
-    data: { session },
-  } = await supabase.auth.getSession()
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  const { data: profileData } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', session?.user.id || '')
-    .single()
+  let isAdmin = false
+  if (user) {
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
 
-  const profile = profileData as { role: string } | null
-  const isAdmin = profile?.role === 'admin'
+    isAdmin = (profileData as { role: string } | null)?.role === 'admin'
+  }
 
-  // Fetch stats in parallel
-  const [membersRes, companiesRes, groupsRes, quotasRes] = await Promise.all([
-    supabase.from('profiles').select('id', { count: 'exact', head: true }),
-    supabase.from('companies').select('id', { count: 'exact', head: true }),
-    supabase.from('groups').select('id', { count: 'exact', head: true }),
-    supabase
-      .from('quotas')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'active'),
-  ])
+  // Fetch stats in parallel with error handling
+  let stats = { members: 0, companies: 0, groups: 0, activeQuotas: 0 }
+  try {
+    const [membersRes, companiesRes, groupsRes, quotasRes] = await Promise.all([
+      supabase.from('profiles').select('id', { count: 'exact', head: true }),
+      supabase.from('companies').select('id', { count: 'exact', head: true }),
+      supabase.from('groups').select('id', { count: 'exact', head: true }),
+      supabase
+        .from('quotas')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'active'),
+    ])
 
-  const stats = {
-    members: membersRes.count ?? 0,
-    companies: companiesRes.count ?? 0,
-    groups: groupsRes.count ?? 0,
-    activeQuotas: quotasRes.count ?? 0,
+    stats = {
+      members: membersRes.count ?? 0,
+      companies: companiesRes.count ?? 0,
+      groups: groupsRes.count ?? 0,
+      activeQuotas: quotasRes.count ?? 0,
+    }
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error)
   }
 
   const statCards = [

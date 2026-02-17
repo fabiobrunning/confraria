@@ -90,12 +90,12 @@ export default function AuthPage() {
       }
 
       // Register first login (mark pre-registration as accessed)
-      const ipAddress = await fetch('https://api.ipify.org?format=json')
+      // Fire-and-forget: don't block login if this fails
+      fetch('https://api.ipify.org?format=json')
         .then((res) => res.json())
         .then((data) => data.ip)
         .catch(() => undefined)
-
-      await registerFirstLogin(ipAddress)
+        .then((ip) => registerFirstLogin(ip).catch(() => {}))
 
       router.push('/dashboard')
       router.refresh()
