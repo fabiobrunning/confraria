@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { PreRegistrationModal } from '@/components/pre-registrations/PreRegistrationModal'
 import { PreRegistrationsTable } from '@/components/pre-registrations/PreRegistrationsTable'
 import { Input } from '@/components/ui/input'
-import { Plus, Search } from 'lucide-react'
+import { Plus, Search, Copy, Check, Eye, EyeOff } from 'lucide-react'
 import {
   usePreRegistrations,
   useCreatePreRegistration,
@@ -44,6 +44,12 @@ export default function PreRegistrationsPage() {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false)
   const [selectedPreReg, setSelectedPreReg] = useState<any>(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [credentialsResult, setCredentialsResult] = useState<{
+    credentials: { temporaryPassword: string; username: string }
+    message: string
+    whatsappLink?: string
+  } | null>(null)
+  const [credentialsModalOpen, setCredentialsModalOpen] = useState(false)
 
   // Busca membros disponíveis
   useEffect(() => {
@@ -92,7 +98,15 @@ export default function PreRegistrationsPage() {
 
   const handleResendCredentials = async (preRegistrationId: string) => {
     try {
-      await resendMutation.mutateAsync({ preRegistrationId, sendMethod: 'whatsapp' })
+      const result = await resendMutation.mutateAsync({ preRegistrationId, sendMethod: 'whatsapp' })
+      if (result?.credentials) {
+        setCredentialsResult({
+          credentials: result.credentials,
+          message: result.message || '',
+          whatsappLink: result.whatsappLink,
+        })
+        setCredentialsModalOpen(true)
+      }
     } catch (error) {
       console.error('Erro ao reenviar:', error)
     }
@@ -101,7 +115,16 @@ export default function PreRegistrationsPage() {
   const handleRegeneratePassword = async (preRegistrationId: string) => {
     try {
       const result = await regenerateMutation.mutateAsync({ preRegistrationId, sendMethod: 'whatsapp' })
+      if (result?.credentials) {
+        setCredentialsResult({
+          credentials: result.credentials,
+          message: result.message || '',
+          whatsappLink: result.whatsappLink,
+        })
+        setCredentialsModalOpen(true)
+      }
       setSelectedPreReg(null)
+      setDetailsModalOpen(false)
       return result
     } catch (error) {
       console.error('Erro ao regenerar:', error)
@@ -203,6 +226,16 @@ export default function PreRegistrationsPage() {
           onRegenerate={() => handleRegeneratePassword(selectedPreReg.id)}
         />
       )}
+
+      {/* Modal de credenciais (resultado de regenerar/reenviar) */}
+      <CredentialsResultModal
+        open={credentialsModalOpen}
+        onOpenChange={(open) => {
+          setCredentialsModalOpen(open)
+          if (!open) setCredentialsResult(null)
+        }}
+        result={credentialsResult}
+      />
     </PageContainer>
   )
 }
@@ -327,6 +360,133 @@ function PreRegistrationDetailsModal({
             className="flex-1"
           >
             Regenerar Senha
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Modal para exibir credenciais após regenerar/reenviar senha
+ */
+function CredentialsResultModal({
+  open,
+  onOpenChange,
+  result,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  result: {
+    credentials: { temporaryPassword: string; username: string }
+    message: string
+    whatsappLink?: string
+  } | null
+}) {
+  const { toast } = useToast()
+  const [showPassword, setShowPassword] = useState(false)
+  const [copiedField, setCopiedField] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (open) {
+      setShowPassword(false)
+      setCopiedField(null)
+    }
+  }, [open])
+
+  if (!result) return null
+
+  const copyToClipboard = async (text: string, field: string) => {
+    await navigator.clipboard.writeText(text)
+    setCopiedField(field)
+    toast({ title: 'Copiado!' })
+    setTimeout(() => setCopiedField(null), 2000)
+  }
+
+  return (
+    <div className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 ${open ? '' : 'hidden'}`}>
+      <div className="bg-card border border-border rounded-lg max-w-xl w-full p-6 space-y-4">
+        <div className="flex items-center justify-between pb-4 border-b border-border">
+          <h2 className="text-xl font-bold">Credenciais Geradas</h2>
+          <button
+            onClick={() => onOpenChange(false)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="space-y-4 bg-muted/50 rounded-lg p-4">
+          <div>
+            <label className="text-sm text-muted-foreground mb-2 block">Usuário</label>
+            <div className="flex gap-2">
+              <input
+                value={result.credentials.username}
+                readOnly
+                className="flex-1 bg-background border border-border rounded-md px-3 py-2 text-sm"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => copyToClipboard(result.credentials.username, 'username')}
+              >
+                {copiedField === 'username' ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+              </Button>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm text-muted-foreground mb-2 block">Senha Temporária</label>
+            <div className="flex gap-2">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={result.credentials.temporaryPassword}
+                readOnly
+                className="flex-1 bg-background border border-border rounded-md px-3 py-2 text-sm font-mono"
+              />
+              <Button variant="outline" size="sm" onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => copyToClipboard(result.credentials.temporaryPassword, 'password')}
+              >
+                {copiedField === 'password' ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Válido por 30 dias.</p>
+          </div>
+        </div>
+
+        {/* Mensagem */}
+        {result.message && (
+          <div className="space-y-2">
+            <label className="text-sm text-muted-foreground">Mensagem para Enviar</label>
+            <div className="bg-muted/50 rounded-lg p-3 max-h-40 overflow-y-auto">
+              <p className="text-sm whitespace-pre-wrap font-mono">{result.message}</p>
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-2 pt-4 border-t border-border">
+          {result.whatsappLink && (
+            <Button
+              onClick={() => window.open(result.whatsappLink, '_blank')}
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
+              Abrir WhatsApp
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            onClick={() => copyToClipboard(result.message, 'message')}
+          >
+            <Copy className="w-4 h-4 mr-2" />
+            Copiar Mensagem
+          </Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Fechar
           </Button>
         </div>
       </div>

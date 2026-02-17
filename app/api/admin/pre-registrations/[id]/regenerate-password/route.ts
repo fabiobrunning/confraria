@@ -1,12 +1,14 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { regeneratePassword } from '@/lib/pre-registration/server-service';
+import { generateTemporaryPassword } from '@/lib/pre-registration/generate-password';
 import {
   getMessageTemplate,
   formatPhoneForWhatsApp,
 } from '@/lib/pre-registration/message-templates';
 import { regeneratePasswordSchema } from '@/lib/pre-registration/schemas';
-import * as bcrypt from 'bcrypt';
+import { rateLimit } from '@/lib/rate-limit';
+import { apiError } from '@/lib/api-response';
 
 /**
  * POST /api/admin/pre-registrations/[id]/regenerate-password
@@ -16,6 +18,13 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Rate limit: 10 requests per hour
+  const rateLimitResponse = rateLimit(request, 'regenerate-password', {
+    maxRequests: 10,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const supabase = await createClient();
     const adminSupabase = createAdminClient();
@@ -38,7 +47,7 @@ export async function POST(
       .eq('id', session.user.id)
       .single();
 
-    if ((profile as any)?.role !== 'admin') {
+    if ((profile as { role: string } | null)?.role !== 'admin') {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
@@ -57,7 +66,7 @@ export async function POST(
     const preRegistrationId = params.id;
 
     // Fetch pre-registration attempt
-    const { data: attemptData, error: fetchError } = await supabase
+    const { data: attemptData, error: fetchError } = await (supabase as any)
       .from('pre_registration_attempts')
       .select(
         `
@@ -70,7 +79,12 @@ export async function POST(
       .eq('id', preRegistrationId)
       .single();
 
-    const attempt = attemptData as any;
+    const attempt = attemptData as {
+      id: string;
+      member_id: string;
+      expiration_date: string;
+      profiles: { id: string; full_name: string; phone: string } | { id: string; full_name: string; phone: string }[];
+    } | null;
 
     if (fetchError || !attempt) {
       return NextResponse.json(
@@ -87,41 +101,35 @@ export async function POST(
       );
     }
 
-    // Regenerate password
+    // Generate password and sync to Auth FIRST (avoid race condition)
+    const newPassword = generateTemporaryPassword(12);
+
+    const { error: authUpdateError } = await adminSupabase.auth.admin.updateUserById(
+      attempt.member_id,
+      { password: newPassword }
+    );
+
+    if (authUpdateError) {
+      console.error('Error updating auth password:', authUpdateError);
+      return apiError(500, 'Erro ao atualizar senha no sistema de autenticação');
+    }
+
+    // Auth synced — now update DB record with the same password
     const result = await regeneratePassword(
       preRegistrationId,
       session.user.id,
-      send_method
+      send_method,
+      newPassword
     );
 
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 500 });
     }
 
-    // Update password in Supabase Auth for the member using admin client
-    const saltRounds = 12;
-    const hashedForAuth = await bcrypt.hash(result.newPassword!, saltRounds);
-
-    const { error: authUpdateError } = await adminSupabase.auth.admin.updateUserById(
-      attempt.member_id,
-      { password: hashedForAuth }
-    );
-
-    if (authUpdateError) {
-      console.error('Error updating auth password:', authUpdateError);
-      return NextResponse.json(
-        {
-          error: 'Erro ao atualizar senha no sistema de autenticação: ' + authUpdateError.message,
-          details: 'A senha foi armazenada no banco mas falhou ao sincronizar com o sistema de autenticação'
-        },
-        { status: 500 }
-      );
-    }
-
     // Get member info for message
-    const member = Array.isArray(attempt.profiles)
+    const member = (Array.isArray(attempt.profiles)
       ? attempt.profiles[0]
-      : attempt.profiles;
+      : attempt.profiles) as { id: string; full_name: string; phone: string } | null;
 
     if (!member) {
       return NextResponse.json(
@@ -132,9 +140,9 @@ export async function POST(
 
     // Generate message for display
     const message = getMessageTemplate('whatsapp', 'reset', {
-      recipientName: (member as any).full_name,
-      phone: (member as any).phone,
-      password: result.newPassword!,
+      recipientName: member.full_name,
+      phone: member.phone,
+      password: newPassword,
       expiresIn: '30 dias',
       appUrl: process.env.NEXT_PUBLIC_APP_URL || 'https://confraria.app',
     });
@@ -142,7 +150,7 @@ export async function POST(
     // Create WhatsApp link for manual sending
     const whatsappLink =
       send_method === 'whatsapp'
-        ? `https://wa.me/${formatPhoneForWhatsApp((member as any).phone)}?text=${encodeURIComponent(message)}`
+        ? `https://wa.me/${formatPhoneForWhatsApp(member.phone)}?text=${encodeURIComponent(message)}`
         : null;
 
     return NextResponse.json(
@@ -150,12 +158,13 @@ export async function POST(
         success: true,
         preRegistrationId,
         member: {
-          id: (member as any).id,
-          name: (member as any).full_name,
-          phone: (member as any).phone,
+          id: member.id,
+          name: member.full_name,
+          phone: member.phone,
         },
         credentials: {
-          username: (member as any).phone,
+          temporaryPassword: newPassword,
+          username: member.phone,
           expiresIn: '30 dias',
         },
         message,
@@ -165,15 +174,6 @@ export async function POST(
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error regenerating password:', error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : 'Erro ao regenerar senha',
-      },
-      { status: 500 }
-    );
+    return apiError(500, 'Erro ao regenerar senha', error);
   }
 }

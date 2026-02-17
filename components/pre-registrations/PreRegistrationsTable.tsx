@@ -206,7 +206,7 @@ export function PreRegistrationsTable({
                         </>
                       )}
 
-                      {status !== 'accessed' && status !== 'expired' && (
+                      {status === 'locked' && (
                         <>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
