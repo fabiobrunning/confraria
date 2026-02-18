@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Archive&family=Inter:wght@400;500;600&family=Cormorant+Garamond:wght@400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,96 +8,57 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Black background with gray gradient */
-    --background: 0 0% 5%;
-    --foreground: 0 0% 95%;
+    /* Dark theme — Confraria Pedra Branca (single unified theme) */
+    --background: 20.0353 13.8354% 4.1252%; /* #0c0a09 */
+    --foreground: 0 0% 96%; /* #f5f5f5 */
 
-    /* Light cards with dark text */
-    --card: 0 0% 96%;
-    --card-foreground: 0 0% 10%;
+    --card: 223.8136 0% 14.9382%; /* #262626 */
+    --card-foreground: 0 0% 96%; /* #f5f5f5 */
 
-    --popover: 0 0% 96%;
-    --popover-foreground: 0 0% 10%;
+    --popover: 225 4.6512% 16.8627%; /* #292a2d */
+    --popover-foreground: 0 0% 96%; /* #f5f5f5 */
 
-    /* Black primary */
-    --primary: 0 0% 0%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 44.4156 36.8421% 59.0196%; /* #bda970 - Dourado */
+    --primary-foreground: 0 0% 100%; /* #ffffff */
 
-    /* Gray secondary */
-    --secondary: 0 0% 85%;
-    --secondary-foreground: 0 0% 10%;
+    --secondary: 0 0% 100%; /* #ffffff */
+    --secondary-foreground: 0 0% 10%; /* #1a1a1a */
 
-    --muted: 0 0% 90%;
-    --muted-foreground: 0 0% 35%;
+    --muted: 231.4286 6.3063% 21.7647%; /* #34353b */
+    --muted-foreground: 44 25% 80%; /* #d4c9b8 - Bege claro */
 
-    /* Golden accent for buttons */
-    --accent: 39 42% 53%;
-    --accent-foreground: 0 0% 10%;
+    --accent: 217.5 22.6415% 20.7843%; /* #293241 - Azul escuro */
+    --accent-foreground: 0 0% 100%; /* #ffffff */
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 62.5% 84.3137%; /* #f0bebe */
+    --destructive-foreground: 0 0% 10%; /* #1a1a1a */
 
-    --border: 0 0% 80%;
-    --input: 0 0% 90%;
-    --ring: 39 42% 53%;
+    --border: 220 4.6154% 35%; /* #545659 */
+    --input: 220 4.6154% 25.4902%; /* #3e4044 */
+    --ring: 257.9104 69.0722% 80.9804%; /* #c1adf0 */
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
     /* Success state */
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
+    --success: 142.1053 48.1013% 69.0196%; /* #8ad6a6 */
+    --success-foreground: 0 0% 10%; /* #1a1a1a */
 
-    /* Sidebar with black theme */
-    --sidebar-background: 0 0% 0%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 39 42% 53%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 39 42% 53%;
-  }
+    /* Chart colors */
+    --chart-1: 142.1053 48.1013% 69.0196%; /* #8ad6a6 */
+    --chart-2: 257.9104 69.0722% 80.9804%; /* #c1adf0 */
+    --chart-3: 0 69.2308% 97.4510%; /* #fdf4f4 */
+    --chart-4: 217.9412 59.6491% 77.6471%; /* #a4bde8 */
+    --chart-5: 0 0% 70%; /* #b3b3b3 */
 
-  .dark {
-    --background: 0 0% 5%;
-    --foreground: 0 0% 95%;
-
-    --card: 0 0% 96%;
-    --card-foreground: 0 0% 10%;
-
-    --popover: 0 0% 96%;
-    --popover-foreground: 0 0% 10%;
-
-    --primary: 0 0% 0%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 0 0% 85%;
-    --secondary-foreground: 0 0% 10%;
-
-    --muted: 0 0% 90%;
-    --muted-foreground: 0 0% 35%;
-
-    --accent: 39 42% 53%;
-    --accent-foreground: 0 0% 10%;
-
-    --destructive: 0 62.8% 50%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 0 0% 80%;
-    --input: 0 0% 90%;
-    --ring: 39 42% 53%;
-
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
-
-    --sidebar-background: 0 0% 0%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 39 42% 53%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 39 42% 53%;
+    /* Sidebar */
+    --sidebar-background: 240 4.9180% 11.9608%; /* #1d1d20 */
+    --sidebar-foreground: 0 0% 96%; /* #f5f5f5 */
+    --sidebar-primary: 257.9104 69.0722% 80.9804%; /* #c1adf0 */
+    --sidebar-primary-foreground: 0 0% 100%; /* #ffffff */
+    --sidebar-accent: 231.4286 6.3063% 21.7647%; /* #34353b */
+    --sidebar-accent-foreground: 257.9104 69.0722% 80.9804%; /* #c1adf0 */
+    --sidebar-border: 220 4.6154% 35%; /* #545659 */
+    --sidebar-ring: 257.9104 69.0722% 80.9804%; /* #c1adf0 */
   }
 }
 
@@ -376,11 +335,11 @@ All colors MUST be HSL.
 /* Sidebar state responsive layout */
 @media (min-width: 1024px) {
   [data-sidebar-state="collapsed"] .main-content {
-    margin-left: 80px !important; /* w-20 */
+    margin-left: 80px; /* w-20 */
   }
 
   [data-sidebar-state="expanded"] .main-content {
-    margin-left: 256px !important; /* w-64 */
+    margin-left: 256px; /* w-64 */
   }
 }
 

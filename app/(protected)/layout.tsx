@@ -31,10 +31,10 @@ export default async function ProtectedLayout({
   const profile = profileData as { role: string } | null
 
   return (
-    <div className="member-area dark min-h-screen flex w-full" data-sidebar-state="expanded">
+    <div className="member-area min-h-screen flex w-full" data-sidebar-state="expanded">
       <SidebarStateSync />
       <Sidebar role={profile?.role ?? null} />
-      <main className="flex-1 lg:ml-64 mt-12 lg:mt-0 transition-all duration-300 main-content">
+      <main className="flex-1 lg:ml-64 mt-14 lg:mt-0 transition-all duration-300 main-content">
         <ErrorBoundary>
           {children}
         </ErrorBoundary>

@@ -1,31 +1,32 @@
 import { ReactNode } from 'react'
+import { LucideIcon, Inbox } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
 interface EmptyStateProps {
   message: string
+  description?: string
+  icon?: LucideIcon
   action?: ReactNode
   className?: string
 }
 
-/**
- * EmptyState - Atomic Design System Component
- *
- * Estado vazio padrão para listas/tabelas sem dados.
- * Garante consistência visual em todas as páginas.
- *
- * @example
- * <EmptyState
- *   message="Nenhum membro cadastrado"
- *   action={<Button>Cadastrar Primeiro Membro</Button>}
- * />
- */
-export function EmptyState({ message, action, className }: EmptyStateProps) {
+export function EmptyState({
+  message,
+  description,
+  icon: Icon = Inbox,
+  action,
+  className,
+}: EmptyStateProps) {
   return (
     <Card className={cn('', className)}>
-      <CardContent className="py-10 text-center">
-        <p className="text-muted-foreground mb-4">{message}</p>
-        {action}
+      <CardContent className="py-12 text-center flex flex-col items-center gap-3">
+        <Icon className="h-10 w-10 text-muted-foreground/50" />
+        <p className="text-muted-foreground font-medium">{message}</p>
+        {description && (
+          <p className="text-sm text-muted-foreground/70 max-w-md">{description}</p>
+        )}
+        {action && <div className="mt-2">{action}</div>}
       </CardContent>
     </Card>
   )

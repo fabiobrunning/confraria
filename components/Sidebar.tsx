@@ -86,41 +86,65 @@ export default function Sidebar({ role }: SidebarProps) {
   )
 
   const NavContent = useCallback(
-    ({ collapsed = false }: { collapsed?: boolean }) => (
+    ({ collapsed = false }: { collapsed?: boolean }) => {
+      const renderItem = (item: (typeof allItems)[number]) => {
+        const navItem = (
+          <Link
+            key={item.path}
+            href={item.path}
+            onClick={() => setMobileMenuOpen(false)}
+            className={cn(
+              'flex items-center rounded-lg px-3 py-2 transition-colors',
+              collapsed ? 'justify-center' : 'gap-3',
+              isActive(item.path)
+                ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+                : 'text-sidebar-foreground hover:bg-sidebar-accent'
+            )}
+          >
+            <item.icon className="h-5 w-5 flex-shrink-0" />
+            {!collapsed && <span>{item.label}</span>}
+          </Link>
+        )
+
+        if (collapsed) {
+          return (
+            <Tooltip key={item.path}>
+              <TooltipTrigger asChild>{navItem}</TooltipTrigger>
+              <TooltipContent side="right">{item.label}</TooltipContent>
+            </Tooltip>
+          )
+        }
+
+        return navItem
+      }
+
+      return (
       <>
+        {/* Meu Espaço */}
         <div className="space-y-1">
-          {allItems.map((item) => {
-            const navItem = (
-              <Link
-                key={item.path}
-                href={item.path}
-                onClick={() => setMobileMenuOpen(false)}
-                className={cn(
-                  'flex items-center rounded-lg px-3 py-2 transition-colors',
-                  collapsed ? 'justify-center' : 'gap-3',
-                  isActive(item.path)
-                    ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-                    : 'text-sidebar-foreground hover:bg-sidebar-accent'
-                )}
-              >
-                <item.icon className="h-5 w-5 flex-shrink-0" />
-                {!collapsed && <span>{item.label}</span>}
-              </Link>
-            )
-
-            // Only show tooltip on collapsed desktop sidebar
-            if (collapsed) {
-              return (
-                <Tooltip key={item.path}>
-                  <TooltipTrigger asChild>{navItem}</TooltipTrigger>
-                  <TooltipContent side="right">{item.label}</TooltipContent>
-                </Tooltip>
-              )
-            }
-
-            return navItem
-          })}
+          {!collapsed && (
+            <span className="px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Meu Espaço
+            </span>
+          )}
+          {navigationItems.map(renderItem)}
         </div>
+
+        {/* Administração */}
+        {adminItems.length > 0 && (
+          <div className="space-y-1 mt-4">
+            {!collapsed && (
+              <>
+                <div className="mx-3 border-t border-sidebar-border" />
+                <span className="px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Administração
+                </span>
+              </>
+            )}
+            {collapsed && <div className="mx-2 border-t border-sidebar-border my-2" />}
+            {adminItems.map(renderItem)}
+          </div>
+        )}
         <div className="mt-auto">
           {collapsed ? (
             <Tooltip>
@@ -147,8 +171,9 @@ export default function Sidebar({ role }: SidebarProps) {
           )}
         </div>
       </>
-    ),
-    [allItems, isActive, handleLogout]
+      )
+    },
+    [navigationItems, adminItems, isActive, handleLogout]
   )
 
   // Prevent hydration mismatch by only showing collapse state after mount
@@ -168,7 +193,7 @@ export default function Sidebar({ role }: SidebarProps) {
         <div className="h-24 min-h-24 p-4 border-b border-sidebar-border flex items-center justify-between">
           {!effectiveCollapsed && (
             <Image
-              src="/logo-confraria.svg"
+              src="/logo_confraria_br.png"
               alt="Confraria Pedra Branca"
               width={80}
               height={80}
@@ -198,7 +223,7 @@ export default function Sidebar({ role }: SidebarProps) {
       </aside>
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-12 bg-sidebar border-b border-sidebar-border z-50 flex items-center justify-between px-3">
+      <div className="lg:hidden fixed top-0 left-0 right-0 w-full h-14 bg-sidebar border-b border-sidebar-border z-50 flex items-center justify-between px-3">
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetTrigger asChild>
             <Button
@@ -212,7 +237,7 @@ export default function Sidebar({ role }: SidebarProps) {
           <SheetContent side="left" className="w-[280px] p-0 bg-sidebar">
             <div className="p-4 border-b border-sidebar-border flex justify-center min-h-24">
               <Image
-                src="/logo-confraria.svg"
+                src="/logo_confraria_br.png"
                 alt="Confraria Pedra Branca"
                 width={80}
                 height={80}
@@ -225,7 +250,16 @@ export default function Sidebar({ role }: SidebarProps) {
             </nav>
           </SheetContent>
         </Sheet>
-        <div className="flex-1"></div>
+        <div className="flex-1 flex items-center justify-center gap-2">
+          <Image
+            src="/Logo_icone_br.png"
+            alt="Confraria"
+            width={28}
+            height={28}
+            className="h-7 w-7 object-contain"
+          />
+          <span className="text-sidebar-foreground font-semibold text-sm">Confraria</span>
+        </div>
         <div className="w-10"></div>
       </div>
     </TooltipProvider>
