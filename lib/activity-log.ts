@@ -14,6 +14,10 @@ type ActivityAction =
   | 'group.delete'
   | 'draw.execute'
   | 'prospect.update'
+  | 'event.create'
+  | 'event.update'
+  | 'event.cancel'
+  | 'event.confirm'
 
 interface LogActivityParams {
   userId: string

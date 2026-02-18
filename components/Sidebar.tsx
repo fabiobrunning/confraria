@@ -17,6 +17,7 @@ import {
   TrendingUp,
   User,
   Coins,
+  Calendar,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react'
@@ -71,6 +72,7 @@ export default function Sidebar({ role }: SidebarProps) {
             { path: '/admin/companies', icon: Building2, label: 'Empresas' },
             { path: '/groups', icon: Coins, label: 'Grupos e Cotas' },
             { path: '/business-transactions', icon: TrendingUp, label: 'Transações de Negócios' },
+            { path: '/admin/events', icon: Calendar, label: 'Eventos' },
             { path: '/admin/prospects', icon: UserCheck, label: 'Interessados' },
             { path: '/pre-register', icon: UserPlus, label: 'Pre-Cadastro' },
           ]
