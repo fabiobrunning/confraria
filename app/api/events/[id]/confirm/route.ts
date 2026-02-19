@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { apiError, apiSuccess } from '@/lib/api-response'
+import { logActivity } from '@/lib/activity-log'
 import { rateLimit } from '@/lib/rate-limit'
 import { confirmAttendanceSchema } from '@/lib/schemas/events'
 
@@ -101,6 +102,14 @@ export async function POST(
 
       if (error) throw error
 
+      logActivity({
+        userId: profileMatch.id,
+        action: 'event.confirm',
+        entityType: 'event_confirmation',
+        entityId: eventId,
+        metadata: { user_phone, confirmed_count, updated: true },
+      })
+
       return apiSuccess({
         confirmation: updated,
         user_name: profileMatch.full_name,
@@ -119,6 +128,14 @@ export async function POST(
       .single()
 
     if (error) throw error
+
+    logActivity({
+      userId: profileMatch.id,
+      action: 'event.confirm',
+      entityType: 'event_confirmation',
+      entityId: eventId,
+      metadata: { user_phone, confirmed_count },
+    })
 
     return apiSuccess({
       confirmation,

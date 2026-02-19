@@ -11,6 +11,21 @@
 */
 
 -- ============================================================
+-- 0. ENSURE handle_updated_at() EXISTS
+--    (created conditionally in 20260217120000, may not exist)
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.handle_updated_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$;
+
+-- ============================================================
 -- 1. EVENTS TABLE
 -- ============================================================
 

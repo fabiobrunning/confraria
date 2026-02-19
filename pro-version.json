@@ -1,0 +1,18 @@
+{
+  "proVersion": "0.1.3",
+  "installedAt": "2026-02-18T12:21:06.115Z",
+  "fileCount": 11,
+  "fileHashes": {
+    ".aios-core/pro-config.yaml": "sha256:d70ed6ebd31b252b018d20062e5174e6721879cf160eb2afb56142e8f732358d",
+    ".aios-core/feature-registry.yaml": "sha256:0e494e7432da5472366ff39752073f8499ed682eafa2be06085ac3123599868a",
+    ".claude/commands/squad-creator-pro/oalanicolas.md": "sha256:6eb3d29889558294ef4b9cbfdef37833f02111480c155eb3af42a26af74d749b",
+    ".claude/commands/squad-creator-pro/pedro-valerio.md": "sha256:642e5be9dccee13907995a693a9ed8baf18651ce7a62f0a94dd7acb11b1f1846",
+    ".claude/commands/squad-creator-pro/squad-chief.md": "sha256:2232d953e204bb1940db30ecfcc278ded929b7a0c242cafb918b11436fee589c",
+    ".gemini/rules/squad-creator-pro/oalanicolas.md": "sha256:6eb3d29889558294ef4b9cbfdef37833f02111480c155eb3af42a26af74d749b",
+    ".gemini/rules/squad-creator-pro/pedro-valerio.md": "sha256:642e5be9dccee13907995a693a9ed8baf18651ce7a62f0a94dd7acb11b1f1846",
+    ".gemini/rules/squad-creator-pro/squad-chief.md": "sha256:2232d953e204bb1940db30ecfcc278ded929b7a0c242cafb918b11436fee589c",
+    ".cursor/rules/oalanicolas.md": "sha256:6eb3d29889558294ef4b9cbfdef37833f02111480c155eb3af42a26af74d749b",
+    ".cursor/rules/pedro-valerio.md": "sha256:642e5be9dccee13907995a693a9ed8baf18651ce7a62f0a94dd7acb11b1f1846",
+    ".cursor/rules/squad-chief.md": "sha256:2232d953e204bb1940db30ecfcc278ded929b7a0c242cafb918b11436fee589c"
+  }
+}

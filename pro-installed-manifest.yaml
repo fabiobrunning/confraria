@@ -1,0 +1,27 @@
+generatedAt: '2026-02-18T12:21:06.116Z'
+totalFiles: 12
+files:
+  - path: .aios-core/pro-config.yaml
+    timestamp: '2026-02-18T12:21:06.109Z'
+  - path: .aios-core/feature-registry.yaml
+    timestamp: '2026-02-18T12:21:06.110Z'
+  - path: .claude/commands/squad-creator-pro/oalanicolas.md
+    timestamp: '2026-02-18T12:21:06.112Z'
+  - path: .claude/commands/squad-creator-pro/pedro-valerio.md
+    timestamp: '2026-02-18T12:21:06.112Z'
+  - path: .claude/commands/squad-creator-pro/squad-chief.md
+    timestamp: '2026-02-18T12:21:06.112Z'
+  - path: .gemini/rules/squad-creator-pro/oalanicolas.md
+    timestamp: '2026-02-18T12:21:06.113Z'
+  - path: .gemini/rules/squad-creator-pro/pedro-valerio.md
+    timestamp: '2026-02-18T12:21:06.113Z'
+  - path: .gemini/rules/squad-creator-pro/squad-chief.md
+    timestamp: '2026-02-18T12:21:06.113Z'
+  - path: .cursor/rules/oalanicolas.md
+    timestamp: '2026-02-18T12:21:06.113Z'
+  - path: .cursor/rules/pedro-valerio.md
+    timestamp: '2026-02-18T12:21:06.114Z'
+  - path: .cursor/rules/squad-chief.md
+    timestamp: '2026-02-18T12:21:06.114Z'
+  - path: pro-version.json
+    timestamp: '2026-02-18T12:21:06.116Z'

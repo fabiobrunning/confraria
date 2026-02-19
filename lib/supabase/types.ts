@@ -39,6 +39,197 @@ export type Database = {
   }
   public: {
     Tables: {
+      _deprecated_members: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          email: string | null
+          full_name: string
+          group_id: string
+          id: string
+          joined_at: string
+          phone: string
+          pre_registered: boolean
+          profile_id: string | null
+          registration_number: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          email?: string | null
+          full_name: string
+          group_id: string
+          id?: string
+          joined_at?: string
+          phone: string
+          pre_registered?: boolean
+          profile_id?: string | null
+          registration_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          group_id?: string
+          id?: string
+          joined_at?: string
+          phone?: string
+          pre_registered?: boolean
+          profile_id?: string | null
+          registration_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "members_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      app_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      business_transactions: {
+        Row: {
+          amount: number
+          consortium_group_id: string | null
+          created_at: string
+          description: string
+          id: string
+          member_from_id: string
+          member_to_id: string | null
+          notes: string | null
+          transaction_date: string
+          transaction_type: Database["public"]["Enums"]["transaction_type"]
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          consortium_group_id?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          member_from_id: string
+          member_to_id?: string | null
+          notes?: string | null
+          transaction_date?: string
+          transaction_type: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          consortium_group_id?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          member_from_id?: string
+          member_to_id?: string | null
+          notes?: string | null
+          transaction_date?: string
+          transaction_type?: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_transactions_consortium_group_id_fkey"
+            columns: ["consortium_group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_transactions_member_from_id_fkey"
+            columns: ["member_from_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_transactions_member_to_id_fkey"
+            columns: ["member_to_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           address: string | null
@@ -192,6 +383,97 @@ export type Database = {
           },
         ]
       }
+      event_confirmations: {
+        Row: {
+          confirmed_at: string
+          confirmed_count: number
+          created_at: string
+          event_id: string
+          id: string
+          updated_at: string
+          user_phone: string
+        }
+        Insert: {
+          confirmed_at?: string
+          confirmed_count: number
+          created_at?: string
+          event_id: string
+          id?: string
+          updated_at?: string
+          user_phone: string
+        }
+        Update: {
+          confirmed_at?: string
+          confirmed_count?: number
+          created_at?: string
+          event_id?: string
+          id?: string
+          updated_at?: string
+          user_phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_confirmations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          confirmation_limit: number
+          created_at: string
+          created_by: string
+          date: string
+          deadline: string
+          deleted_at: string | null
+          description: string
+          id: string
+          name: string
+          status: string
+          time: string
+          updated_at: string
+        }
+        Insert: {
+          confirmation_limit: number
+          created_at?: string
+          created_by: string
+          date: string
+          deadline: string
+          deleted_at?: string | null
+          description: string
+          id?: string
+          name: string
+          status?: string
+          time: string
+          updated_at?: string
+        }
+        Update: {
+          confirmation_limit?: number
+          created_at?: string
+          created_by?: string
+          date?: string
+          deadline?: string
+          deleted_at?: string | null
+          description?: string
+          id?: string
+          name?: string
+          status?: string
+          time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       groups: {
         Row: {
           adjustment_type: Database["public"]["Enums"]["adjustment_type"] | null
@@ -298,70 +580,75 @@ export type Database = {
           },
         ]
       }
-      members: {
+      pre_registration_attempts: {
         Row: {
-          company_id: string | null
+          access_attempts: number | null
           created_at: string
-          email: string | null
-          full_name: string
-          group_id: string
+          created_by_admin_id: string
+          expiration_date: string
+          first_access_from_ip: unknown
+          first_accessed_at: string | null
           id: string
-          joined_at: string
-          phone: string
-          pre_registered: boolean
-          profile_id: string | null
-          registration_number: string | null
-          status: string
+          last_sent_at: string | null
+          locked_until: string | null
+          max_access_attempts: number | null
+          member_id: string
+          notes: string | null
+          password_generated_at: string
+          send_count: number
+          send_method: string
+          temporary_password_hash: string
           updated_at: string
         }
         Insert: {
-          company_id?: string | null
+          access_attempts?: number | null
           created_at?: string
-          email?: string | null
-          full_name: string
-          group_id: string
+          created_by_admin_id: string
+          expiration_date?: string
+          first_access_from_ip?: unknown
+          first_accessed_at?: string | null
           id?: string
-          joined_at?: string
-          phone: string
-          pre_registered?: boolean
-          profile_id?: string | null
-          registration_number?: string | null
-          status?: string
+          last_sent_at?: string | null
+          locked_until?: string | null
+          max_access_attempts?: number | null
+          member_id: string
+          notes?: string | null
+          password_generated_at?: string
+          send_count?: number
+          send_method: string
+          temporary_password_hash: string
           updated_at?: string
         }
         Update: {
-          company_id?: string | null
+          access_attempts?: number | null
           created_at?: string
-          email?: string | null
-          full_name?: string
-          group_id?: string
+          created_by_admin_id?: string
+          expiration_date?: string
+          first_access_from_ip?: unknown
+          first_accessed_at?: string | null
           id?: string
-          joined_at?: string
-          phone?: string
-          pre_registered?: boolean
-          profile_id?: string | null
-          registration_number?: string | null
-          status?: string
+          last_sent_at?: string | null
+          locked_until?: string | null
+          max_access_attempts?: number | null
+          member_id?: string
+          notes?: string | null
+          password_generated_at?: string
+          send_count?: number
+          send_method?: string
+          temporary_password_hash?: string
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "members_company_id_fkey"
-            columns: ["company_id"]
+            foreignKeyName: "pre_registration_attempts_created_by_admin_id_fkey"
+            columns: ["created_by_admin_id"]
             isOneToOne: false
-            referencedRelation: "companies"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "members_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "groups"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "members_profile_id_fkey"
-            columns: ["profile_id"]
+            foreignKeyName: "pre_registration_attempts_member_id_fkey"
+            columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -378,6 +665,7 @@ export type Database = {
           address_state: string | null
           address_street: string | null
           created_at: string
+          deleted_at: string | null
           full_name: string
           id: string
           instagram: string | null
@@ -395,6 +683,7 @@ export type Database = {
           address_state?: string | null
           address_street?: string | null
           created_at?: string
+          deleted_at?: string | null
           full_name?: string
           id: string
           instagram?: string | null
@@ -412,6 +701,7 @@ export type Database = {
           address_state?: string | null
           address_street?: string | null
           created_at?: string
+          deleted_at?: string | null
           full_name?: string
           id?: string
           instagram?: string | null
@@ -529,13 +819,40 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      is_admin:
-        | { Args: never; Returns: boolean }
-        | { Args: { user_id: string }; Returns: boolean }
+      get_member_business_stats: {
+        Args: { member_uuid: string }
+        Returns: {
+          referrals_given: number
+          referrals_received: number
+          total_given: number
+          total_received: number
+          total_transactions: number
+        }[]
+      }
+      get_monthly_business_evolution: {
+        Args: never
+        Returns: {
+          month: string
+          total_value: number
+          transaction_count: number
+        }[]
+      }
+      get_total_business_value: { Args: never; Returns: number }
+      get_user_phone: { Args: never; Returns: string }
+      get_value_by_transaction_type: {
+        Args: never
+        Returns: {
+          total_value: number
+          transaction_count: number
+          transaction_type: Database["public"]["Enums"]["transaction_type"]
+        }[]
+      }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       adjustment_type: "monthly" | "annual" | "none"
       quota_status: "active" | "contemplated"
+      transaction_type: "direct_business" | "referral" | "consortium"
       user_role: "admin" | "member"
     }
     CompositeTypes: {
@@ -669,20 +986,13 @@ export const Constants = {
     Enums: {
       adjustment_type: ["monthly", "annual", "none"],
       quota_status: ["active", "contemplated"],
+      transaction_type: ["direct_business", "referral", "consortium"],
       user_role: ["admin", "member"],
     },
   },
 } as const
 
-// Convenience types for common tables
-export type Prospect = Tables<'prospects'>
-export type ProspectInsert = TablesInsert<'prospects'>
-export type ProspectUpdate = TablesUpdate<'prospects'>
-
-// Note: pre_registration_attempts table exists in Supabase but is not yet in generated types
-// These types are defined as needed by the application
-export type PreRegistrationAttempt = any
-export type PreRegistrationAttemptInsert = any
-export type PreRegistrationAttemptUpdate = any
-
+// Custom type aliases used across the codebase
+export type Prospect = Database['public']['Tables']['prospects']['Row']
+export type ProspectInsert = Database['public']['Tables']['prospects']['Insert']
 export type ProspectStatus = 'new' | 'contacted' | 'in_progress' | 'converted' | 'rejected'

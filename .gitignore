@@ -1,41 +1,36 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
 
-# Next.js
-.next/
-out/
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Environment & Secrets (AIOS)
 .env
+.env.local
+.env.*.local
+*.key
+*.pem
+
+# Dependencies (AIOS)
+node_modules/
+node_modules
+
+# Build & Logs (AIOS)
+dist/
+build/
+*.log
+logs/
 tsconfig.tsbuildinfo
-
-# Playwright
-test-results/
 playwright-report/
+test-results/
+.next/
 
-# Local Netlify folder
-.netlify
-.aios-core
-.aios/
-squads/
-skills/
+# Package manager duplicates
+bun.lockb
+
+# IDE & OS (AIOS)
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# AIOS Local (AIOS)
+.aios-core/local/
+.claude/settings.local.json
+.aios/install-log.txt
