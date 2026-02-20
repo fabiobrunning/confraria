@@ -54,7 +54,7 @@ export async function POST(
       .eq('id', eventId)
       .eq('status', 'active')
       .is('deleted_at', null)
-      .single()
+      .single() as { data: { id: string; name: string; deadline: string; confirmation_limit: number | null; status: string } | null }
 
     if (!event) return apiError(404, 'Evento não encontrado')
 
@@ -66,7 +66,7 @@ export async function POST(
     const { data: currentConfirmations } = await adminSupabase
       .from('event_confirmations' as any)
       .select('confirmed_count')
-      .eq('event_id', eventId)
+      .eq('event_id', eventId) as { data: { confirmed_count: number }[] | null }
 
     const currentTotal = currentConfirmations?.reduce(
       (sum, c) => sum + c.confirmed_count, 0
@@ -78,13 +78,13 @@ export async function POST(
       .select('id, confirmed_count')
       .eq('event_id', eventId)
       .eq('user_phone', user_phone)
-      .single()
+      .single() as { data: { id: string; confirmed_count: number } | null }
 
     const additionalPeople = existing
       ? confirmed_count - existing.confirmed_count
       : confirmed_count
 
-    if (currentTotal + additionalPeople > event.confirmation_limit) {
+    if (event.confirmation_limit && currentTotal + additionalPeople > event.confirmation_limit) {
       return apiError(400, `Limite de ${event.confirmation_limit} confirmações atingido`)
     }
 

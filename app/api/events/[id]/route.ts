@@ -22,7 +22,7 @@ export async function GET(
       .eq('id', id)
       .eq('status', 'active')
       .is('deleted_at', null)
-      .single()
+      .single() as { data: { id: string; name: string; description: string | null; date: string; time: string | null; deadline: string; confirmation_limit: number | null; status: string; created_at: string } | null; error: unknown }
 
     if (error || !event) return apiError(404, 'Evento não encontrado')
 
@@ -61,7 +61,7 @@ export async function PUT(
       .from('profiles')
       .select('role')
       .eq('id', user.id)
-      .single()
+      .single() as { data: { role: string } | null }
 
     if (profile?.role !== 'admin') return apiError(403, 'Acesso restrito a administradores')
 
@@ -80,12 +80,12 @@ export async function PUT(
       }
     }
 
-    const { data: event, error } = await supabase
-      .from('events' as any)
+    const { data: event, error } = await (supabase
+      .from('events' as any) as any)
       .update(parsed.data)
       .eq('id', id)
       .select()
-      .single()
+      .single() as { data: Record<string, unknown> | null; error: { code?: string; message?: string } | null }
 
     if (error) {
       if (error.code === 'PGRST116') return apiError(404, 'Evento não encontrado')
@@ -122,14 +122,14 @@ export async function DELETE(
       .from('profiles')
       .select('role')
       .eq('id', user.id)
-      .single()
+      .single() as { data: { role: string } | null }
 
     if (profile?.role !== 'admin') return apiError(403, 'Acesso restrito a administradores')
 
-    const { error } = await supabase
-      .from('events' as any)
+    const { error } = await (supabase
+      .from('events' as any) as any)
       .update({ status: 'cancelled', deleted_at: new Date().toISOString() })
-      .eq('id', id)
+      .eq('id', id) as { error: { code?: string; message?: string } | null }
 
     if (error) {
       if (error.code === 'PGRST116') return apiError(404, 'Evento não encontrado')

@@ -20,7 +20,7 @@ export async function GET(
       .from('profiles')
       .select('role')
       .eq('id', user.id)
-      .single()
+      .single() as { data: { role: string } | null }
 
     if (profile?.role !== 'admin') return apiError(403, 'Acesso restrito a administradores')
 
@@ -29,7 +29,7 @@ export async function GET(
       .from('events' as any)
       .select('id, name')
       .eq('id', eventId)
-      .single()
+      .single() as { data: { id: string; name: string } | null }
 
     if (!event) return apiError(404, 'Evento não encontrado')
 
@@ -39,7 +39,7 @@ export async function GET(
       .from('event_confirmations' as any)
       .select('user_phone, confirmed_count, confirmed_at')
       .eq('event_id', eventId)
-      .order('confirmed_at', { ascending: true })
+      .order('confirmed_at', { ascending: true }) as { data: { user_phone: string; confirmed_count: number; confirmed_at: string }[] | null; error: unknown }
 
     if (error) throw error
 

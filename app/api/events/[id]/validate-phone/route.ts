@@ -32,7 +32,7 @@ export async function GET(
       .eq('id', eventId)
       .eq('status', 'active')
       .is('deleted_at', null)
-      .single()
+      .single() as { data: { id: string } | null }
 
     if (!event) return apiError(404, 'Evento não encontrado')
 
@@ -44,7 +44,7 @@ export async function GET(
       .is('deleted_at', null)
       .or(`phone.eq.${phone},phone.eq.${normalizedPhone},phone.eq.(${phone.slice(0,2)}) ${phone.slice(2)}`)
       .limit(1)
-      .single()
+      .single() as { data: { full_name: string; phone: string } | null }
 
     if (!profile) {
       return apiSuccess({ valid: false })
@@ -56,7 +56,7 @@ export async function GET(
       .select('confirmed_count, confirmed_at')
       .eq('event_id', eventId)
       .eq('user_phone', profile.phone)
-      .single()
+      .single() as { data: { confirmed_count: number; confirmed_at: string } | null }
 
     return apiSuccess({
       valid: true,

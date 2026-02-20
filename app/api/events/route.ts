@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       .from('profiles')
       .select('role')
       .eq('id', user.id)
-      .single()
+      .single() as { data: { role: string } | null }
 
     if (profile?.role !== 'admin') return apiError(403, 'Acesso restrito a administradores')
 
@@ -37,8 +37,8 @@ export async function POST(request: NextRequest) {
       return apiError(400, 'Deadline deve ser igual ou posterior à data do evento')
     }
 
-    const { data: event, error } = await supabase
-      .from('events' as any)
+    const { data: event, error } = await (supabase
+      .from('events' as any) as any)
       .insert({
         name,
         description,
@@ -49,9 +49,10 @@ export async function POST(request: NextRequest) {
         created_by: user.id,
       })
       .select()
-      .single()
+      .single() as { data: { id: string; name: string; [key: string]: unknown } | null; error: unknown }
 
     if (error) throw error
+    if (!event) throw new Error('Falha ao criar evento')
 
     logActivity({
       userId: user.id,
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest) {
       .from('profiles')
       .select('role')
       .eq('id', user.id)
-      .single()
+      .single() as { data: { role: string } | null }
 
     const isAdmin = profile?.role === 'admin'
 
@@ -89,8 +90,8 @@ export async function GET(request: NextRequest) {
     const status = url.searchParams.get('status')
     const offset = (page - 1) * limit
 
-    let query = supabase
-      .from('events' as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let query = (supabase.from('events' as any) as any)
       .select('*, event_confirmations(confirmed_count)', { count: 'exact' })
 
     // Members only see active non-deleted (RLS handles this, but be explicit)
@@ -102,7 +103,7 @@ export async function GET(request: NextRequest) {
 
     const { data: events, error, count } = await query
       .order('date', { ascending: false })
-      .range(offset, offset + limit - 1)
+      .range(offset, offset + limit - 1) as { data: ({ event_confirmations: unknown[]; [key: string]: unknown })[] | null; error: unknown; count: number | null }
 
     if (error) throw error
 
