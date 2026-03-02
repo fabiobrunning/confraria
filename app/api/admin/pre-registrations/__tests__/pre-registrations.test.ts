@@ -65,7 +65,7 @@ describe('Pre-Registration API', () => {
       expect(result.success).toBe(true);
       expect(result.attemptId).toBe('attempt-uuid');
       expect(result.temporaryPassword).toBeDefined();
-      expect(result.temporaryPassword?.length).toBe(12);
+      expect(result.temporaryPassword?.length).toBe(6);
     });
 
     it('should fail if member_id is missing', async () => {
@@ -79,17 +79,15 @@ describe('Pre-Registration API', () => {
       expect(result.error).toBeDefined();
     });
 
-    it('should generate a secure temporary password', async () => {
+    it('should generate a 6-digit numeric PIN', async () => {
       const { generateTemporaryPassword } = await import(
         '@/lib/pre-registration/generate-password'
       );
 
-      const password = generateTemporaryPassword(12);
+      const password = generateTemporaryPassword();
 
-      expect(password).toHaveLength(12);
-      expect(/[A-Z]/.test(password)).toBe(true); // Has uppercase
-      expect(/[a-z]/.test(password)).toBe(true); // Has lowercase
-      expect(/\d/.test(password)).toBe(true); // Has numbers
+      expect(password).toHaveLength(6);
+      expect(/^\d{6}$/.test(password)).toBe(true); // Only digits
     });
   });
 
@@ -197,7 +195,7 @@ describe('Pre-Registration API', () => {
 
       expect(result.success).toBe(true);
       expect(result.newPassword).toBeDefined();
-      expect(result.newPassword?.length).toBe(12);
+      expect(result.newPassword?.length).toBe(6);
     });
 
     it('should generate a different password each time', async () => {
@@ -205,8 +203,8 @@ describe('Pre-Registration API', () => {
         '@/lib/pre-registration/generate-password'
       );
 
-      const password1 = generateTemporaryPassword(12);
-      const password2 = generateTemporaryPassword(12);
+      const password1 = generateTemporaryPassword();
+      const password2 = generateTemporaryPassword();
 
       expect(password1).not.toBe(password2);
     });
@@ -222,23 +220,6 @@ describe('Pre-Registration API', () => {
       expect(validatePhoneFormat('11 99999-9999')).toBe(true);
       expect(validatePhoneFormat('+55 11 99999-9999')).toBe(true);
       expect(validatePhoneFormat('invalid')).toBe(false);
-    });
-
-    it('should validate password strength', async () => {
-      const { validatePasswordStrength } = await import(
-        '@/lib/pre-registration/generate-password'
-      );
-
-      const strong = validatePasswordStrength('MyP@ssw0rd123');
-      expect(strong.isLongEnough).toBe(true);
-      expect(strong.hasUppercase).toBe(true);
-      expect(strong.hasLowercase).toBe(true);
-      expect(strong.hasNumbers).toBe(true);
-      expect(strong.score).toBeGreaterThan(2);
-
-      const weak = validatePasswordStrength('weak');
-      expect(weak.isLongEnough).toBe(false);
-      expect(weak.score).toBeLessThanOrEqual(2);
     });
 
     it('should format password for audit logs', async () => {

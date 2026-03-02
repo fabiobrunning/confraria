@@ -109,7 +109,7 @@ export async function POST(
     }
 
     // Generate new password and sync to Auth FIRST (avoid race condition)
-    const newPassword = generateTemporaryPassword(12);
+    const newPassword = generateTemporaryPassword();
     const adminSupabase = createAdminClient();
 
     const { error: authUpdateError } = await adminSupabase.auth.admin.updateUserById(

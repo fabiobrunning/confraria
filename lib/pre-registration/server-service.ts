@@ -31,7 +31,7 @@ export async function createPreRegistrationAttempt(
     const supabase = await createClient();
 
     // Use pre-generated password (when Auth was synced first) or generate new one
-    const plainPassword = preGeneratedPassword || generateTemporaryPassword(12);
+    const plainPassword = preGeneratedPassword || generateTemporaryPassword();
 
     // Hash password with bcrypt (salt: 12)
     const hashedPassword = await hashPassword(plainPassword);
@@ -146,7 +146,7 @@ export async function resendCredentials(
     }
 
     // Use pre-generated password (when Auth was synced first) or generate new one
-    const newPassword = preGeneratedPassword || generateTemporaryPassword(12);
+    const newPassword = preGeneratedPassword || generateTemporaryPassword();
     const hashedPassword = await hashPassword(newPassword);
     const newSendCount = (current.send_count || 0) + 1;
 
@@ -201,7 +201,7 @@ export async function regeneratePassword(
     const supabase = await createClient();
 
     // Use pre-generated password (when Auth was synced first) or generate new one
-    const newPassword = preGeneratedPassword || generateTemporaryPassword(12);
+    const newPassword = preGeneratedPassword || generateTemporaryPassword();
     const hashedPassword = await hashPassword(newPassword);
 
     // Update record

@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate new temporary password
-    const newPassword = generateTemporaryPassword(12)
+    const newPassword = generateTemporaryPassword()
 
     // Update password in Supabase Auth using admin client
     // NOTE: Supabase Auth hashes internally — send plaintext here

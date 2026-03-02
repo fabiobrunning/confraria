@@ -96,7 +96,7 @@ export async function POST(_request: NextRequest) {
 
       try {
         // Generate new password
-        const newPassword = generateTemporaryPassword(12)
+        const newPassword = generateTemporaryPassword()
 
         // 1. Sync to Supabase Auth (plaintext — Auth hashes internally)
         const { error: authError } = await adminSupabase.auth.admin.updateUserById(

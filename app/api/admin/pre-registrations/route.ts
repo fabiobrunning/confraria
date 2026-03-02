@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
 
     // Generate password and sync to Auth FIRST (avoid race condition)
     // If Auth fails, no orphan record is left in the DB
-    const temporaryPassword = generateTemporaryPassword(12);
+    const temporaryPassword = generateTemporaryPassword();
     const adminSupabase = createAdminClient();
 
     const { error: authUpdateError } = await adminSupabase.auth.admin.updateUserById(

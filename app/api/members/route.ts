@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate secure temporary password
-    const tempPassword = generateTemporaryPassword(12)
+    const tempPassword = generateTemporaryPassword()
 
     // Clean phone number (remove formatting)
     const cleanPhone = phone.replace(/\D/g, '')
