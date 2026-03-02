@@ -1,23 +1,21 @@
 markdownExploder: true
 project:
   type: brownfield
-  installedAt: '2026-02-18T12:20:42.473Z'
+  installedAt: '2026-02-25T12:32:14.044Z'
   version: 2.1.0
 user_profile: advanced
 ide:
   selected:
     - claude-code
     - codex
-    - gemini
     - cursor
-    - github-copilot
     - antigravity
   configs:
     vscode: false
     codex: true
-    gemini: true
+    gemini: false
     cursor: true
-    github-copilot: true
+    github-copilot: false
     antigravity: true
     zed: false
     claude-desktop: false
@@ -90,6 +88,23 @@ projectStatus:
   statusFile: .aios/project-status.yaml
   maxModifiedFiles: 5
   maxRecentCommits: 2
+boundary:
+  frameworkProtection: true
+  protected:
+    - .aios-core/core/**
+    - .aios-core/development/tasks/**
+    - .aios-core/development/templates/**
+    - .aios-core/development/checklists/**
+    - .aios-core/development/workflows/**
+    - .aios-core/infrastructure/**
+    - .aios-core/constitution.md
+    - bin/aios.js
+    - bin/aios-init.js
+  exceptions:
+    - .aios-core/data/**
+    - .aios-core/development/agents/*/MEMORY.md
+    - .aios-core/core/config/schemas/**
+    - .aios-core/core/config/template-overrides.js
 agentIdentity:
   greeting:
     contextDetection: true
