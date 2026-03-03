@@ -23,34 +23,16 @@ interface TemporaryPasswordGeneratorProps {
 }
 
 /**
- * Generate a secure random password
- * 16 characters with uppercase, lowercase, numbers, and special chars
+ * Generate a 6-digit numeric PIN
+ * Simple and easy to share via WhatsApp
  */
 function generatePassword(): string {
-  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-  const lowercase = 'abcdefghijklmnopqrstuvwxyz'
-  const numbers = '0123456789'
-  const special = '!@#$%^&*()-_=+[]{}|;:,.<>?'
-  const all = uppercase + lowercase + numbers + special
-
-  let password = ''
-
-  // Ensure at least one character from each category
-  password += uppercase[Math.floor(Math.random() * uppercase.length)]
-  password += lowercase[Math.floor(Math.random() * lowercase.length)]
-  password += numbers[Math.floor(Math.random() * numbers.length)]
-  password += special[Math.floor(Math.random() * special.length)]
-
-  // Fill remaining 12 characters randomly
-  for (let i = 0; i < 12; i++) {
-    password += all[Math.floor(Math.random() * all.length)]
+  const digits = '0123456789'
+  let pin = ''
+  for (let i = 0; i < 6; i++) {
+    pin += digits[Math.floor(Math.random() * digits.length)]
   }
-
-  // Shuffle the password
-  return password
-    .split('')
-    .sort(() => Math.random() - 0.5)
-    .join('')
+  return pin
 }
 
 export function TemporaryPasswordGenerator({
@@ -219,7 +201,7 @@ export function TemporaryPasswordGenerator({
               <div className="text-center py-6">
                 <Key className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
                 <p className="text-sm text-muted-foreground mb-4">
-                  Clique no botão abaixo para gerar uma senha segura
+                  Clique no botão abaixo para gerar um PIN de 6 dígitos
                 </p>
               </div>
 
