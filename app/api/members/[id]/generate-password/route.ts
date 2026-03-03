@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
 
 
@@ -16,6 +16,7 @@ export async function POST(
   try {
     const { id } = await params
     const supabase = await createClient()
+    const adminSupabase = createAdminClient()
 
     // Check authentication
     const { data: { user } } = await supabase.auth.getUser()
@@ -37,20 +38,20 @@ export async function POST(
       return NextResponse.json({ error: 'Sem permissão' }, { status: 403 })
     }
 
-    const { password, sendEmail } = await request.json()
+    const { password } = await request.json()
 
     if (!password) {
       return NextResponse.json({ error: 'Senha não fornecida' }, { status: 400 })
     }
 
-    // Get member details
-    const { data: memberData, error: memberError } = await supabase
+    // Get member details using admin client to bypass RLS
+    const { data: memberData, error: memberError } = await adminSupabase
       .from('profiles')
-      .select('id, email, full_name, pre_registered')
+      .select('id, full_name, phone, pre_registered')
       .eq('id', id)
       .single()
 
-    const member = memberData as { id: string; email: string; full_name: string; pre_registered: boolean } | null;
+    const member = memberData as { id: string; full_name: string; phone: string; pre_registered: boolean } | null;
 
     if (memberError || !member) {
       return NextResponse.json({ error: 'Membro não encontrado' }, { status: 404 })
@@ -63,9 +64,8 @@ export async function POST(
       )
     }
 
-    // Update member's password in Supabase Auth
-    // NOTE: Supabase Auth hashes internally — send plaintext here
-    const { error: updateError } = await supabase.auth.admin.updateUserById(
+    // Update member's password in Supabase Auth using admin client
+    const { error: updateError } = await adminSupabase.auth.admin.updateUserById(
       id,
       { password }
     )
@@ -76,13 +76,6 @@ export async function POST(
         { error: 'Erro ao atualizar senha no sistema de autenticação' },
         { status: 500 }
       )
-    }
-
-    // Send email if requested and email exists
-    if (sendEmail && member.email) {
-      // TODO: Implement email sending via Supabase or external service
-      // For now, we'll log it
-      // TODO: Implement email sending via Supabase or external service
     }
 
     // Log activity
@@ -97,7 +90,6 @@ export async function POST(
     return NextResponse.json({
       success: true,
       message: 'Senha gerada com sucesso',
-      emailSent: sendEmail && !!member.email,
     })
   } catch (error) {
     console.error('Error generating password:', error)
