@@ -47,21 +47,14 @@ export async function POST(
     // Get member details using admin client to bypass RLS
     const { data: memberData, error: memberError } = await adminSupabase
       .from('profiles')
-      .select('id, full_name, phone, pre_registered')
+      .select('id, full_name, phone')
       .eq('id', id)
       .single()
 
-    const member = memberData as { id: string; full_name: string; phone: string; pre_registered: boolean } | null;
+    const member = memberData as { id: string; full_name: string; phone: string } | null;
 
     if (memberError || !member) {
       return NextResponse.json({ error: 'Membro não encontrado' }, { status: 404 })
-    }
-
-    if (!member.pre_registered) {
-      return NextResponse.json(
-        { error: 'Este membro já completou o cadastro' },
-        { status: 400 }
-      )
     }
 
     // Update member's password in Supabase Auth using admin client
