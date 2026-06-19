@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter, Cormorant_Garamond } from 'next/font/google'
+import { Inter, Cormorant_Garamond, Georama } from 'next/font/google'
 import localFont from 'next/font/local'
 import './globals.css'
 import './globals-members.css'
@@ -17,6 +17,13 @@ const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-cormorant',
+})
+
+const georama = Georama({
+  subsets: ['latin'],
+  weight: ['300', '400', '500'],
+  variable: '--font-georama',
+  display: 'swap',
 })
 
 const archive = localFont({
@@ -37,7 +44,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body className={`${inter.variable} ${cormorant.variable} ${archive.variable} ${inter.className}`}>
+      <body className={`${inter.variable} ${cormorant.variable} ${georama.variable} ${archive.variable} ${inter.className}`}>
         <QueryProvider>
           <TooltipProvider>
             {children}

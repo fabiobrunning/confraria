@@ -18,6 +18,7 @@ export default {
         'sans': ['var(--font-inter)', 'Inter', 'system-ui', 'sans-serif'],
         'display': ['var(--font-archive)', 'Archive', 'system-ui', 'sans-serif'],
         'serif': ['var(--font-cormorant)', 'Cormorant Garamond', 'Georgia', 'serif'],
+        'brand': ['var(--font-georama)', 'Georama', 'system-ui', 'sans-serif'],
         'mono': ['ui-monospace', 'monospace'],
       },
       fontSize: {
