@@ -269,87 +269,90 @@ export default function HomePage() {
 
       {/* Page Content */}
       <div ref={pageContentRef} className="page-content will-change-transform">
-        {/* Hero Section - Text Centered */}
-        <section className="relative min-h-[100dvh] flex flex-col justify-center overflow-hidden" aria-label="Hero section">
-          {/* Background */}
-          <div className="absolute inset-0 -z-10">
-            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black z-10" />
-            <img
-              src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1920&q=80"
-              alt=""
-              className="w-full h-full object-cover"
-              loading="eager"
+        {/* Hero Section — VideoHero fullscreen */}
+        <section className="relative h-[100dvh] flex flex-col items-center justify-center overflow-hidden" aria-label="Hero section">
+          {/* Vídeo de fundo */}
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+            src="/videos/motion.mp4"
+          />
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black" />
+
+          {/* Logo centralizado */}
+          <div className="relative z-10 flex flex-col items-center gap-8 animate-fade-up" style={{ animationDelay: '500ms', animationFillMode: 'both' }}>
+            <Image
+              src="/logo-confraria.svg"
+              alt="Confraria Pedra Branca"
+              width={280}
+              height={80}
+              className="h-16 sm:h-20 w-auto"
+              priority
             />
+            <p className="font-brand text-label uppercase tracking-[0.25em] text-white/50 text-sm">
+              Empresários que geram negócios com propósito
+            </p>
           </div>
 
-          {/* Centered Content */}
-          <div className="px-4 sm:px-6 lg:px-8 w-full max-w-[1200px] mx-auto text-center pt-32 sm:pt-28 pb-16 sm:pb-12">
-            {/* Main Headline */}
-            <h1 className="font-display text-[2.5rem] sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl leading-[0.95] tracking-tight uppercase bg-gradient-to-b from-white via-white to-accent/80 bg-clip-text text-transparent mb-8 sm:mb-6">
-              Pessoas com visão geram negócios com propósito
-            </h1>
-
-            {/* Subheadline */}
-            <p className="font-serif text-2xl sm:text-3xl md:text-4xl text-white/80 max-w-[900px] mx-auto mb-10 sm:mb-8 leading-relaxed font-medium">
-              O networking autêntico que todo empresário procura, mas raramente encontra.
-            </p>
-
-            {/* Description */}
-            <p className="text-white/60 text-lg sm:text-xl md:text-2xl max-w-[850px] mx-auto mb-12 sm:mb-10 leading-relaxed">
-              Fortalecemos líderes de negócios da nossa região, criando um ambiente de confiança mútua. Conhecimento compartilhado sem segundas intenções, desafios divididos por escolha, conquistas celebradas com orgulho genuíno.
-            </p>
-
-            {/* Scroll indicator */}
-            <div className="mt-8 sm:mt-6 flex flex-col items-center gap-3 animate-pulse">
-              <p className="font-serif text-2xl sm:text-3xl md:text-4xl text-white/80 max-w-[900px] mx-auto leading-relaxed font-medium">E nossos números refletem exatamente isso:</p>
-              <div className="w-0.5 h-40 bg-gradient-to-b from-white/40 via-white/20 to-transparent" />
-            </div>
+          {/* Indicador de scroll */}
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
+            <div className="w-px h-16 bg-gradient-to-b from-primary/60 to-transparent" />
           </div>
         </section>
 
-        {/* Counter Section */}
+        {/* Manifesto + Counters */}
         <section
           ref={counterSectionRef}
-          className="bg-black px-4 sm:px-6 py-10 sm:py-14 border-t border-white/5"
-          aria-label="Estatisticas da Confraria"
+          className="bg-background px-4 sm:px-6 py-20 sm:py-28 border-t border-white/[0.06]"
+          aria-label="Manifesto e estatísticas"
         >
-          <div className="mx-auto max-w-6xl">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8 text-center">
-              {/* Membros */}
+          <div className="mx-auto max-w-6xl space-y-16">
+            {/* Headline manifesto */}
+            <div className="text-center max-w-4xl mx-auto">
+              <p className="font-brand text-label uppercase tracking-[0.2em] text-primary/60 mb-4 text-sm">
+                Nossa essência
+              </p>
+              <h2 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl uppercase leading-[0.95] tracking-tight bg-gradient-to-b from-white via-white to-primary/70 bg-clip-text text-transparent">
+                Pessoas com visão geram negócios com propósito
+              </h2>
+            </div>
+
+            {/* Counters */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10 text-center">
               <div className="group">
                 <div
-                  className="text-white font-bold font-display mb-1 text-8xl sm:text-9xl md:text-[10rem] leading-none transition-all duration-300 group-hover:text-accent"
+                  className="text-white font-display font-bold text-8xl sm:text-9xl leading-none transition-colors group-hover:text-primary"
                   aria-label={`${membros} membros ativos`}
                 >
                   {membros}
                 </div>
-                <div className="text-base sm:text-lg font-medium text-white/60 tracking-[0.15em] uppercase">
+                <div className="font-brand text-xs uppercase tracking-[0.2em] text-white/40 mt-2">
                   Membros Ativos
                 </div>
               </div>
-
-              {/* Empresas */}
               <div className="group">
                 <div
-                  className="text-white font-bold font-display mb-1 text-8xl sm:text-9xl md:text-[10rem] leading-none transition-all duration-300 group-hover:text-accent"
+                  className="text-white font-display font-bold text-8xl sm:text-9xl leading-none transition-colors group-hover:text-primary"
                   aria-label={`${empresas} empresas conectadas`}
                 >
                   {empresas}
                 </div>
-                <div className="text-base sm:text-lg font-medium text-white/60 tracking-[0.15em] uppercase">
+                <div className="font-brand text-xs uppercase tracking-[0.2em] text-white/40 mt-2">
                   Empresas Conectadas
                 </div>
               </div>
-
-              {/* Valor */}
               <div className="group">
                 <div
-                  className="text-accent font-bold font-display mb-1 text-8xl sm:text-9xl md:text-[10rem] leading-none transition-all duration-300 group-hover:scale-105"
-                  aria-label={`Mais de ${valor} milhões em valor movimentado`}
+                  className="text-primary font-display font-bold text-8xl sm:text-9xl leading-none transition-transform group-hover:scale-105"
+                  aria-label={`Mais de ${valor} milhões movimentados`}
                 >
                   +{valor}M
                 </div>
-                <div className="text-base sm:text-lg font-medium text-white/60 tracking-[0.15em] uppercase">
+                <div className="font-brand text-xs uppercase tracking-[0.2em] text-white/40 mt-2">
                   Valor Movimentado
                 </div>
               </div>
@@ -390,16 +393,9 @@ export default function HomePage() {
               </div>
 
               {/* Developer Credit */}
-              <p className="text-white/40 text-sm">
+              <p className="text-white/30 text-xs font-brand uppercase tracking-widest">
                 Desenvolvido pela{' '}
-                <a
-                  href="https://looping.com.br"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-accent hover:text-accent/80 transition-colors font-medium"
-                >
-                  Looping
-                </a>
+                <span className="text-primary/60">Seivi</span>
               </p>
             </div>
           </div>

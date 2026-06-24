@@ -241,6 +241,7 @@ export async function regeneratePassword(
 
 /**
  * List pending pre-registrations (not yet completed first access)
+ * Includes group name via quotas → groups JOIN
  */
 export async function listPendingPreRegistrations(
   page: number = 1,
@@ -249,9 +250,11 @@ export async function listPendingPreRegistrations(
   data: (PreRegistrationAttempt & {
     member_name: string;
     member_phone: string;
+    group_name: string | null;
   })[];
   total: number;
   page: number;
+  limit: number;
   totalPages: number;
 }> {
   try {
@@ -259,13 +262,16 @@ export async function listPendingPreRegistrations(
 
     const offset = (page - 1) * limit;
 
-    // Get pending pre-registrations (not accessed yet)
     const { data, count, error } = await (supabase as any)
       .from('pre_registration_attempts')
       .select(
         `*,
-        profiles!member_id(id, full_name, phone)
-      `,
+        profiles!member_id(
+          id,
+          full_name,
+          phone,
+          quotas(group_id, groups(name))
+        )`,
         { count: 'exact' }
       )
       .is('first_accessed_at', null)
@@ -275,33 +281,116 @@ export async function listPendingPreRegistrations(
 
     if (error) {
       console.error('Error listing pending registrations:', error);
-      return { data: [], total: 0, page, totalPages: 0 };
+      return { data: [], total: 0, page, limit, totalPages: 0 };
     }
 
-    // Transform response
     const results = (data || []).map((item: Record<string, any>) => {
-      const profile = Array.isArray(item.profiles)
-        ? item.profiles[0]
-        : item.profiles;
+      const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
+      const quotas: any[] = Array.isArray(profile?.quotas) ? profile.quotas : [];
+      const group = quotas[0]?.groups;
       return {
         ...item,
-        member_name: profile?.full_name || 'Unknown',
+        member_name: profile?.full_name || 'Desconhecido',
         member_phone: profile?.phone || '',
+        group_name: group?.name || null,
       };
     });
 
     const total = count || 0;
-    const totalPages = Math.ceil(total / limit);
-
-    return {
-      data: results,
-      total,
-      page,
-      totalPages,
-    };
+    return { data: results, total, page, limit, totalPages: Math.ceil(total / limit) };
   } catch (error) {
     console.error('Unexpected error in listPendingPreRegistrations:', error);
-    return { data: [], total: 0, page, totalPages: 0 };
+    return { data: [], total: 0, page, limit, totalPages: 0 };
+  }
+}
+
+/**
+ * List ALL members who have never signed in (regardless of pre-registration attempt).
+ * Used by the "Membros Pendentes" admin view.
+ */
+export async function listAllPendingMembers(
+  page: number = 1,
+  limit: number = 50
+): Promise<{
+  data: {
+    id: string;
+    full_name: string;
+    phone: string;
+    created_at: string;
+    group_name: string | null;
+    has_pre_registration: boolean;
+    pre_reg_id: string | null;
+    pre_reg_expires: string | null;
+    pre_reg_send_count: number;
+    pre_reg_last_sent: string | null;
+  }[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}> {
+  try {
+    const supabase = await createClient();
+    const offset = (page - 1) * limit;
+
+    // Fetch profiles with pre_registered=true, joining groups and latest pre_reg attempt
+    const { data, count, error } = await (supabase as any)
+      .from('profiles')
+      .select(
+        `id, full_name, phone, created_at,
+        quotas(group_id, groups(name)),
+        pre_registration_attempts(
+          id, expiration_date, send_count, last_sent_at, first_accessed_at
+        )`,
+        { count: 'exact' }
+      )
+      .eq('pre_registered', true)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) {
+      console.error('Error listing all pending members:', error);
+      return { data: [], total: 0, page, limit, totalPages: 0 };
+    }
+
+    const results = (data || [])
+      .map((p: Record<string, any>) => {
+        const quotas: any[] = Array.isArray(p.quotas) ? p.quotas : [];
+        const group = quotas[0]?.groups;
+
+        // Pick the most recent pre-registration attempt
+        const attempts: any[] = Array.isArray(p.pre_registration_attempts)
+          ? p.pre_registration_attempts
+          : [];
+        const latestAttempt = attempts
+          .filter((a: any) => !a.first_accessed_at)
+          .sort((a: any, b: any) =>
+            new Date(b.expiration_date).getTime() - new Date(a.expiration_date).getTime()
+          )[0] || null;
+
+        return {
+          id: p.id,
+          full_name: p.full_name,
+          phone: p.phone,
+          created_at: p.created_at,
+          group_name: group?.name || null,
+          has_pre_registration: !!latestAttempt,
+          pre_reg_id: latestAttempt?.id || null,
+          pre_reg_expires: latestAttempt?.expiration_date || null,
+          pre_reg_send_count: latestAttempt?.send_count || 0,
+          pre_reg_last_sent: latestAttempt?.last_sent_at || null,
+        };
+      })
+      // Only members who haven't signed in (no completed first access)
+      // Incluir todos: sem pré-cadastro (pendente de envio) e com pré-cadastro não acessado
+      .filter((m: any) => m !== null);
+
+    const total = count || 0;
+    return { data: results, total, page, limit, totalPages: Math.ceil(total / limit) };
+  } catch (error) {
+    console.error('Unexpected error in listAllPendingMembers:', error);
+    return { data: [], total: 0, page, limit, totalPages: 0 };
   }
 }
 

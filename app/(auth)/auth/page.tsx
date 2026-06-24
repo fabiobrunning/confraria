@@ -9,13 +9,6 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { authSchema, type AuthFormData } from '@/lib/schemas'
@@ -109,33 +102,35 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black p-4">
-      <Card className="w-full max-w-md shadow-2xl border-accent/20 bg-white">
-        <CardHeader className="space-y-4 text-center pt-8">
-          <div className="flex justify-center mb-2">
+    <div className="relative min-h-[100dvh] bg-background flex items-center justify-center p-4 overflow-hidden">
+      {/* Blob dourado */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/[0.06] blur-[120px] pointer-events-none" />
+
+      {/* Card */}
+      <div className="relative z-10 w-full max-w-[400px] animate-fade-up">
+        <div className="bg-card border border-white/[0.08] rounded-2xl p-8 space-y-8 shadow-2xl">
+          {/* Logo */}
+          <div className="flex flex-col items-center gap-3">
             <Image
-              src="/confraria-pedra-branca.svg"
+              src="/logo-confraria.svg"
               alt="Confraria Pedra Branca"
-              width={80}
-              height={80}
-              className="h-20 w-auto"
+              width={160}
+              height={48}
+              className="h-12 w-auto"
               priority
             />
+            <div className="text-center space-y-1">
+              <h1 className="font-serif italic text-xl text-foreground/90">Área do Membro</h1>
+              <p className="font-brand text-label uppercase tracking-[0.2em] text-primary/60 text-xs">
+                Acesso exclusivo
+              </p>
+            </div>
           </div>
-          <CardTitle className="text-3xl font-display tracking-wide text-black">
-            CONFRARIA PEDRA BRANCA
-          </CardTitle>
-          <CardDescription className="font-serif text-base text-gray-600">
-            Sistema de Gestao de Consorcios
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="px-8 pb-8">
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-2">
-              <Label
-                htmlFor="phone"
-                className="font-sans text-sm font-medium text-gray-700"
-              >
+
+          {/* Form */}
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div className="space-y-1.5">
+              <Label htmlFor="phone" className="font-brand text-xs uppercase tracking-wide text-muted-foreground">
                 Telefone
               </Label>
               <Input
@@ -143,29 +138,20 @@ export default function AuthPage() {
                 type="tel"
                 placeholder="(00) 00000-0000"
                 value={formData.phone}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    phone: maskPhone(e.target.value),
-                  }))
-                }
+                onChange={(e) => setFormData((prev) => ({ ...prev, phone: maskPhone(e.target.value) }))}
                 disabled={loading}
-                className={`font-sans bg-white text-gray-900 placeholder:text-gray-500 ${
+                className={`h-12 bg-input border-white/[0.08] focus:border-primary/60 placeholder:text-muted-foreground/40 ${
                   validationErrors.phone ? 'border-destructive' : ''
                 }`}
                 maxLength={15}
               />
               {validationErrors.phone && (
-                <p className="text-sm text-destructive font-sans">
-                  {validationErrors.phone}
-                </p>
+                <p className="text-xs text-destructive">{validationErrors.phone}</p>
               )}
             </div>
-            <div className="space-y-2">
-              <Label
-                htmlFor="password"
-                className="font-sans text-sm font-medium text-gray-700"
-              >
+
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="font-brand text-xs uppercase tracking-wide text-muted-foreground">
                 Senha
               </Label>
               <div className="relative flex items-center">
@@ -174,11 +160,9 @@ export default function AuthPage() {
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={formData.password}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, password: e.target.value }))
-                  }
+                  onChange={(e) => setFormData((prev) => ({ ...prev, password: e.target.value }))}
                   disabled={loading}
-                  className={`font-sans pr-10 bg-white text-gray-900 placeholder:text-gray-500 ${
+                  className={`h-12 bg-input border-white/[0.08] focus:border-primary/60 pr-10 placeholder:text-muted-foreground/40 ${
                     validationErrors.password ? 'border-destructive' : ''
                   }`}
                 />
@@ -186,42 +170,33 @@ export default function AuthPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={loading}
-                  className="absolute right-3 text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                  className="absolute right-3 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
                 >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
               {validationErrors.password && (
-                <p className="text-sm text-destructive font-sans">
-                  {validationErrors.password}
-                </p>
+                <p className="text-xs text-destructive">{validationErrors.password}</p>
               )}
             </div>
-            <Button
-              type="submit"
-              className="w-full bg-accent hover:bg-accent/90 text-white font-sans font-medium"
-              disabled={loading}
-            >
+
+            <Button type="submit" className="w-full h-12" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Entrar
             </Button>
 
-            <div className="text-center pt-2">
+            <div className="text-center">
               <button
                 type="button"
                 onClick={() => setShowForgotPassword(true)}
-                className="text-sm text-accent hover:underline font-medium"
+                className="font-brand text-xs uppercase tracking-wide text-muted-foreground hover:text-primary transition-colors"
               >
-                Esqueci a senha
+                Esqueci minha senha
               </button>
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <ForgotPasswordModal
         open={showForgotPassword}

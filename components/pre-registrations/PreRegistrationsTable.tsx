@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { PreRegistrationStatusBadge, getPreRegistrationStatus } from './PreRegistrationStatusBadge'
-import { Phone, Calendar, Send, RotateCw, MoreHorizontal } from 'lucide-react'
+import { Phone, Calendar, Send, RotateCw, MoreHorizontal, Users } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +25,7 @@ interface PreRegistration {
   member_id: string
   member_name: string
   member_phone: string
+  group_name?: string | null
   created_at: string
   send_count: number
   last_sent_at: string | null
@@ -78,6 +79,7 @@ export function PreRegistrationsTable({
             <TableRow className="hover:bg-transparent border-border">
               <TableHead className="text-muted-foreground">Nome</TableHead>
               <TableHead className="text-muted-foreground hidden md:table-cell">Telefone</TableHead>
+              <TableHead className="text-muted-foreground hidden sm:table-cell">Grupo</TableHead>
               <TableHead className="text-muted-foreground">Status</TableHead>
               <TableHead className="text-muted-foreground hidden lg:table-cell">Enviado</TableHead>
               <TableHead className="text-muted-foreground hidden sm:table-cell">Data</TableHead>
@@ -114,6 +116,9 @@ export function PreRegistrationsTable({
             <TableHead className="text-muted-foreground font-medium">Nome</TableHead>
             <TableHead className="text-muted-foreground font-medium hidden md:table-cell">
               Telefone
+            </TableHead>
+            <TableHead className="text-muted-foreground font-medium hidden sm:table-cell">
+              Grupo
             </TableHead>
             <TableHead className="text-muted-foreground font-medium">Status</TableHead>
             <TableHead className="text-muted-foreground font-medium hidden lg:table-cell">
@@ -154,6 +159,17 @@ export function PreRegistrationsTable({
                     <Phone className="w-4 h-4" />
                     <span>{preReg.member_phone}</span>
                   </div>
+                </TableCell>
+
+                <TableCell className="hidden sm:table-cell">
+                  {preReg.group_name ? (
+                    <div className="flex items-center gap-1.5 text-sm">
+                      <Users className="w-3.5 h-3.5 text-primary/60 shrink-0" />
+                      <span className="text-foreground/80">{preReg.group_name}</span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground/50">—</span>
+                  )}
                 </TableCell>
 
                 <TableCell>

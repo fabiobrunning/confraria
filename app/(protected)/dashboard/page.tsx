@@ -1,74 +1,38 @@
 import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Users, Building2, Layers, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 import { DashboardBusinessStats } from './DashboardBusinessStats'
-import { PageContainer, PageHeader } from '@/components/layout'
-
-interface StatCardProps {
-  title: string
-  value: number
-  icon: React.ReactNode
-  color: string
-  href: string | null
-}
-
-function StatCard({ title, value, icon, color, href }: StatCardProps) {
-  const content = (
-    <Card
-      className={`hover:shadow-lg transition-all ${
-        href ? 'cursor-pointer hover:scale-105' : ''
-      }`}
-    >
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <div className={color}>{icon}</div>
-      </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-bold">{value}</div>
-      </CardContent>
-    </Card>
-  )
-
-  if (href) {
-    return <Link href={href}>{content}</Link>
-  }
-
-  return content
-}
+import { PageContainer } from '@/components/layout'
+import { GlassCard } from '@/components/ui/glass-card'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  // Get user - use getUser() for JWT validation (more secure than getSession)
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   let isAdmin = false
+  let profileName = ''
+
   if (user) {
     const { data: profileData } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, full_name')
       .eq('id', user.id)
       .single()
 
-    isAdmin = (profileData as { role: string } | null)?.role === 'admin'
+    isAdmin = (profileData as { role: string; full_name: string } | null)?.role === 'admin'
+    profileName = (profileData as { role: string; full_name: string } | null)?.full_name || ''
   }
 
-  // Fetch stats in parallel with error handling
   let stats = { members: 0, companies: 0, groups: 0, activeQuotas: 0 }
   try {
     const [membersRes, companiesRes, groupsRes, quotasRes] = await Promise.all([
       supabase.from('profiles').select('id', { count: 'exact', head: true }),
       supabase.from('companies').select('id', { count: 'exact', head: true }),
       supabase.from('groups').select('id', { count: 'exact', head: true }),
-      supabase
-        .from('quotas')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', 'active'),
+      supabase.from('quotas').select('id', { count: 'exact', head: true }).eq('status', 'active'),
     ])
-
     stats = {
       members: membersRes.count ?? 0,
       companies: companiesRes.count ?? 0,
@@ -79,69 +43,50 @@ export default async function DashboardPage() {
     console.error('Error fetching dashboard stats:', error)
   }
 
-  const statCards = [
-    {
-      title: 'Total de Membros',
-      value: stats.members,
-      icon: <Users className="h-5 w-5" />,
-      color: 'text-primary',
-      href: '/members',
-    },
-    {
-      title: 'Empresas Cadastradas',
-      value: stats.companies,
-      icon: <Building2 className="h-5 w-5" />,
-      color: 'text-primary',
-      href: '/companies',
-    },
-    {
-      title: 'Grupos de Consorcio',
-      value: stats.groups,
-      icon: <Layers className="h-5 w-5" />,
-      color: 'text-success',
-      href: '/groups',
-    },
-    {
-      title: 'Cotas Ativas',
-      value: stats.activeQuotas,
-      icon: <TrendingUp className="h-5 w-5" />,
-      color: 'text-primary',
-      href: null,
-    },
-  ]
+  const firstName = profileName.split(' ')[0] || 'Membro'
 
   return (
     <PageContainer>
-      <PageHeader
-        title="Dashboard"
-        description="Visão geral do sistema de consórcios"
-      />
-
-      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
-        {statCards.map((stat) => (
-          <StatCard
-            key={stat.title}
-            title={stat.title}
-            value={stat.value}
-            icon={stat.icon}
-            color={stat.color}
-            href={stat.href}
-          />
-        ))}
+      {/* Saudação */}
+      <div className="mb-8">
+        <p className="font-brand text-label uppercase tracking-[0.2em] text-muted-foreground text-xs mb-1">
+          Bem-vindo de volta
+        </p>
+        <h1 className="font-display text-3xl sm:text-4xl uppercase tracking-tight text-foreground">
+          {firstName}
+        </h1>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Bem-vindo ao Sistema</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Este e o sistema de gestao de consorcios da Confraria Pedra Branca.
-            Use o menu lateral para navegar entre as diferentes secoes do
-            sistema.
-          </p>
-        </CardContent>
-      </Card>
+      {/* GlassCards de stats */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4 mb-8">
+        <Link href="/members">
+          <GlassCard
+            label="Membros"
+            value={String(stats.members)}
+            sub="Total de membros"
+          />
+        </Link>
+        <Link href="/companies">
+          <GlassCard
+            label="Empresas"
+            value={String(stats.companies)}
+            sub="Cadastradas"
+          />
+        </Link>
+        <Link href="/groups">
+          <GlassCard
+            label="Grupos"
+            value={String(stats.groups)}
+            sub="de Consórcio"
+          />
+        </Link>
+        <GlassCard
+          label="Cotas Ativas"
+          value={String(stats.activeQuotas)}
+          sub="Em andamento"
+          accent
+        />
+      </div>
 
       {/* Business Transactions Stats (Admin only) */}
       {isAdmin && <DashboardBusinessStats />}

@@ -74,7 +74,8 @@ export default function Sidebar({ role }: SidebarProps) {
             { path: '/business-transactions', icon: TrendingUp, label: 'Transações de Negócios' },
             { path: '/admin/events', icon: Calendar, label: 'Eventos' },
             { path: '/admin/prospects', icon: UserCheck, label: 'Interessados' },
-            { path: '/pre-register', icon: UserPlus, label: 'Pre-Cadastro' },
+            { path: '/admin/pending-members', icon: UserPlus, label: 'Membros Pendentes' },
+            { path: '/pre-register', icon: UserPlus, label: 'Pré-Cadastro' },
           ]
         : [],
     [role]
@@ -88,21 +89,25 @@ export default function Sidebar({ role }: SidebarProps) {
   const NavContent = useCallback(
     ({ collapsed = false }: { collapsed?: boolean }) => {
       const renderItem = (item: (typeof allItems)[number]) => {
+        const active = isActive(item.path)
         const navItem = (
           <Link
             key={item.path}
             href={item.path}
             onClick={() => setMobileMenuOpen(false)}
             className={cn(
-              'flex items-center rounded-lg px-3 py-2 transition-colors',
+              'flex items-center rounded-lg px-3 py-2 transition-all duration-150',
               collapsed ? 'justify-center' : 'gap-3',
-              isActive(item.path)
-                ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-                : 'text-sidebar-foreground hover:bg-sidebar-accent'
+              active
+                ? 'text-primary'
+                : 'text-white/40 hover:text-white/70'
             )}
           >
-            <item.icon className="h-5 w-5 flex-shrink-0" />
-            {!collapsed && <span>{item.label}</span>}
+            {!collapsed && active && (
+              <span className="w-1 h-1 bg-primary rounded-full shrink-0 -ml-0.5 mr-0.5" />
+            )}
+            <item.icon className={cn('h-4 w-4 flex-shrink-0', active ? 'text-primary' : '')} />
+            {!collapsed && <span className="text-sm">{item.label}</span>}
           </Link>
         )
 
@@ -121,9 +126,9 @@ export default function Sidebar({ role }: SidebarProps) {
       return (
       <>
         {/* Meu Espaço */}
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {!collapsed && (
-            <span className="px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <span className="px-3 py-2 font-brand text-label text-[10px] uppercase tracking-[0.2em] text-white/20 block">
               Meu Espaço
             </span>
           )}
@@ -132,16 +137,16 @@ export default function Sidebar({ role }: SidebarProps) {
 
         {/* Administração */}
         {adminItems.length > 0 && (
-          <div className="space-y-1 mt-4">
+          <div className="space-y-0.5 mt-4">
             {!collapsed && (
               <>
-                <div className="mx-3 border-t border-sidebar-border" />
-                <span className="px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <div className="mx-3 my-2 border-t border-white/[0.06]" />
+                <span className="px-3 py-2 font-brand text-label text-[10px] uppercase tracking-[0.2em] text-white/20 block">
                   Administração
                 </span>
               </>
             )}
-            {collapsed && <div className="mx-2 border-t border-sidebar-border my-2" />}
+            {collapsed && <div className="mx-2 border-t border-white/[0.06] my-2" />}
             {adminItems.map(renderItem)}
           </div>
         )}
@@ -151,10 +156,10 @@ export default function Sidebar({ role }: SidebarProps) {
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="w-full justify-center text-sidebar-foreground hover:bg-sidebar-accent"
+                  className="w-full justify-center text-white/30 hover:text-white/60"
                   onClick={handleLogout}
                 >
-                  <LogOut className="h-5 w-5" />
+                  <LogOut className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="right">Sair</TooltipContent>
@@ -162,10 +167,10 @@ export default function Sidebar({ role }: SidebarProps) {
           ) : (
             <Button
               variant="ghost"
-              className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+              className="w-full justify-start gap-3 text-white/30 hover:text-white/60 text-sm"
               onClick={handleLogout}
             >
-              <LogOut className="mr-3 h-5 w-5" />
+              <LogOut className="h-4 w-4" />
               Sair
             </Button>
           )}
@@ -184,13 +189,13 @@ export default function Sidebar({ role }: SidebarProps) {
       {/* Desktop Sidebar */}
       <aside
         className={cn(
-          'hidden lg:flex flex-col bg-sidebar border-r border-sidebar-border fixed h-screen transition-all duration-300',
+          'hidden lg:flex flex-col bg-background border-r border-white/[0.06] fixed h-screen transition-all duration-300',
           effectiveCollapsed ? 'w-20' : 'w-64'
         )}
         data-sidebar-collapsed={effectiveCollapsed}
       >
         {/* Header with Logo and Toggle - Maintain min height to prevent shift */}
-        <div className="h-24 min-h-24 p-4 border-b border-sidebar-border flex items-center justify-between">
+        <div className="h-24 min-h-24 p-4 border-b border-white/[0.06] flex items-center justify-between">
           {!effectiveCollapsed && (
             <Image
               src="/logo_confraria_br.png"
@@ -205,7 +210,7 @@ export default function Sidebar({ role }: SidebarProps) {
             variant="ghost"
             size="icon"
             onClick={toggleCollapse}
-            className="text-sidebar-foreground hover:bg-sidebar-accent flex-shrink-0"
+            className="text-white/30 hover:text-white/60 flex-shrink-0"
             title={effectiveCollapsed ? 'Expandir menu' : 'Retrair menu'}
           >
             {effectiveCollapsed ? (
@@ -223,19 +228,19 @@ export default function Sidebar({ role }: SidebarProps) {
       </aside>
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 w-full h-14 bg-sidebar border-b border-sidebar-border z-50 flex items-center justify-between px-3">
+      <div className="lg:hidden fixed top-0 left-0 right-0 w-full h-14 bg-background border-b border-white/[0.06] z-50 flex items-center justify-between px-3">
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className="text-sidebar-foreground h-10 w-10"
+              className="text-white/40 hover:text-white/70 h-10 w-10"
             >
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[280px] p-0 bg-sidebar">
-            <div className="p-4 border-b border-sidebar-border flex justify-center min-h-24">
+          <SheetContent side="left" className="w-[280px] p-0 bg-background border-r border-white/[0.06]">
+            <div className="p-4 border-b border-white/[0.06] flex justify-center min-h-24">
               <Image
                 src="/logo_confraria_br.png"
                 alt="Confraria Pedra Branca"
