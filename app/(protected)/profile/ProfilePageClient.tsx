@@ -495,28 +495,28 @@ export default function ProfilePageClient({ initialProfile, email, quotas = [] }
     <div className="p-4 sm:p-6 space-y-6 max-w-4xl mx-auto">
       {/* Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">Meu Perfil</h1>
-        <p className="text-muted-foreground">Gerencie suas informacoes pessoais</p>
+        <p className="font-brand text-label uppercase tracking-[0.2em] text-muted-foreground text-xs mb-1">Configurações</p>
+        <h1 className="font-display text-3xl uppercase tracking-tight">Meu Perfil</h1>
       </div>
 
       {/* Card de Perfil */}
-      <Card className="bg-gradient-to-r from-card to-card/80 border-primary/20">
+      <Card className="border-white/[0.08] bg-card">
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row items-center gap-4">
-            <Avatar className="h-20 w-20 border-2 border-primary/30">
-              <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
+            <Avatar className="h-20 w-20 border border-primary/30">
+              <AvatarFallback className="bg-primary/10 text-primary text-xl font-display">
                 {getInitials(formData.full_name)}
               </AvatarFallback>
             </Avatar>
             <div className="text-center sm:text-left space-y-1">
-              <h2 className="text-xl font-semibold">{formData.full_name || 'Seu Nome'}</h2>
+              <h2 className="font-display text-xl uppercase">{formData.full_name || 'Seu Nome'}</h2>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Mail className="h-4 w-4" />
-                <span className="text-sm">{email}</span>
+                <span className="text-sm font-brand">{email}</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Calendar className="h-4 w-4" />
-                <span className="text-sm">
+                <span className="text-sm font-brand">
                   Membro desde {formatMemberSince(initialProfile.created_at)}
                 </span>
               </div>

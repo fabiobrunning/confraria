@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import gsap from 'gsap'
+import { ArrowUpRight } from 'lucide-react'
 
 const menuItems = [
   { label: 'NOSSAS EMPRESAS', href: '/companies', bgIndex: 1 },
@@ -26,12 +27,21 @@ export default function HomePage() {
   const [empresas, setEmpresas] = useState(150)
   const [valor, setValor] = useState(15)
   const [countersStarted, setCountersStarted] = useState(false)
+  const [companies, setCompanies] = useState<{ id: string; name: string; website: string | null; instagram: string | null }[]>([])
 
   const menuOverlayRef = useRef<HTMLDivElement>(null)
   const pageContentRef = useRef<HTMLDivElement>(null)
   const bgImgsRef = useRef<(HTMLImageElement | null)[]>([])
   const menuTimelineRef = useRef<gsap.core.Timeline | null>(null)
   const counterSectionRef = useRef<HTMLDivElement>(null)
+
+  // Buscar empresas para home pública
+  useEffect(() => {
+    fetch('/api/public/companies')
+      .then((r) => r.json())
+      .then((data) => setCompanies(Array.isArray(data) ? data : []))
+      .catch(() => {})
+  }, [])
 
   // GSAP Menu Animation
   useEffect(() => {
@@ -359,6 +369,44 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* Empresas da Confraria */}
+        {companies.length > 0 && (
+          <section className="bg-background border-t border-white/[0.06] px-4 sm:px-6 py-20 sm:py-28">
+            <div className="mx-auto max-w-7xl">
+              <p className="font-brand text-label text-[10px] uppercase tracking-[0.25em] text-white/20 mb-8 text-center">
+                Empresas da Confraria
+              </p>
+              <div className="columns-2 sm:columns-3 lg:columns-4 xl:columns-5 gap-0">
+                {companies.map((company, index) => (
+                  <div
+                    key={company.id}
+                    className="animate-fade-up opacity-0 break-inside-avoid"
+                    style={{ animationDelay: `${index * 40}ms`, animationFillMode: 'forwards' }}
+                  >
+                    {company.website || company.instagram ? (
+                      <a
+                        href={company.website || `https://instagram.com/${company.instagram}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group flex items-center justify-between px-4 py-3 border border-white/[0.06] hover:border-primary/30 hover:bg-primary/[0.03] transition-colors duration-300"
+                      >
+                        <span className="font-brand text-sm text-white/50 group-hover:text-primary transition-colors duration-300 truncate">
+                          {company.name}
+                        </span>
+                        <ArrowUpRight className="w-3 h-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex-shrink-0 ml-2" />
+                      </a>
+                    ) : (
+                      <div className="flex items-center px-4 py-3 border border-white/[0.06]">
+                        <span className="font-brand text-sm text-white/30 truncate">{company.name}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Footer */}
         <footer className="bg-black border-t border-white/5 py-8">
