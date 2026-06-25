@@ -40,19 +40,19 @@ export function PageHeader({
   className,
 }: PageHeaderProps) {
   return (
-    <div className={cn('flex items-center justify-between', className)}>
+    <div className={cn('flex items-start justify-between gap-4', className)}>
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">
-          {Icon && <Icon className="h-7 w-7 sm:h-8 sm:w-8 text-accent" />}
-          {title}
-        </h1>
         {description && (
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="font-brand text-label uppercase tracking-[0.2em] text-muted-foreground text-xs mb-1 flex items-center gap-2">
+            {Icon && <Icon className="h-3 w-3" />}
             {description}
           </p>
         )}
+        <h1 className="font-display text-2xl sm:text-3xl uppercase tracking-tight text-foreground">
+          {title}
+        </h1>
       </div>
-      {action && <div className="shrink-0">{action}</div>}
+      {action && <div className="shrink-0 mt-1">{action}</div>}
     </div>
   )
 }
